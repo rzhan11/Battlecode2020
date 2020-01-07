@@ -19,6 +19,11 @@ public class BotMiner extends Globals {
 	private static boolean adjacentToSoup = false;
 	private static boolean returningToHQ = false;
 
+
+	private static boolean designSchoolMaker = false;
+	private static boolean designSchoolMade = false;
+	private static MapLocation designSchoolLocation;
+
 	public static void loop() throws GameActionException {
 
 		while (true) {
@@ -41,9 +46,15 @@ public class BotMiner extends Globals {
 						System.out.println("HQ is located at " + HQLocation);
 					}
 					currentExploringDirection = HQLocation.directionTo(here);
+
+					//If this is the first robot made, designate that robot as the one to build the design school
+					if(currentExploringDirection.equals(directions[0])){
+						designSchoolMaker = true;
+						designSchoolLocation = new MapLocation(HQLocation.x-1,HQLocation.y);
+					}
 				}
 
-			    turn();
+				turn();
 				firstTurn = false;
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -57,6 +68,22 @@ public class BotMiner extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
+
+		if(teamSoup >= RobotType.DESIGN_SCHOOL.cost && designSchoolMaker && !designSchoolMade) {
+			if(here.isAdjacentTo(designSchoolLocation)){
+				//build design school
+				if(rc.isReady() && rc.canBuildRobot(RobotType.DESIGN_SCHOOL,here.directionTo(designSchoolLocation))){
+					rc.buildRobot(RobotType.DESIGN_SCHOOL,here.directionTo(designSchoolLocation));
+					designSchoolMade = true;
+				}
+
+			} else {
+				Nav.bugNavigate(designSchoolLocation);
+				System.out.println("Going to Design School Location");
+			}
+			return;
+		}
+
 
 		soupCarrying = rc.getSoupCarrying();
 		adjacentToSoup = soupDeposit != null && here.isAdjacentTo(soupDeposit);
@@ -184,4 +211,6 @@ public class BotMiner extends Globals {
 		}
 		return false;
 	}
+
+
 }
