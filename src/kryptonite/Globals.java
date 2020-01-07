@@ -16,9 +16,10 @@ public class Globals {
 
 	public static Direction[] directions = {Direction.NORTH, Direction.NORTHEAST, Direction.EAST, Direction.SOUTHEAST, Direction.SOUTH, Direction.SOUTHWEST, Direction.WEST, Direction.NORTHWEST};
 
+	public static Direction[] diagonalDirections = {Direction.NORTHEAST, Direction.SOUTHEAST, Direction.SOUTHWEST, Direction.NORTHWEST};
+
 	public static void init(RobotController theRC) {
 		rc = theRC;
-		here = rc.getLocation();
 
 		us = rc.getTeam();
 		them = us.opponent();
@@ -34,9 +35,11 @@ public class Globals {
 
 	public static MapLocation here;
 	public static int roundNum;
+	public static int teamSoup;
 
 	public static void update() {
 		here = rc.getLocation();
 		roundNum = rc.getRoundNum();
+		teamSoup = rc.getTeamSoup();
 	}
 }
