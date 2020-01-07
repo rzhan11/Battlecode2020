@@ -2,7 +2,7 @@ package kryptonite;
 
 import battlecode.common.*;
 
-public class BotHQ {
+public class BotHQ extends Globals {
 
 	public static void loop() throws GameActionException {
 		while (true) {
