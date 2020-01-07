@@ -4,6 +4,8 @@ import battlecode.common.*;
 
 public class BotMiner extends Globals {
 
+	final private static int SOUP_CARRYING_LIMIT = 100;
+
 	private static boolean firstTurn = true;
 
 	private static MapLocation HQLocation;
@@ -13,7 +15,10 @@ public class BotMiner extends Globals {
 
 	private static Direction currentExploringDirection;
 
-	private static MapLocation locatedSoupDeposit = null;
+	private static MapLocation soupDeposit = null;
+	private static int soupCarrying;
+	private static boolean adjacentToSoup = false;
+	private static boolean returningToHQ = false;
 
 	public static void loop() throws GameActionException {
 
@@ -54,6 +59,52 @@ public class BotMiner extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
+
+		soupCarrying = rc.getSoupCarrying();
+		adjacentToSoup = soupDeposit != null && here.isAdjacentTo(soupDeposit);
+
+		/*
+		Check if soupDeposit is depleted or if we are carrying maximum soup
+		*/
+		if (soupDeposit != null && adjacentToSoup && rc.senseSoup(soupDeposit) == 0) {
+			soupDeposit = null;
+			adjacentToSoup = false;
+			if (soupCarrying > 0) {
+				returningToHQ = true;
+			}
+		}
+		if (soupCarrying == SOUP_CARRYING_LIMIT) {
+			returningToHQ = true;
+		}
+
+		/*
+		Bug navigate to HQLocation and deposit soup
+		*/
+		if (returningToHQ) {
+			if (here.isAdjacentTo(HQLocation)) {
+				if (rc.isReady()) {
+					rc.depositSoup(here.directionTo(HQLocation), soupCarrying);
+					returningToHQ = false;
+					System.out.println("Deposited " + soupCarrying + " soup at HQ");
+				}
+				return;
+			}
+			Nav.bugNavigate(HQLocation);
+			System.out.println("Returning to HQ");
+			return;
+		}
+
+		/*
+		mine dat soup
+		*/
+		if (adjacentToSoup) {
+			System.out.println("Mining soup");
+			if (rc.isReady()) {
+				rc.mineSoup(here.directionTo(soupDeposit));
+			}
+			return;
+		}
+
 		/*
 		if I have already found a soup deposit or I see a soup deposit
 			flag this event and bug-nav towards it
@@ -63,14 +114,42 @@ public class BotMiner extends Globals {
 			if I encounter a water/elevation obstacle, bug-nav around it
 		*/
 
-		if (locatedSoupDeposit != null || locateSoupDeposit()) {
-			System.out.println("Found soup at " + locatedSoupDeposit);
-		} else {
+		if (soupDeposit == null) { //|| (rc.canSenseLocation(soupDeposit) && rc.senseRobotAtLocation(soupDeposit) != null)) {
+			locateOpenSoupDeposit();
+		}
+
+		if (soupDeposit != null) {
 			if (rc.isReady()) {
-				int count = 0;
+				Nav.bugNavigate(soupDeposit);
+			}
+			System.out.println("Found soup at " + soupDeposit);
+
+		} else { // explore
+			if (rc.isReady()) {
+				MapLocation dest = here.add(currentExploringDirection);
+				// finds a Direction that points to a valid MapLocation
+				int count = 0; // technically not needed in non 1x1 maps
+				while (!rc.onTheMap(dest) && count < 4) {
+					currentExploringDirection = currentExploringDirection.rotateLeft();
+					currentExploringDirection = currentExploringDirection.rotateLeft();
+					dest = here.add(currentExploringDirection);
+					count++;
+				}
+				// currentExploringDirection = currentExploringDirection.rotateLeft();
+				// while (!rc.onTheMap(dest) && count < 4) {
+				// 	currentExploringDirection = currentExploringDirection.rotateLeft();
+				// 	currentExploringDirection = currentExploringDirection.rotateLeft();
+				// 	dest = here.add(currentExploringDirection);
+				// 	count++;
+				// }
+
+				System.out.println("Exploring " + currentExploringDirection);
+
+				count = 0;
 				Direction curDir = currentExploringDirection;
-				while (!rc.canMove(curDir) && count < 8) {
+				while ((!rc.canMove(curDir) || rc.senseFlooding(dest)) && count < 8) {
 					curDir = curDir.rotateLeft();
+					dest = here.add(curDir);
 					count++;
 				}
 				if (count < 8) {
@@ -81,22 +160,18 @@ public class BotMiner extends Globals {
 	}
 
 	/*
-	To be implemented
-	*/
-	public static void bugNavigate (MapLocation target) throws GameActionException {
-
-
-	}
-
-	/*
 	Returns false if no soup deposit was found
-	Returns true if soup deposit was found and also saves the MapLocation in variable 'locatedSoupDeposit'
+	Returns true if soup deposit was found and also saves the MapLocation in variable 'soupDeposit'
 	*/
-	public static boolean locateSoupDeposit() throws GameActionException {
+	public static boolean locateOpenSoupDeposit() throws GameActionException {
 		for (int[] pair: sensableDirections) {
-			MapLocation loc = new MapLocation(here.x + pair[0], here.y + pair[1]);
-			if (rc.senseSoup(loc) >= 0) {
-				locatedSoupDeposit = loc;
+			MapLocation loc = here.translate(pair[0], pair[1]);
+			// System.out.println(here);
+			// System.out.println(loc);
+			// System.out.println("dist "+here.distanceSquaredTo(loc));
+			// System.out.println("soup: "+rc.senseSoup(loc));
+			if (rc.canSenseLocation(loc) && rc.senseSoup(loc) > 0 && rc.senseRobotAtLocation(loc) == null) {
+				soupDeposit = loc;
 				return true;
 			}
 		}

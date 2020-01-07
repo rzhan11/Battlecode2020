@@ -25,16 +25,15 @@ public class BotHQ extends Globals {
 
 	public static void turn() throws GameActionException {
 		/*
-		build a Miner if we can afford it, are not on cooldown, and less than four Miners have been built
+		build a Miner if we can afford it, are not on cooldown, and less than eight Miners have been built
 		*/
-		boolean builtMinerFlag = false;
 		if (teamSoup >= RobotType.MINER.cost && rc.isReady()) {
-			if (minerSpawnCount < 4) {
-				Direction dir = diagonalDirections[minerSpawnCount];
+			if (minerSpawnCount < 8) {
+				Direction dir = directions[minerSpawnCount];
 		        if (rc.canBuildRobot(RobotType.MINER, dir)) {
 		            rc.buildRobot(RobotType.MINER, dir);
 					minerSpawnCount++;
-					builtMinerFlag = true;
+					return;
 				}
 			}
 		}
