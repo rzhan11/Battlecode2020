@@ -1,25 +1,25 @@
 dist/*
 build/*
 
-/matches
-/deploy/lib
-/deploy/bin
+matches
+deploy/lib
+deploy/bin
 *.rms
 *.bc17
-/build/
-/bin/
+build/
+bin/
 *.conf
 .DS_Store
 *.log
 *.swp
 *.pyc
 .gradle
-/client/
+client/
 *.jar
 *.iml
 *.ipr
 *.iws
-/.idea/
+.idea/
 
 
 # User-specific stuff:
