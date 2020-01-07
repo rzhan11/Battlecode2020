@@ -29,3 +29,10 @@ battlecode-scaffold.iws
 .classpath
 .project
 .settings/
+
+
+build.gradle
+gradle.properties
+gradlew
+gradlew.bat
+version.txt
