@@ -4,8 +4,6 @@ import battlecode.common.*;
 
 public class BotMiner extends Globals {
 
-	final private static int SOUP_CARRYING_LIMIT = 100;
-
 	private static boolean firstTurn = true;
 
 	private static MapLocation HQLocation;
@@ -15,6 +13,7 @@ public class BotMiner extends Globals {
 
 	private static Direction currentExploringDirection;
 
+	private static int soupDepositIndex = 0;
 	private static MapLocation soupDeposit = null;
 	private static int soupCarrying;
 	private static boolean adjacentToSoup = false;
@@ -42,7 +41,6 @@ public class BotMiner extends Globals {
 						System.out.println("HQ is located at " + HQLocation);
 					}
 					currentExploringDirection = HQLocation.directionTo(here);
-					System.out.println("Exploring " + currentExploringDirection);
 				}
 
 			    turn();
@@ -63,6 +61,14 @@ public class BotMiner extends Globals {
 		soupCarrying = rc.getSoupCarrying();
 		adjacentToSoup = soupDeposit != null && here.isAdjacentTo(soupDeposit);
 
+		System.out.println();
+		System.out.println("Robot: " + myType);
+		System.out.println("ID: " + myID);
+		System.out.println("Location: " + here);
+		System.out.println("soupCarrying: " + soupCarrying);
+
+		Nav.avoidWater();
+
 		/*
 		Check if soupDeposit is depleted or if we are carrying maximum soup
 		*/
@@ -73,7 +79,7 @@ public class BotMiner extends Globals {
 				returningToHQ = true;
 			}
 		}
-		if (soupCarrying == SOUP_CARRYING_LIMIT) {
+		if (soupCarrying == RobotType.MINER.soupLimit) {
 			returningToHQ = true;
 		}
 
@@ -126,20 +132,20 @@ public class BotMiner extends Globals {
 
 		} else { // explore
 			if (rc.isReady()) {
-				MapLocation dest = here.add(currentExploringDirection);
+				MapLocation dest = rc.adjacentLocation(currentExploringDirection);
 				// finds a Direction that points to a valid MapLocation
 				int count = 0; // technically not needed in non 1x1 maps
 				while (!rc.onTheMap(dest) && count < 4) {
 					currentExploringDirection = currentExploringDirection.rotateLeft();
 					currentExploringDirection = currentExploringDirection.rotateLeft();
-					dest = here.add(currentExploringDirection);
+					dest = rc.adjacentLocation(currentExploringDirection);
 					count++;
 				}
 				// currentExploringDirection = currentExploringDirection.rotateLeft();
 				// while (!rc.onTheMap(dest) && count < 4) {
 				// 	currentExploringDirection = currentExploringDirection.rotateLeft();
 				// 	currentExploringDirection = currentExploringDirection.rotateLeft();
-				// 	dest = here.add(currentExploringDirection);
+				// 	dest = rc.adjacentLocation(currentExploringDirection);
 				// 	count++;
 				// }
 
@@ -149,13 +155,14 @@ public class BotMiner extends Globals {
 				Direction curDir = currentExploringDirection;
 				while ((!rc.canMove(curDir) || rc.senseFlooding(dest)) && count < 8) {
 					curDir = curDir.rotateLeft();
-					dest = here.add(curDir);
+					dest = rc.adjacentLocation(curDir);
 					count++;
 				}
 				if (count < 8) {
 					rc.move(curDir);
 				}
 			}
+			myElevation = rc.senseElevation(here);
 		}
 	}
 
@@ -170,7 +177,7 @@ public class BotMiner extends Globals {
 			// System.out.println(loc);
 			// System.out.println("dist "+here.distanceSquaredTo(loc));
 			// System.out.println("soup: "+rc.senseSoup(loc));
-			if (rc.canSenseLocation(loc) && rc.senseSoup(loc) > 0 && rc.senseRobotAtLocation(loc) == null) {
+			if (rc.canSenseLocation(loc) && rc.senseSoup(loc) > 0) {
 				soupDeposit = loc;
 				return true;
 			}

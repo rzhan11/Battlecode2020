@@ -20,15 +20,20 @@ public class Globals {
 	public static int mapHeight;
 	public static Direction[] directions = {Direction.NORTH, Direction.NORTHEAST, Direction.EAST, Direction.SOUTHEAST, Direction.SOUTH, Direction.SOUTHWEST, Direction.WEST, Direction.NORTHWEST}; // 8 directions
 	public static Direction[] allDirections = {Direction.NORTH, Direction.NORTHEAST, Direction.EAST, Direction.SOUTHEAST, Direction.SOUTH, Direction.SOUTHWEST, Direction.WEST, Direction.NORTHWEST, Direction.CENTER}; // includes center
+	public static Direction[] cardinalDirections = {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST}; // four cardinal directions
 	public static Direction[] diagonalDirections = {Direction.NORTHEAST, Direction.SOUTHEAST, Direction.SOUTHWEST, Direction.NORTHWEST}; // four diagonals
 
 	/*
 	Values that might change each turn
 	*/
 
-	public static MapLocation here;
 	public static int roundNum;
 	public static int teamSoup;
+
+	public static MapLocation here;
+	public static int myElevation;
+	public static int waterLevel;
+
 
 	public static int myPollution;
 	public static int actualSensorRadiusSquared;
@@ -37,6 +42,8 @@ public class Globals {
 	public static RobotInfo[] visibleAllies = null;
 
 	public static void init(RobotController theRC) throws GameActionException {
+		boolean b = (directions[0] == Direction.NORTH);
+		System.out.println("ss " + b);
 		rc = theRC;
 		here = rc.getLocation();
 
@@ -56,9 +63,11 @@ public class Globals {
 		roundNum = rc.getRoundNum();
 		teamSoup = rc.getTeamSoup();
 
+		myElevation = rc.senseElevation(here);
+		waterLevel = (int) GameConstants.getWaterLevel(roundNum);
+
 		myPollution = rc.sensePollution(here);
-		double tempSensorPollution = (1 + myPollution / 4000.0);
-		actualSensorRadiusSquared = (int) (baseSensorRadiusSquared / tempSensorPollution / tempSensorPollution);
+		actualSensorRadiusSquared = (int) (baseSensorRadiusSquared * GameConstants.getSensorRadiusPollutionCoefficient(myPollution));
 		extremePollution = actualSensorRadiusSquared < 2;
 		if (extremePollution) {
 			System.out.println("WARNING: Extreme pollution has made actualSensorRadiusSquared < 2, so errors may occur. Ask Richard.");
@@ -88,7 +97,6 @@ public class Globals {
 				}
 			}
 		}
-		System.out.println("size " + size);
 
 		int[][] temp = new int[size][2];
 		temp[0][0] = temp[0][1] = 0;
