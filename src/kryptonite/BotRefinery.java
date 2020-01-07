@@ -2,7 +2,7 @@ package kryptonite;
 
 import battlecode.common.*;
 
-public class BotRefinery {
+public class BotRefinery extends Globals {
 
 	public static void loop() throws GameActionException {
 		while (true) {
