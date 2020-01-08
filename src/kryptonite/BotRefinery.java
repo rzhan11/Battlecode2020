@@ -17,6 +17,7 @@ public class BotRefinery extends Globals {
 			if (startTurn != endTurn) {
 				System.out.println("OVER BYTECODE LIMIT");
 			}
+			System.out.println("-");
 			Clock.yield();
 		}
 	}

@@ -19,6 +19,7 @@ public class BotHQ extends Globals {
 			if (startTurn != endTurn) {
 				System.out.println("OVER BYTECODE LIMIT");
 			}
+			System.out.println("-");
 			Clock.yield();
 		}
 	}
