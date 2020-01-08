@@ -42,8 +42,7 @@ public class Globals {
 	public static RobotInfo[] visibleAllies = null;
 
 	public static void init(RobotController theRC) throws GameActionException {
-		boolean b = (directions[0] == Direction.NORTH);
-		System.out.println("ss " + b);
+
 		rc = theRC;
 		here = rc.getLocation();
 
@@ -57,9 +56,20 @@ public class Globals {
 
 		mapWidth = rc.getMapWidth();
 		mapHeight = rc.getMapHeight();
+
+		if (us == Team.A) {
+			Communication.secretKey = 1337;
+		} else {
+			Communication.secretKey = 7331;
+		}
 	}
 
 	public static void update() throws GameActionException {
+		System.out.println();
+		System.out.println("Robot: " + myType);
+		System.out.println("ID: " + myID);
+		System.out.println("Location: " + here);
+
 		roundNum = rc.getRoundNum();
 		teamSoup = rc.getTeamSoup();
 
@@ -74,6 +84,8 @@ public class Globals {
 		}
 
 		visibleAllies = rc.senseNearbyRobots(actualSensorRadiusSquared, us);
+
+		Communication.readTransactions();
 	}
 
 	public static void updateRobot() throws GameActionException {

@@ -13,7 +13,7 @@ public class BotMiner extends Globals {
 
 	private static Direction currentExploringDirection;
 
-	private static int soupDepositIndex = 0;
+	// a soup deposit is a single soup location
 	private static MapLocation soupDeposit = null;
 	private static int soupCarrying;
 	private static boolean adjacentToSoup = false;
@@ -63,6 +63,7 @@ public class BotMiner extends Globals {
 			if (startTurn != endTurn) {
 				System.out.println("OVER BYTECODE LIMIT");
 			}
+			System.out.println("-");
 			Clock.yield();
 		}
 	}
@@ -84,14 +85,9 @@ public class BotMiner extends Globals {
 			return;
 		}
 
-
 		soupCarrying = rc.getSoupCarrying();
 		adjacentToSoup = soupDeposit != null && here.isAdjacentTo(soupDeposit);
 
-		System.out.println();
-		System.out.println("Robot: " + myType);
-		System.out.println("ID: " + myID);
-		System.out.println("Location: " + here);
 		System.out.println("soupCarrying: " + soupCarrying);
 
 		Nav.avoidWater();
@@ -147,8 +143,13 @@ public class BotMiner extends Globals {
 			if I encounter a water/elevation obstacle, bug-nav around it
 		*/
 
-		if (soupDeposit == null) { //|| (rc.canSenseLocation(soupDeposit) && rc.senseRobotAtLocation(soupDeposit) != null)) {
-			locateOpenSoupDeposit();
+		if (soupDeposit == null) {
+			if (Communication.soupClustersIndex < Communication.soupClustersSize) {
+				soupDeposit = Communication.soupClusters[Communication.soupClustersIndex];
+				Communication.soupClustersIndex++;
+			} else {
+				locateOpenSoupDeposit();
+			}
 		}
 
 		if (soupDeposit != null) {
@@ -206,6 +207,7 @@ public class BotMiner extends Globals {
 			// System.out.println("soup: "+rc.senseSoup(loc));
 			if (rc.canSenseLocation(loc) && rc.senseSoup(loc) > 0) {
 				soupDeposit = loc;
+				Communication.writeClusterTransaction(loc.x, loc.y);
 				return true;
 			}
 		}
