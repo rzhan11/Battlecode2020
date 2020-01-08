@@ -5,9 +5,8 @@ import battlecode.common.*;
 public class BotLandscaper extends Globals {
 
 	private static boolean firstTurn = true;
-	private static MapLocation HQLocation;
-	private static MapLocation buildLocation;
-	private static MapLocation[] wall;
+	private static MapLocation HQLocation, buildLocation;
+	private static MapLocation[] wallPlaces, wall;
 	private static int lsCount;
 
 
@@ -28,13 +27,31 @@ public class BotLandscaper extends Globals {
 					} else {
 						Debug.tlog("HQ is located at " + HQLocation);
 					}
-					wall = new  MapLocation[] {
+					wallPlaces = new MapLocation[] {
 							new MapLocation(HQLocation.x-2, HQLocation.y),
 							new MapLocation(HQLocation.x-2, HQLocation.y-2),
 							new MapLocation(HQLocation.x-2, HQLocation.y+2),
 							new MapLocation(HQLocation.x+2, HQLocation.y),
 							new MapLocation(HQLocation.x+2, HQLocation.y-2),
 							new MapLocation(HQLocation.x+2, HQLocation.y+2),
+							new MapLocation(HQLocation.x, HQLocation.y-2),
+							new MapLocation(HQLocation.x, HQLocation.y+2),
+					};
+					wall = new  MapLocation[] {
+							new MapLocation(HQLocation.x-2, HQLocation.y),
+							new MapLocation(HQLocation.x-2, HQLocation.y-1),
+							new MapLocation(HQLocation.x-2, HQLocation.y-2),
+							new MapLocation(HQLocation.x-2, HQLocation.y+1),
+							new MapLocation(HQLocation.x-2, HQLocation.y+2),
+							new MapLocation(HQLocation.x+2, HQLocation.y),
+							new MapLocation(HQLocation.x+2, HQLocation.y-1),
+							new MapLocation(HQLocation.x+2, HQLocation.y-2),
+							new MapLocation(HQLocation.x+2, HQLocation.y+1),
+							new MapLocation(HQLocation.x+2, HQLocation.y+2),
+							new MapLocation(HQLocation.x-1, HQLocation.y-2),
+							new MapLocation(HQLocation.x-1, HQLocation.y+2),
+							new MapLocation(HQLocation.x+1, HQLocation.y-2),
+							new MapLocation(HQLocation.x+1, HQLocation.y+2),
 							new MapLocation(HQLocation.x, HQLocation.y-2),
 							new MapLocation(HQLocation.x, HQLocation.y+2),
 					};
@@ -48,7 +65,7 @@ public class BotLandscaper extends Globals {
 					[A1][B2][B5][B6][B3]
 					*/
 					boolean isA = true;
-					buildLocation = wall[lsCount];
+					buildLocation = wallPlaces[lsCount];
 				}
 				firstTurn = false;
 				turn();
