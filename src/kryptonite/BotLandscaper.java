@@ -4,6 +4,8 @@ import battlecode.common.*;
 
 public class BotLandscaper extends Globals {
 
+	private static boolean firstTurn = true;
+	private static boolean arrived = false;
 	private static MapLocation HQLocation;
 	private static MapLocation buildLocation;
 	private static MapLocation[] wall;
@@ -55,7 +57,6 @@ public class BotLandscaper extends Globals {
 					[A1][B2][B5][B6][B3]
 					*/
 					boolean isA = true;
-					MapLocation curloc = rc.getLocation();
 					buildLocation = wall[lsCount];
 				}
 
@@ -68,6 +69,27 @@ public class BotLandscaper extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
+		if (arrived) {
+			if (rc.getDirtCarrying() > 5) {
+				if (rc.canDepositDirt(Direction.CENTER)) rc.depositDirt(Direction.CENTER);
+			} else {
+				for (Direction d : Direction.allDirections()) {
+					// TODO: Ensure dirt dug is not inside wall but only outside
+					if (!inArray(wall, new MapLocation(rc.getLocation().x + d.getDeltaX(),
+							rc.getLocation().y + d.getDeltaY())) && d != Direction.CENTER) {
+						if(rc.canDigDirt(d)) rc.digDirt(d);
+					}
+				}
+			}
+		} else {
+			Nav.bugNavigate(buildLocation);
+		}
+	}
 
+	private static boolean inArray(Object[] arr, Object item) {
+		for(Object o : arr) {
+			if (o.equals(item)) return true;
+		}
+		return false;
 	}
 }
