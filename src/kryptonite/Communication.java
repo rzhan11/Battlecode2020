@@ -80,7 +80,7 @@ public class Communication extends Globals {
 		if (teamSoup >= 1) {
 			rc.submitTransaction(message, 1);
 		} else {
-			Debug.tlog("WARNING: Could not afford transaction");
+			Debug.tlog("Could not afford transaction");
 		}
 	}
 
@@ -106,7 +106,7 @@ public class Communication extends Globals {
 		if (teamSoup >= 1) {
 			rc.submitTransaction(message, 1);
 		} else {
-			Debug.tlog("WARNING: Could not afford transaction");
+			Debug.tlog("Could not afford transaction");
 		}
 	}
 

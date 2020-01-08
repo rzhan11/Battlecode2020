@@ -27,6 +27,7 @@ public class BotMiner extends Globals {
 	public static MapLocation[] refineries = new MapLocation[BIG_ARRAY_SIZE];
 	public static boolean[] deadRefineries = new boolean[BIG_ARRAY_SIZE];
 	public static int refineriesSize = 0;
+	private static int refineriesChecked = 0;
 	private static int refineriesIndex = -1;
 
 	private static boolean designSchoolMaker = false;
@@ -74,6 +75,10 @@ public class BotMiner extends Globals {
 	}
 
 	public static void addToSoupClusters (MapLocation loc) {
+		if (soupClustersSize == BIG_ARRAY_SIZE) {
+			Debug.tlogi("ERROR: soupClustersSize reached BIG_ARRAY_SIZE limit");
+			return;
+		}
 		soupClusters[soupClustersSize] = loc;
 		soupClustersSize++;
 	}
@@ -111,17 +116,33 @@ public class BotMiner extends Globals {
 		Nav.avoidWater();
 
 		/*
-		Check if soupDeposit is depleted or if we are carrying maximum soup
+		If we are not going back to a refinery, check if soupDeposit is depleted or if we are carrying maximum soup
+		If we are going to a refinery, check if there is a better one
 		*/
-		if (soupDeposit != null && adjacentToSoup && rc.senseSoup(soupDeposit) == 0) {
-			soupDeposit = null;
-			adjacentToSoup = false;
-			if (soupCarrying > 0) {
+		if (refineriesIndex == -1) {
+			if (soupDeposit != null && rc.canSenseLocation(soupDeposit) && rc.senseSoup(soupDeposit) == 0) {
+				soupDeposit = null;
+				adjacentToSoup = false;
+				if (soupCarrying > 0) {
+					pickRefinery();
+				}
+			}
+			if (refineriesIndex == -1 && soupCarrying == RobotType.MINER.soupLimit) {
 				pickRefinery();
 			}
-		}
-		if (soupCarrying == RobotType.MINER.soupLimit) {
-			pickRefinery();
+		} else {
+			int closestIndex = -1;
+			int closestDist = P_INF;
+			for (int i = refineriesChecked; i < refineriesSize; i++) {
+				int dist = here.distanceSquaredTo(refineries[i]);
+				if (dist < closestDist) {
+					closestIndex = i;
+					closestDist = dist;
+				}
+			}
+			if (closestDist < here.distanceSquaredTo(refineries[refineriesIndex])) {
+				refineriesIndex = closestIndex;
+			}
 		}
 
 		/*
@@ -129,6 +150,11 @@ public class BotMiner extends Globals {
 		*/
 		if (refineriesIndex != -1) {
 			MapLocation loc = refineries[refineriesIndex];
+			if (rc.canSenseLocation(loc) && rc.senseRobotAtLocation(loc) == null) {
+				deadRefineries[refineriesIndex] = true;
+				pickRefinery();
+				loc = refineries[refineriesIndex];
+			}
 			if (here.isAdjacentTo(loc)) {
 				if (rc.isReady()) {
 					rc.depositSoup(here.directionTo(loc), soupCarrying);
@@ -261,6 +287,10 @@ public class BotMiner extends Globals {
 	}
 
 	public static void addToRefineries (MapLocation loc) {
+		if (refineriesSize == BIG_ARRAY_SIZE) {
+			Debug.tlogi("ERROR: refineriesSize reached BIG_ARRAY_SIZE limit");
+			return;
+		}
 		refineries[refineriesSize] = loc;
 		refineriesSize++;
 	}
@@ -348,14 +378,18 @@ public class BotMiner extends Globals {
 	*/
 
 	public static void pickRefinery () throws GameActionException {
+		refineriesChecked = refineriesSize;
+
 		// identifies closest refinery
 		int closestDistance = P_INF;
 		int closestIndex = -1;
 		for (int i = 0; i < refineriesSize; i++) {
-			int dist = here.distanceSquaredTo(refineries[i]);
-			if (dist < closestDistance) {
-				closestDistance = dist;
-				closestIndex = i;
+			if (!deadRefineries[i]) {
+				int dist = here.distanceSquaredTo(refineries[i]);
+				if (dist < closestDistance) {
+					closestDistance = dist;
+					closestIndex = i;
+				}
 			}
 		}
 
