@@ -52,7 +52,7 @@ public class BotMiner extends Globals {
 					if (HQLocation == null) {
 						Debug.tlogi("ERROR: Failed sanity check - Cannot find HQLocation");
 					} else {
-						Debug.tlog("HQ is located at " + HQLocation);
+						Debug.tlog("HQLocation: " + HQLocation);
 					}
 					currentExploringDirection = HQLocation.directionTo(here);
 
@@ -74,13 +74,27 @@ public class BotMiner extends Globals {
 		}
 	}
 
-	public static void addToSoupClusters (MapLocation loc) {
-		if (soupClustersSize == BIG_ARRAY_SIZE) {
-			Debug.tlogi("ERROR: soupClustersSize reached BIG_ARRAY_SIZE limit");
-			return;
+	/*
+	Adds a location to soupClusters if not already added
+	*/
+	public static boolean addToSoupClusters (MapLocation loc) {
+		boolean isNew = true;
+		for (int i = 0; i < soupClustersSize; i++) {
+			if (loc.equals(soupClusters[i])) {
+				isNew = false;
+				break;
+			}
 		}
-		soupClusters[soupClustersSize] = loc;
-		soupClustersSize++;
+		if (isNew) {
+			if (soupClustersSize == BIG_ARRAY_SIZE) {
+				Debug.tlogi("ERROR: soupClustersSize reached BIG_ARRAY_SIZE limit");
+				return false;
+			}
+			soupClusters[soupClustersSize] = loc;
+			soupClustersSize++;
+			Debug.tlog("Added a soupCluster at " + loc);
+		}
+		return isNew;
 	}
 
 	public static void turn() throws GameActionException {
@@ -167,23 +181,6 @@ public class BotMiner extends Globals {
 			Debug.tlog("Moving to refinery at " + loc);
 			return;
 		}
-
-		/*
-		Bug navigate to HQ and deposit soup
-		*/
-		// if (returningToHQ) {
-		// 	if (here.isAdjacentTo(HQLocation)) {
-		// 		if (rc.isReady()) {
-		// 			rc.depositSoup(here.directionTo(HQLocation), soupCarrying);
-		// 			returningToHQ = false;
-		// 			Debug.tlog("Deposited " + soupCarrying + " soup at HQ");
-		// 		}
-		// 		return;
-		// 	}
-		// 	Nav.bugNavigate(HQLocation);
-		// 	Debug.tlog("Moving to HQ");
-		// 	return;
-		// }
 
 		/*
 		mine dat soup
@@ -286,13 +283,24 @@ public class BotMiner extends Globals {
 		}
 	}
 
-	public static void addToRefineries (MapLocation loc) {
-		if (refineriesSize == BIG_ARRAY_SIZE) {
-			Debug.tlogi("ERROR: refineriesSize reached BIG_ARRAY_SIZE limit");
-			return;
+	public static boolean addToRefineries (MapLocation loc) {
+		boolean isNew = true;
+		for (int i = 0; i < refineriesSize; i++) {
+			if (loc.equals(refineries[i])) {
+				isNew = false;
+				break;
+			}
 		}
-		refineries[refineriesSize] = loc;
-		refineriesSize++;
+		if (isNew) {
+			if (refineriesSize == BIG_ARRAY_SIZE) {
+				Debug.tlogi("ERROR: refineriesSize reached BIG_ARRAY_SIZE limit");
+				return false;
+			}
+			refineries[refineriesSize] = loc;
+			refineriesSize++;
+			Debug.tlog("Added a refinery at " + loc);
+		}
+		return isNew;
 	}
 
 	/*
@@ -306,18 +314,7 @@ public class BotMiner extends Globals {
 
 		for (RobotInfo ri: visibleAllies) {
 			if (ri.type == RobotType.REFINERY) {
-				boolean isNew = true;
-				for (int i = 0; i < refineriesSize; i++) {
-					if (ri.location.equals(refineries[i])) {
-						isNew = false;
-						break;
-					}
-				}
-				if (isNew) {
-					addToRefineries(ri.location);
-					foundNewRefineries = true;
-					Debug.tlog("Found a refinery at " + ri.location);
-				}
+				foundNewRefineries |= addToRefineries(ri.location);
 			}
 		}
 		return foundNewRefineries;

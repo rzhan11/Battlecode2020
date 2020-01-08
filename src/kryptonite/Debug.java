@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 public class Debug extends Globals {
 
-	final private static boolean DISPLAY_LOGS = false;
+	final private static boolean DISPLAY_LOGS = true;
 
 	/*
 	Prints a separator line, currently a single dash
@@ -31,7 +31,17 @@ public class Debug extends Globals {
 	*/
 	public static void tlog (String str) {
 		if (DISPLAY_LOGS) {
-			System.out.println("-\t" + str);
+			System.out.println("-" + str);
+		}
+	}
+
+	/*
+	Prints message with a double tab in front
+	Can be turned off by setting 'DISPLAY_LOGS' to true
+	*/
+	public static void ttlog (String str) {
+		if (DISPLAY_LOGS) {
+			System.out.println("--" + str);
 		}
 	}
 
@@ -56,6 +66,14 @@ public class Debug extends Globals {
 	Ignores the 'DISPLAY_LOGS' flag
 	*/
 	public static void tlogi (String str) {
-		System.out.println("-\t" + str);
+		System.out.println("-" + str);
+	}
+
+	/* (Log Important)
+	Always prints message with a double tab in front
+	Ignores the 'DISPLAY_LOGS' flag
+	*/
+	public static void ttlogi (String str) {
+		System.out.println("--" + str);
 	}
 }

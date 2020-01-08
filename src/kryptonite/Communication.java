@@ -4,12 +4,14 @@ import battlecode.common.*;
 
 public class Communication extends Globals {
 
-	// used to alter our own data
-	public static int secretKey;
+	final public static int READ_OLD_TRANSACTIONS_COST = 2000; // how many bytecodes readOldTransactions() will leave available
 
 	// each of these signals should be different
 	final public static int SOUP_CLUSTER_SIGNAL = 0;
 	final public static int REFINERY_BUILT_SIGNAL = 1;
+
+	// used to alter our own data
+	public static int secretKey;
 
 	/*
 		Communication is made up of 7 integers (32-bit)
@@ -39,27 +41,49 @@ public class Communication extends Globals {
 		}
 	}
 
+	public static void readOldTransactions () throws GameActionException {
+		if (oldTransactionsIndex <= 0) {
+			return;
+		}
+		int startTransactionIndex = oldTransactionsIndex;
+		while (Clock.getBytecodesLeft() >= READ_OLD_TRANSACTIONS_COST && oldTransactionsIndex > 0) {
+			readTransactions(oldTransactionsIndex);
+			oldTransactionsIndex--;
+		}
+		if (oldTransactionsIndex < startTransactionIndex) {
+			Debug.tlog("Read old transactions " + (oldTransactionsIndex + 1) + " to " + startTransactionIndex);
+		} else {
+			Debug.tlog("Unable to read old transactions due to bytecode limit");
+		}
+	}
+
 	/*
 	Reads in transactions that were submitted last round
 	*/
-	public static void readTransactions () throws GameActionException {
-		if (roundNum > 1) {
-			Transaction[] block = rc.getBlock(roundNum - 1);
-			for (Transaction t: block) {
-				int[] message = t.getMessage();
-				int submitterID = decryptID(message[0]);
-				if (submitterID == -1) {
-					continue; // not submitted by our team
-				} else {
-			        switch (message[1]) {
-			            case SOUP_CLUSTER_SIGNAL:
-							readTransactionSoupCluster(message);
-							break;
-			            case REFINERY_BUILT_SIGNAL:
-							readTransactionRefineryBuilt(message);
-							break;
-			        }
-				}
+	public static void readTransactions (int round) throws GameActionException {
+		if (round < 1 || round >= roundNum) {
+			Debug.tlog("Tried to read Transactions of round " + round + " but not possible");
+			return;
+		}
+		Transaction[] block = rc.getBlock(round);
+		for (Transaction t: block) {
+			int[] message = t.getMessage();
+			int submitterID = decryptID(message[0]);
+			if (submitterID == -1) {
+				continue; // not submitted by our team
+			} else {
+		        switch (message[1]) {
+		            case SOUP_CLUSTER_SIGNAL:
+						if (myType == RobotType.MINER) {
+							readTransactionSoupCluster(message, round);
+						}
+						break;
+		            case REFINERY_BUILT_SIGNAL:
+						if (myType == RobotType.MINER) {
+							readTransactionRefineryBuilt(message, round);
+						}
+						break;
+		        }
 			}
 		}
 	}
@@ -84,9 +108,13 @@ public class Communication extends Globals {
 		}
 	}
 
-	public static void readTransactionSoupCluster (int[] message) {
+	public static void readTransactionSoupCluster (int[] message, int round) {
+		MapLocation loc = new MapLocation(message[2], message[3]);
+		Debug.tlog("Reading 'soup cluster' transaction");
+		Debug.ttlog("Submitter ID: " + decryptID(message[0]));
+		Debug.ttlog("Location: " + loc);
+		Debug.ttlog("Posted round: " + round);
 		BotMiner.addToSoupClusters(new MapLocation(message[2], message[3]));
-		Debug.tlog("Reading transaction from id " + decryptID(message[0]) + " for 'soup cluster' at " + BotMiner.soupClusters[BotMiner.soupClustersSize - 1]);
 	}
 
 	/*
@@ -110,8 +138,12 @@ public class Communication extends Globals {
 		}
 	}
 
-	public static void readTransactionRefineryBuilt (int[] message) {
-		BotMiner.addToRefineries(new MapLocation(message[2], message[3]));
-		Debug.tlog("Reading transaction from id " + decryptID(message[0]) + " for 'refinery built' at " + BotMiner.refineries[BotMiner.refineriesSize - 1]);
+	public static void readTransactionRefineryBuilt (int[] message, int round) {
+		MapLocation loc = new MapLocation(message[2], message[3]);
+		Debug.tlog("Reading 'refinery' transaction");
+		Debug.ttlog("Submitter ID: " + decryptID(message[0]));
+		Debug.ttlog("Location: " + loc);
+		Debug.ttlog("Posted round: " + round);
+		BotMiner.addToRefineries(loc);
 	}
 }

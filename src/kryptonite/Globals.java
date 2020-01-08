@@ -51,9 +51,10 @@ public class Globals {
 
 	public static RobotInfo[] visibleAllies = null;
 
+	public static int oldTransactionsIndex;
+
 	public static void init(RobotController theRC) throws GameActionException {
 		rc = theRC;
-		here = rc.getLocation();
 
 		us = rc.getTeam();
 		them = us.opponent();
@@ -71,15 +72,21 @@ public class Globals {
 		} else {
 			Communication.secretKey = 7331;
 		}
+
+		here = rc.getLocation();
+		roundNum = rc.getRoundNum();
+		oldTransactionsIndex = roundNum - 2;
 	}
 
 	public static void update() throws GameActionException {
-		Debug.log();
-		Debug.tlog("Robot: " + myType);
-		Debug.tlog("ID: " + myID);
-		Debug.tlog("Location: " + here);
 		roundNum = rc.getRoundNum();
 		teamSoup = rc.getTeamSoup();
+
+		Debug.log();
+		Debug.tlog("Robot: " + myType);
+		Debug.tlog("roundNum: " + roundNum);
+		Debug.tlog("ID: " + myID);
+		Debug.tlog("Location: " + here);
 
 		myElevation = rc.senseElevation(here);
 		waterLevel = (int) GameConstants.getWaterLevel(roundNum);
@@ -93,7 +100,7 @@ public class Globals {
 
 		visibleAllies = rc.senseNearbyRobots(-1, us); // -1 uses all robots within sense radius
 
-		Communication.readTransactions();
+		Communication.readTransactions(roundNum - 1);
 	}
 
 	public static void updateRobot() throws GameActionException {
@@ -102,10 +109,16 @@ public class Globals {
 
 	public static void endTurn() throws GameActionException {
 		firstTurn = false;
+
+		Communication.readOldTransactions();
+
+		// check if we went over the bytecode limit
 		int endTurn = rc.getRoundNum();
 		if (roundNum != endTurn) {
-			Debug.tlogi("OVER BYTECODE LIMIT");
+			Debug.tlogi("ERROR: Over the bytecode limit");
 		}
+
+		Debug.tlog("Ending turn with " + Clock.getBytecodesLeft() + " bytecodes");
 		Debug.log();
 		Clock.yield();
 	}
