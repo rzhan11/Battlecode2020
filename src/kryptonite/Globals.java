@@ -87,7 +87,7 @@ public class Globals {
 		Debug.tlog("roundNum: " + roundNum);
 		Debug.tlog("ID: " + myID);
 		Debug.tlog("Location: " + here);
-		Debug.tlog("isReady: " + rc.isReady());
+		Debug.tlog("Cooldown: " + rc.getCooldownTurns());
 
 		myElevation = rc.senseElevation(here);
 		waterLevel = (int) GameConstants.getWaterLevel(roundNum);
