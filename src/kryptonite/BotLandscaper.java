@@ -68,7 +68,7 @@ public class BotLandscaper extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
-		System.out.println("LSCOUNT: " + lsCount + " , LOCATION: " + buildLocation);
+		Debug.tlog("LSCOUNT: " + lsCount + " , LOCATION: " + buildLocation);
 		if (here.equals(buildLocation)) {
 			if (rc.getDirtCarrying() > 5) {
 				if (rc.canDepositDirt(Direction.CENTER)) rc.depositDirt(Direction.CENTER);
