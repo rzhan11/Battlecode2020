@@ -30,19 +30,11 @@ public class BotLandscaper extends Globals {
 					}
 					wall = new  MapLocation[] {
 							new MapLocation(HQLocation.x-2, HQLocation.y),
-							new MapLocation(HQLocation.x-2, HQLocation.y-1),
 							new MapLocation(HQLocation.x-2, HQLocation.y-2),
-							new MapLocation(HQLocation.x-2, HQLocation.y+1),
 							new MapLocation(HQLocation.x-2, HQLocation.y+2),
 							new MapLocation(HQLocation.x+2, HQLocation.y),
-							new MapLocation(HQLocation.x+2, HQLocation.y-1),
 							new MapLocation(HQLocation.x+2, HQLocation.y-2),
-							new MapLocation(HQLocation.x+2, HQLocation.y+1),
 							new MapLocation(HQLocation.x+2, HQLocation.y+2),
-							new MapLocation(HQLocation.x-1, HQLocation.y-2),
-							new MapLocation(HQLocation.x-1, HQLocation.y+2),
-							new MapLocation(HQLocation.x+1, HQLocation.y-2),
-							new MapLocation(HQLocation.x+1, HQLocation.y+2),
 							new MapLocation(HQLocation.x, HQLocation.y-2),
 							new MapLocation(HQLocation.x, HQLocation.y+2),
 					};
@@ -71,7 +63,19 @@ public class BotLandscaper extends Globals {
 		System.out.println("LSCOUNT: " + lsCount + " , LOCATION: " + buildLocation);
 		if (here.equals(buildLocation)) {
 			if (rc.getDirtCarrying() > 5) {
-				if (rc.canDepositDirt(Direction.CENTER)) rc.depositDirt(Direction.CENTER);
+				int minEle = 10000;
+				Direction minD = null;
+				for (Direction d : Direction.allDirections()) {
+					MapLocation dropLoc = new MapLocation(here.x + d.getDeltaX(), here.y + d.getDeltaY());
+					if(inArray(wall, dropLoc)) {
+						int dropEle = rc.senseElevation(dropLoc);
+						if (dropEle < minEle) {
+							minEle = dropEle;
+							minD = d;
+						}
+					}
+				}
+				if (rc.canDepositDirt(minD)) rc.depositDirt(minD);
 			} else {
 				for (Direction d : Direction.allDirections()) {
 					MapLocation digSpot = new MapLocation(here.x + d.getDeltaX(),here.y + d.getDeltaY());
@@ -81,6 +85,7 @@ public class BotLandscaper extends Globals {
 				}
 			}
 		} else {
+			// TODO: More intelligence path finding (can pickup and deposit dirt on its path)
 			Nav.bugNavigate(buildLocation);
 		}
 	}
