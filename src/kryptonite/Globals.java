@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 public class Globals {
 	/*
-
+	Constants for general use
 	*/
 	final public static int BIG_ARRAY_SIZE = 500;
 	final public static int P_INF = 1000000000;
@@ -22,7 +22,7 @@ public class Globals {
 	public static RobotType myType;
 	public static int baseSensorRadiusSquared;
 
-	public static int[][] sensableDirections = null; // stores (dx, dy) of locations that can be sensed
+	public static int[][] sensableDirections = null; // stores (dx, dy, magnitude) of locations that can be sensed
 
 	public static int mapWidth;
 	public static int mapHeight;
@@ -87,6 +87,7 @@ public class Globals {
 		Debug.tlog("roundNum: " + roundNum);
 		Debug.tlog("ID: " + myID);
 		Debug.tlog("Location: " + here);
+		Debug.tlog("isReady: " + rc.isReady());
 
 		myElevation = rc.senseElevation(here);
 		waterLevel = (int) GameConstants.getWaterLevel(roundNum);
@@ -149,13 +150,17 @@ public class Globals {
 			for (dy = 1; dy <= maxdy[dx]; dy++) {
 				if (sensorRadiusSquared >= dx * dx + dy * dy) {
 					temp[index][0] = dx;
-					temp[index++][1] = dy;
+					temp[index][1] = dy;
+					index++;
 					temp[index][0] = -dx;
-					temp[index++][1] = dy;
+					temp[index][1] = dy;
+					index++;
 					temp[index][0] = dx;
-					temp[index++][1] = -dy;
+					temp[index][1] = -dy;
+					index++;
 					temp[index][0] = -dx;
-					temp[index++][1] = -dy;
+					temp[index][1] = -dy;
+					index++;
 				}
 			}
 		}

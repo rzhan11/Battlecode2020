@@ -5,6 +5,8 @@ import battlecode.common.*;
 public class BotMiner extends Globals {
 
 	final private static int REFINERY_DISTANCE_LIMIT = 64; // distance at which we try to use refineries
+	final private static int MIN_SOUP_WRITE_SOUP_CLUSTER = 500;
+	final private static int MIN_SOUP_BUILD_REFINERY = 1000;
 
 	private static MapLocation HQLocation;
 
@@ -16,7 +18,8 @@ public class BotMiner extends Globals {
 	// a soup deposit is a single soup location
 	private static MapLocation soupDeposit = null;
 	private static int soupCarrying;
-	private static boolean adjacentToSoup = false;
+	private static int visibleSoup;
+	private static MapLocation centerOfVisibleSoup = null;
 	// private static boolean returningToHQ = false;
 
 	public static MapLocation[] soupClusters = new MapLocation[BIG_ARRAY_SIZE];
@@ -29,6 +32,9 @@ public class BotMiner extends Globals {
 	public static int refineriesSize = 0;
 	private static int refineriesChecked = 0;
 	private static int refineriesIndex = -1;
+
+	public static MapLocation buildRefineryLocation = null;
+	public static int buildRefineryVisibleSoup;
 
 	private static boolean designSchoolMaker = false;
 	private static boolean designSchoolMade = false;
@@ -99,6 +105,7 @@ public class BotMiner extends Globals {
 
 	public static void turn() throws GameActionException {
 
+		locateSoup();
 		// updates known refineries based on what we can sense this turn
 		locateRefineries();
 
@@ -122,7 +129,6 @@ public class BotMiner extends Globals {
 		}
 
 		soupCarrying = rc.getSoupCarrying();
-		adjacentToSoup = soupDeposit != null && here.isAdjacentTo(soupDeposit);
 
 		Debug.tlog("soupCarrying: " + soupCarrying);
 
@@ -130,32 +136,75 @@ public class BotMiner extends Globals {
 		Nav.avoidWater();
 
 		/*
-		If we are not going back to a refinery, check if soupDeposit is depleted or if we are carrying maximum soup
+		If we are not moving to/building a refinery, check if soupDeposit is depleted or if we are carrying maximum soup
 		If we are going to a refinery, check if there is a better one
 		*/
-		if (refineriesIndex == -1) {
-			if (soupDeposit != null && rc.canSenseLocation(soupDeposit) && rc.senseSoup(soupDeposit) == 0) {
-				soupDeposit = null;
-				adjacentToSoup = false;
-				if (soupCarrying > 0) {
+		if (buildRefineryLocation == null) {
+			if (refineriesIndex == -1) {
+				if (soupDeposit != null && rc.canSenseLocation(soupDeposit) && rc.senseSoup(soupDeposit) == 0) {
+					soupDeposit = null;
+					if (soupCarrying > 0) {
+						pickRefinery();
+					}
+				}
+				if (refineriesIndex == -1 && soupCarrying == RobotType.MINER.soupLimit) {
 					pickRefinery();
 				}
-			}
-			if (refineriesIndex == -1 && soupCarrying == RobotType.MINER.soupLimit) {
-				pickRefinery();
-			}
-		} else {
-			int closestIndex = -1;
-			int closestDist = P_INF;
-			for (int i = refineriesChecked; i < refineriesSize; i++) {
-				int dist = here.distanceSquaredTo(refineries[i]);
-				if (dist < closestDist) {
-					closestIndex = i;
-					closestDist = dist;
+			} else {
+				int closestIndex = -1;
+				int closestDist = P_INF;
+				for (int i = refineriesChecked; i < refineriesSize; i++) {
+					int dist = here.distanceSquaredTo(refineries[i]);
+					if (dist < closestDist) {
+						closestIndex = i;
+						closestDist = dist;
+					}
+				}
+				if (closestDist < here.distanceSquaredTo(refineries[refineriesIndex])) {
+					refineriesIndex = closestIndex;
 				}
 			}
-			if (closestDist < here.distanceSquaredTo(refineries[refineriesIndex])) {
-				refineriesIndex = closestIndex;
+		}
+
+		/*
+		If we are building a refinery, try to build the refinery or move towards the buildRefineryLocation
+		*/
+		if (buildRefineryLocation != null) {
+			// if centerOfVisibleSoup is better than buildRefineryLocation, replace it
+			// makes sure that centerOfVisibleSoup isn't flooded or occupied
+			if (visibleSoup > buildRefineryVisibleSoup && rc.senseFlooding(buildRefineryLocation) && rc.senseRobotAtLocation(buildRefineryLocation) == null) {
+				buildRefineryLocation = centerOfVisibleSoup;
+				buildRefineryVisibleSoup = visibleSoup;
+				Debug.tlog("Retargetting refinery build location at " + buildRefineryLocation + " with " + buildRefineryVisibleSoup + " soup");
+			}
+
+			// if buildRefineryLocation is occupied or is flooded, revert to closest refinery
+			if (rc.canSenseLocation(buildRefineryLocation) && (rc.senseRobotAtLocation(buildRefineryLocation) != null || rc.senseFlooding(buildRefineryLocation))) {
+				// findClosestRefinery
+				buildRefineryLocation = null;
+				buildRefineryVisibleSoup = -1;
+				Debug.tlog("Refinery build location at " + buildRefineryLocation + " is not flooded/occupied. Resetting it.");
+			} else {
+				if (here.isAdjacentTo(buildRefineryLocation)) {
+					Direction dir = here.directionTo(buildRefineryLocation);
+					if (rc.isReady() && rc.canBuildRobot(RobotType.REFINERY, dir)) {
+						rc.buildRobot(RobotType.REFINERY, dir);
+						Debug.tlog("Built refinery at " + buildRefineryLocation);
+						Communication.writeTransactionRefineryBuilt(buildRefineryLocation);
+						addToRefineries(buildRefineryLocation);
+
+						buildRefineryLocation = null;
+						buildRefineryVisibleSoup = -1;
+					} else {
+						buildRefineryLocation = null;
+						buildRefineryVisibleSoup = -1;
+						Debug.tlog("Refinery build location at " + buildRefineryLocation + " is too high/low. Resetting it.");
+					}
+				} else {
+					Nav.bugNavigate(buildRefineryLocation);
+					Debug.tlog("Moving to buildRefineryLocation at " + buildRefineryLocation);
+				}
+				return;
 			}
 		}
 
@@ -185,12 +234,36 @@ public class BotMiner extends Globals {
 		/*
 		mine dat soup
 		*/
-		if (adjacentToSoup) {
+		if (soupDeposit != null && here.isAdjacentTo(soupDeposit)) {
 			if (rc.isReady()) {
-				Debug.tlog("Mining soup at ");
+				Debug.tlog("Mining soup at " + soupDeposit);
 				rc.mineSoup(here.directionTo(soupDeposit));
 			}
 			return;
+		}
+
+		/*
+		Tries to target a soupCluster
+		*/
+		if (soupDeposit == null) {
+			int closestDistance = P_INF;
+			int closestIndex = -1;
+			for (int i = 0; i < soupClustersSize; i++) {
+				if (!emptySoupClusters[i]) {
+					int dist = here.distanceSquaredTo(soupClusters[i]);
+					if (dist < closestDistance) {
+						closestDistance = dist;
+						closestIndex = i;
+					}
+
+				}
+			}
+			if (closestIndex != -1) {
+				if (closestDistance < 32 * 32) {
+					soupClusterIndex = closestIndex;
+					Debug.tlog("Targetting soupCluster at " + soupClusters[soupClusterIndex]);
+				}
+			}
 		}
 
 		/*
@@ -202,31 +275,6 @@ public class BotMiner extends Globals {
 			if I encounter a map edge, rotateLeft the currentExploringDirection
 			if I encounter a water/elevation obstacle, bug-nav around it
 		*/
-
-		if (soupDeposit == null) {
-			if (locateSoup()) {
-				Debug.tlog("Found soupDeposit at " + soupDeposit);
-			} else {
-				int closestDistance = P_INF;
-				int closestIndex = -1;
-				for (int i = 0; i < soupClustersSize; i++) {
-					if (!emptySoupClusters[i]) {
-						int dist = here.distanceSquaredTo(soupClusters[i]);
-						if (dist < closestDistance) {
-							closestDistance = dist;
-							closestIndex = i;
-						}
-
-					}
-				}
-				if (closestIndex != -1) {
-					if (closestDistance < 32 * 32) {
-						soupClusterIndex = closestIndex;
-						Debug.tlog("Targetting soupCluster at " + soupClusters[soupClusterIndex]);
-					}
-				}
-			}
-		}
 
 		if (soupDeposit != null) {
 			if (rc.isReady()) {
@@ -321,62 +369,57 @@ public class BotMiner extends Globals {
 	}
 
 	/*
-	Returns false if no soup deposits were found
-	Returns true if soup deposits were found
-		Also saves the MapLocation in variable 'soupDeposit'
-		Also tries to submit a Transaction for the soup cluster
+		If we have not found a soupDeposit yet, we try to find the closest soupDeposit
+		If we find a group of soupDeposits that satisfy the conditions for the soup cluster, submit a Transaction that signals this
 	*/
-	public static boolean locateSoup() throws GameActionException {
+	public static void locateSoup() throws GameActionException {
 		MapLocation[] soups = new MapLocation[sensableDirections.length];
 		int size = 0;
 
 		int totalX = 0;
 		int totalY = 0;
-		int totalSoup = 0;
-		for (int[] pair: sensableDirections) {
-			MapLocation loc = here.translate(pair[0], pair[1]);
+		visibleSoup = 0;
+		for (int[] dir: sensableDirections) {
+			MapLocation loc = here.translate(dir[0], dir[1]);
 			if (rc.canSenseLocation(loc) && rc.senseSoup(loc) > 0) {
 				totalX += loc.x;
 				totalY += loc.y;
-				totalSoup += rc.senseSoup(loc);
+				visibleSoup += rc.senseSoup(loc);
 
 				soups[size] = loc;
 				size++;
 			}
 		}
 		if (size == 0) {
-			return false;
+			return;
 		}
 
-		soupDeposit = soups[0];
+		if (soupDeposit == null) {
+			soupDeposit = soups[0];
+		}
 
-		// if this cluster is too close (distance) to another cluster that has already been submitted in a Transaction, we will not submit a new Transaction
-		boolean worthSubmitting = true;
-		MapLocation centerLoc = new MapLocation(totalX / size, totalY / size);
+		if (visibleSoup >= MIN_SOUP_WRITE_SOUP_CLUSTER) { // enough soup to warrant a Transaction
+			// if this cluster is too close (distance) to another cluster that has already been submitted in a Transaction, we will not submit a new Transaction
+			boolean worthSubmitting = true;
+			centerOfVisibleSoup = new MapLocation(totalX / size, totalY / size);
 
-		for (int i = 0; i < soupClustersSize; i++) {
-			if (centerLoc.distanceSquaredTo(soupClusters[i]) < 16) {
-				worthSubmitting = false;
-				break;
+			for (int i = 0; i < soupClustersSize; i++) {
+				if (centerOfVisibleSoup.distanceSquaredTo(soupClusters[i]) < 16) {
+					worthSubmitting = false;
+					break;
+				}
+			}
+
+			if (worthSubmitting) {
+				Communication.writeTransactionSoupCluster(centerOfVisibleSoup);
 			}
 		}
-
-		if (worthSubmitting) {
-			Communication.writeTransactionSoupCluster(centerLoc);
-		}
-
-		return true;
 	}
 
 	/*
-	This method tries to make the Miner use/build a refinery if we are too far away from other refineries
-	Returns true if we chose to use/build refinery
-	Returns false if we chose otherwise
+	This method returns the index of the closest refinery to this Miner
 	*/
-
-	public static void pickRefinery () throws GameActionException {
-		refineriesChecked = refineriesSize;
-
+	public static int findClosestRefinery () throws GameActionException {
 		// identifies closest refinery
 		int closestDistance = P_INF;
 		int closestIndex = -1;
@@ -395,8 +438,21 @@ public class BotMiner extends Globals {
 			Debug.tlogi("ERROR: Failed sanity check - Cannot find any refineries");
 		}
 
+		return closestIndex;
+	}
+
+	/*
+	This method tries to make the Miner use/build a refinery if we are too far away from other refineries
+	Returns true if we chose to use/build refinery
+	Returns false if we chose otherwise
+	*/
+	public static void pickRefinery () throws GameActionException {
+		refineriesChecked = refineriesSize;
+
+		int closestIndex = findClosestRefinery();
+
 		// if there is a close enough refinery, target it
-		if (closestDistance <= REFINERY_DISTANCE_LIMIT) {
+		if (here.distanceSquaredTo(refineries[closestIndex]) <= REFINERY_DISTANCE_LIMIT) {
 			refineriesIndex = closestIndex;
 			Debug.tlog("Targetting close refinery at " + refineries[refineriesIndex]);
 			return;
@@ -404,15 +460,11 @@ public class BotMiner extends Globals {
 
 		// try to build a refinery
 		if (teamSoup >= RobotType.REFINERY.cost && rc.isReady()) {
-			for (Direction dir: directions) {
-				if (rc.canBuildRobot(RobotType.REFINERY, dir)) {
-					rc.buildRobot(RobotType.REFINERY, dir);
-
-					addToRefineries(rc.adjacentLocation(dir));
-					Debug.tlog("Built/targetting refinery at " + refineries[refineriesSize - 1]);
-
-					Communication.writeTransactionRefineryBuilt(refineries[refineriesSize - 1]);
-
+			if (visibleSoup >= MIN_SOUP_BUILD_REFINERY) { // enough soup to warrant a refinery
+				if (!rc.senseFlooding(centerOfVisibleSoup) && rc.senseRobotAtLocation(centerOfVisibleSoup) == null) { // centerOfVisibleSoup is not flooded/occupied
+					buildRefineryLocation = centerOfVisibleSoup;
+					buildRefineryVisibleSoup = visibleSoup;
+					Debug.tlog("Targetting refinery build location at " + buildRefineryLocation + " with " + buildRefineryVisibleSoup + " soup");
 					return;
 				}
 			}
