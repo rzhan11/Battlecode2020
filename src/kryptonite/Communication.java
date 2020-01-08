@@ -64,7 +64,7 @@ public class Communication extends Globals {
 
 	*/
 	public static void writeClusterTransaction (int x, int y) throws GameActionException {
-		System.out.println("Writing transaction for cluster at " + new MapLocation(x, y));
+		Debug.tlog("Writing transaction for cluster at " + new MapLocation(x, y));
 		int[] message = new int[7];
 		message[0] = encryptID(myID);
 		message[1] = 0;
@@ -76,7 +76,7 @@ public class Communication extends Globals {
 
 	public static void readClusterTransaction (int[] message) {
 		soupClusters[soupClustersSize] = new MapLocation(message[2], message[3]);
-		System.out.println("Reading transaction from id " + decryptID(message[0]) + " for cluster at " + soupClusters[soupClustersSize]);
+		Debug.tlog("Reading transaction from id " + decryptID(message[0]) + " for cluster at " + soupClusters[soupClustersSize]);
 		soupClustersSize++;
 	}
 }

@@ -65,9 +65,9 @@ public class Nav extends Globals {
 			return false;
 		}
 
-		System.out.println("This tile will be flooded next turn");
+		Debug.tlog("This tile will be flooded next turn");
 		if (!rc.isReady()) {
-			System.out.println("Cooldown is not ready. I am dying to water! :(");
+			Debug.tlog("Cooldown is not ready. I am dying to water! :(");
 			return false;
 		}
 
@@ -140,7 +140,7 @@ public class Nav extends Globals {
 				index++;
 			}
 			if (bestIndex == -1) {
-				System.out.println("ERROR: Failed sanity check - Cannot find safe direction");
+				Debug.tlogi("ERROR: Failed sanity check - Cannot find safe direction");
 			} else {
 				rc.move(directions[bestIndex]);
 				return true;
