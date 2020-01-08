@@ -5,10 +5,10 @@ import battlecode.common.*;
 public class BotLandscaper extends Globals {
 
 	private static boolean firstTurn = true;
-	private static boolean arrived = false;
 	private static MapLocation HQLocation;
 	private static MapLocation buildLocation;
 	private static MapLocation[] wall;
+	private static int lsCount;
 
 
 	public static void loop() throws GameActionException {
@@ -19,10 +19,9 @@ public class BotLandscaper extends Globals {
 				Globals.updateRobot();
 				if (firstTurn) {
 					// Identify HQ Location and Number of Prior Landscapers
-					int lsCount = 0;
 					for (RobotInfo ri: visibleAllies) {
 						if (ri.team == us && ri.type == RobotType.HQ) HQLocation = ri.location;
-						if(ri.type == RobotType.LANDSCAPER) lsCount++;
+						if (ri.team == us && ri.type == RobotType.LANDSCAPER) lsCount++;
 					}
 					if (HQLocation == null) {
 						Debug.tlogi("ERROR: Failed sanity check - Cannot find HQLocation");
@@ -59,7 +58,7 @@ public class BotLandscaper extends Globals {
 					boolean isA = true;
 					buildLocation = wall[lsCount];
 				}
-
+				firstTurn = false;
 				turn();
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -69,16 +68,16 @@ public class BotLandscaper extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
-		if (arrived) {
+		System.out.println("LSCOUNT: " + lsCount + " , LOCATION: " + buildLocation);
+		if (here.equals(buildLocation)) {
 			if (rc.getDirtCarrying() > 5) {
 				if (rc.canDepositDirt(Direction.CENTER)) rc.depositDirt(Direction.CENTER);
 			} else {
 				for (Direction d : Direction.allDirections()) {
-					// TODO: Ensure dirt dug is not inside wall but only outside
-					if (!inArray(wall, new MapLocation(rc.getLocation().x + d.getDeltaX(),
-							rc.getLocation().y + d.getDeltaY())) && d != Direction.CENTER) {
-						if(rc.canDigDirt(d)) rc.digDirt(d);
-					}
+					MapLocation digSpot = new MapLocation(here.x + d.getDeltaX(),here.y + d.getDeltaY());
+					if (!inArray(wall, digSpot) && d != Direction.CENTER)
+						if(HQLocation.distanceSquaredTo(digSpot) > HQLocation.distanceSquaredTo(here))
+							if(rc.canDigDirt(d)) rc.digDirt(d);
 				}
 			}
 		} else {
