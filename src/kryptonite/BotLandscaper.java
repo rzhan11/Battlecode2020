@@ -4,7 +4,6 @@ import battlecode.common.*;
 
 public class BotLandscaper extends Globals {
 
-	private static boolean firstTurn = true;
 	private static MapLocation HQLocation;
 	private static MapLocation buildLocation;
 	private static MapLocation[] wall;
@@ -24,9 +23,9 @@ public class BotLandscaper extends Globals {
 						if(ri.type == RobotType.LANDSCAPER) lsCount++;
 					}
 					if (HQLocation == null) {
-						System.out.println("ERROR: Failed sanity check - Cannot find HQLocation");
+						Debug.tlogi("ERROR: Failed sanity check - Cannot find HQLocation");
 					} else {
-						System.out.println("HQ is located at " + HQLocation);
+						Debug.tlog("HQ is located at " + HQLocation);
 					}
 					wall = new  MapLocation[] {
 							new MapLocation(HQLocation.x-2, HQLocation.y),
@@ -61,16 +60,10 @@ public class BotLandscaper extends Globals {
 				}
 
 				turn();
-				firstTurn = false;
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			int endTurn = rc.getRoundNum();
-			if (startTurn != endTurn) {
-				System.out.println("OVER BYTECODE LIMIT");
-			}
-			System.out.println("-");
-			Clock.yield();
+			Globals.endTurn();
 		}
 	}
 

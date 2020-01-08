@@ -27,6 +27,8 @@ public class Globals {
 	Values that might change each turn
 	*/
 
+	public static boolean firstTurn = true;
+
 	public static int roundNum;
 	public static int teamSoup;
 
@@ -42,7 +44,6 @@ public class Globals {
 	public static RobotInfo[] visibleAllies = null;
 
 	public static void init(RobotController theRC) throws GameActionException {
-
 		rc = theRC;
 		here = rc.getLocation();
 
@@ -65,11 +66,10 @@ public class Globals {
 	}
 
 	public static void update() throws GameActionException {
-		System.out.println();
-		System.out.println("Robot: " + myType);
-		System.out.println("ID: " + myID);
-		System.out.println("Location: " + here);
-
+		Debug.log();
+		Debug.tlog("Robot: " + myType);
+		Debug.tlog("ID: " + myID);
+		Debug.tlog("Location: " + here);
 		roundNum = rc.getRoundNum();
 		teamSoup = rc.getTeamSoup();
 
@@ -80,7 +80,7 @@ public class Globals {
 		actualSensorRadiusSquared = (int) (baseSensorRadiusSquared * GameConstants.getSensorRadiusPollutionCoefficient(myPollution));
 		extremePollution = actualSensorRadiusSquared < 2;
 		if (extremePollution) {
-			System.out.println("WARNING: Extreme pollution has made actualSensorRadiusSquared < 2, so errors may occur. Ask Richard.");
+			Debug.tlog("WARNING: Extreme pollution has made actualSensorRadiusSquared < 2, so errors may occur. Ask Richard.");
 		}
 
 		visibleAllies = rc.senseNearbyRobots(actualSensorRadiusSquared, us);
@@ -90,6 +90,16 @@ public class Globals {
 
 	public static void updateRobot() throws GameActionException {
 		here = rc.getLocation();
+	}
+
+	public static void endTurn() throws GameActionException {
+		firstTurn = false;
+		int endTurn = rc.getRoundNum();
+		if (roundNum != endTurn) {
+			Debug.tlogi("OVER BYTECODE LIMIT");
+		}
+		Debug.log();
+		Clock.yield();
 	}
 
 	public static int[][] calculateSensableDirections(int sensorRadiusSquared) {

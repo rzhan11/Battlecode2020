@@ -11,8 +11,7 @@ public class BotFulfillmentCenter extends Globals {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			System.out.println("-");
-			Clock.yield();
+			Globals.endTurn();
 		}
 	}
 

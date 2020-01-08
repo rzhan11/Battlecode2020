@@ -4,8 +4,6 @@ import battlecode.common.*;
 
 public class BotMiner extends Globals {
 
-	private static boolean firstTurn = true;
-
 	private static MapLocation HQLocation;
 
 	// Miner moves in the direction that it was spawned in, until it sees a soup deposit or hits a map edge
@@ -27,7 +25,6 @@ public class BotMiner extends Globals {
 	public static void loop() throws GameActionException {
 
 		while (true) {
-			int startTurn = rc.getRoundNum();
 			try {
 				Globals.update();
 				Globals.updateRobot();
@@ -41,9 +38,9 @@ public class BotMiner extends Globals {
 						}
 					}
 					if (HQLocation == null) {
-						System.out.println("ERROR: Failed sanity check - Cannot find HQLocation");
+						Debug.tlogi("ERROR: Failed sanity check - Cannot find HQLocation");
 					} else {
-						System.out.println("HQ is located at " + HQLocation);
+						Debug.tlog("HQ is located at " + HQLocation);
 					}
 					currentExploringDirection = HQLocation.directionTo(here);
 
@@ -55,16 +52,10 @@ public class BotMiner extends Globals {
 				}
 
 				turn();
-				firstTurn = false;
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			int endTurn = rc.getRoundNum();
-			if (startTurn != endTurn) {
-				System.out.println("OVER BYTECODE LIMIT");
-			}
-			System.out.println("-");
-			Clock.yield();
+			Globals.endTurn();
 		}
 	}
 
@@ -80,7 +71,7 @@ public class BotMiner extends Globals {
 
 			} else {
 				Nav.bugNavigate(designSchoolLocation);
-				System.out.println("Going to Design School Location");
+				Debug.tlog("Going to Design School Location");
 			}
 			return;
 		}
@@ -88,7 +79,7 @@ public class BotMiner extends Globals {
 		soupCarrying = rc.getSoupCarrying();
 		adjacentToSoup = soupDeposit != null && here.isAdjacentTo(soupDeposit);
 
-		System.out.println("soupCarrying: " + soupCarrying);
+		Debug.tlog("soupCarrying: " + soupCarrying);
 
 		Nav.avoidWater();
 
@@ -114,12 +105,12 @@ public class BotMiner extends Globals {
 				if (rc.isReady()) {
 					rc.depositSoup(here.directionTo(HQLocation), soupCarrying);
 					returningToHQ = false;
-					System.out.println("Deposited " + soupCarrying + " soup at HQ");
+					Debug.tlog("Deposited " + soupCarrying + " soup at HQ");
 				}
 				return;
 			}
 			Nav.bugNavigate(HQLocation);
-			System.out.println("Returning to HQ");
+			Debug.tlog("Returning to HQ");
 			return;
 		}
 
@@ -127,7 +118,7 @@ public class BotMiner extends Globals {
 		mine dat soup
 		*/
 		if (adjacentToSoup) {
-			System.out.println("Mining soup");
+			Debug.tlog("Mining soup");
 			if (rc.isReady()) {
 				rc.mineSoup(here.directionTo(soupDeposit));
 			}
@@ -147,7 +138,9 @@ public class BotMiner extends Globals {
 			if (Communication.soupClustersIndex < Communication.soupClustersSize) {
 				soupDeposit = Communication.soupClusters[Communication.soupClustersIndex];
 				Communication.soupClustersIndex++;
+				Debug.tlog("Using soupCluster at " + soupDeposit);
 			} else {
+				Debug.tlog("Found soupDeposit at " + soupDeposit);
 				locateOpenSoupDeposit();
 			}
 		}
@@ -156,7 +149,7 @@ public class BotMiner extends Globals {
 			if (rc.isReady()) {
 				Nav.bugNavigate(soupDeposit);
 			}
-			System.out.println("Found soup at " + soupDeposit);
+			Debug.tlog("Going to soupDeposit at " + soupDeposit);
 
 		} else { // explore
 			if (rc.isReady()) {
@@ -177,7 +170,7 @@ public class BotMiner extends Globals {
 				// 	count++;
 				// }
 
-				System.out.println("Exploring " + currentExploringDirection);
+				Debug.tlog("Exploring " + currentExploringDirection);
 
 				count = 0;
 				Direction curDir = currentExploringDirection;
@@ -201,10 +194,6 @@ public class BotMiner extends Globals {
 	public static boolean locateOpenSoupDeposit() throws GameActionException {
 		for (int[] pair: sensableDirections) {
 			MapLocation loc = here.translate(pair[0], pair[1]);
-			// System.out.println(here);
-			// System.out.println(loc);
-			// System.out.println("dist "+here.distanceSquaredTo(loc));
-			// System.out.println("soup: "+rc.senseSoup(loc));
 			if (rc.canSenseLocation(loc) && rc.senseSoup(loc) > 0) {
 				soupDeposit = loc;
 				Communication.writeClusterTransaction(loc.x, loc.y);
