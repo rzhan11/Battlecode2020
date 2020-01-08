@@ -21,7 +21,7 @@ public class BotDesignSchool extends Globals {
 	public static void turn() throws GameActionException {
 		if (rc.isReady()) {
 			for (Direction d : Direction.allDirections()) {
-				if (teamSoup >= RobotType.LANDSCAPER.cost && rc.canBuildRobot(RobotType.LANDSCAPER, d) && landscapersMade < 10) {
+				if (teamSoup >= RobotType.LANDSCAPER.cost && rc.canBuildRobot(RobotType.LANDSCAPER, d) && landscapersMade < 8) {
 					rc.buildRobot(RobotType.LANDSCAPER, d);
 					landscapersMade++;
 				}
