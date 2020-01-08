@@ -3,6 +3,14 @@ package kryptonite;
 import battlecode.common.*;
 
 public class Globals {
+	/*
+
+	*/
+	final public static int BIG_ARRAY_SIZE = 500;
+	final public static int P_INF = 1000000000;
+	final public static int N_INF = -1000000000;
+
+
 
 	/*
 	Constants that will never change
@@ -83,7 +91,7 @@ public class Globals {
 			Debug.tlog("WARNING: Extreme pollution has made actualSensorRadiusSquared < 2, so errors may occur. Ask Richard.");
 		}
 
-		visibleAllies = rc.senseNearbyRobots(actualSensorRadiusSquared, us);
+		visibleAllies = rc.senseNearbyRobots(-1, us); // -1 uses all robots within sense radius
 
 		Communication.readTransactions();
 	}

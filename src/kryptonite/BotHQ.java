@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 public class BotHQ extends Globals {
 
-	private static int minerSpawnCount = 0;
+	private static boolean[] exploredDirections = new boolean[8]; // whether or not a Miner has been sent in this direction
 
 	public static void loop() throws GameActionException {
 		while (true) {
@@ -23,11 +23,12 @@ public class BotHQ extends Globals {
 		build a Miner if we can afford it, are not on cooldown, and less than eight Miners have been built
 		*/
 		if (teamSoup >= RobotType.MINER.cost && rc.isReady()) {
-			if (minerSpawnCount < 8) {
-				Direction dir = directions[minerSpawnCount];
-		        if (rc.canBuildRobot(RobotType.MINER, dir)) {
+			for (int i = 0; i < directions.length; i++) {
+				Direction dir = directions[i];
+				MapLocation loc = rc.adjacentLocation(dir);
+		        if (!exploredDirections[i] && rc.canBuildRobot(RobotType.MINER, dir)) {
 		            rc.buildRobot(RobotType.MINER, dir);
-					minerSpawnCount++;
+					exploredDirections[i] = true;
 					return;
 				}
 			}

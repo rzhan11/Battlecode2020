@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 public class Debug extends Globals {
 
-	final private static boolean DISPLAY_LOGS = true;
+	final private static boolean DISPLAY_LOGS = false;
 
 	/*
 	Prints a separator line, currently a single dash

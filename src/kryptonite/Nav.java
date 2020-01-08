@@ -132,7 +132,8 @@ public class Nav extends Globals {
 			int bestIndex = -1;
 			for (Direction dir: directions) {
 				MapLocation loc = rc.adjacentLocation(dir);
-				if (!dangerDirection[index] && rc.senseRobotAtLocation(loc) == null) {
+				// Debug.tlogi("dir " + dir);
+				if (rc.canMove(dir) && !dangerDirection[index]) {
 					if (bestIndex == -1 || elevationDirection[index] > elevationDirection[bestIndex]) {
 						bestIndex = index;
 					}
@@ -140,7 +141,7 @@ public class Nav extends Globals {
 				index++;
 			}
 			if (bestIndex == -1) {
-				Debug.tlogi("ERROR: Failed sanity check - Cannot find safe direction");
+				Debug.tlog("No safe directions. I am dying to water! :(");
 			} else {
 				rc.move(directions[bestIndex]);
 				return true;

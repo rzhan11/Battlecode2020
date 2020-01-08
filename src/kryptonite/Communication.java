@@ -4,11 +4,12 @@ import battlecode.common.*;
 
 public class Communication extends Globals {
 
+	// used to alter our own data
 	public static int secretKey;
 
-	public static MapLocation[] soupClusters = new MapLocation[500];
-	public static int soupClustersIndex = 0;
-	public static int soupClustersSize = 0;
+	// each of these signals should be different
+	final public static int SOUP_CLUSTER_SIGNAL = 0;
+	final public static int REFINERY_BUILT_SIGNAL = 1;
 
 	/*
 		Communication is made up of 7 integers (32-bit)
@@ -50,9 +51,14 @@ public class Communication extends Globals {
 				if (submitterID == -1) {
 					continue; // not submitted by our team
 				} else {
-					if (message[1] == 0) {
-						readClusterTransaction(message);
-					}
+			        switch (message[1]) {
+			            case SOUP_CLUSTER_SIGNAL:
+							readTransactionSoupCluster(message);
+							break;
+			            case REFINERY_BUILT_SIGNAL:
+							readTransactionRefineryBuilt(message);
+							break;
+			        }
 				}
 			}
 		}
@@ -63,20 +69,49 @@ public class Communication extends Globals {
 	message[3] = y coordinate of cluster
 
 	*/
-	public static void writeClusterTransaction (int x, int y) throws GameActionException {
-		Debug.tlog("Writing transaction for cluster at " + new MapLocation(x, y));
+	public static void writeTransactionSoupCluster (MapLocation soupClusterLoc) throws GameActionException {
+		Debug.tlog("Writing transaction for 'soup cluster' at " + soupClusterLoc);
 		int[] message = new int[7];
 		message[0] = encryptID(myID);
-		message[1] = 0;
-		message[2] = x;
-		message[3] = y;
+		message[1] = SOUP_CLUSTER_SIGNAL;
+		message[2] = soupClusterLoc.x;
+		message[3] = soupClusterLoc.y;
 
-		rc.submitTransaction(message, 1);
+		if (teamSoup >= 1) {
+			rc.submitTransaction(message, 1);
+		} else {
+			Debug.tlog("WARNING: Could not afford transaction");
+		}
 	}
 
-	public static void readClusterTransaction (int[] message) {
-		soupClusters[soupClustersSize] = new MapLocation(message[2], message[3]);
-		Debug.tlog("Reading transaction from id " + decryptID(message[0]) + " for cluster at " + soupClusters[soupClustersSize]);
-		soupClustersSize++;
+	public static void readTransactionSoupCluster (int[] message) {
+		BotMiner.addToSoupClusters(new MapLocation(message[2], message[3]));
+		Debug.tlog("Reading transaction from id " + decryptID(message[0]) + " for 'soup cluster' at " + BotMiner.soupClusters[BotMiner.soupClustersSize - 1]);
+	}
+
+	/*
+	message[2] = x coordinate of refinery
+	message[3] = y coordinate of refinery
+
+	*/
+	public static void writeTransactionRefineryBuilt (MapLocation refineryLoc) throws GameActionException {
+		// check money
+		Debug.tlog("Writing transaction for 'refinery built' at " + refineryLoc);
+		int[] message = new int[7];
+		message[0] = encryptID(myID);
+		message[1] = REFINERY_BUILT_SIGNAL;
+		message[2] = refineryLoc.x;
+		message[3] = refineryLoc.y;
+
+		if (teamSoup >= 1) {
+			rc.submitTransaction(message, 1);
+		} else {
+			Debug.tlog("WARNING: Could not afford transaction");
+		}
+	}
+
+	public static void readTransactionRefineryBuilt (int[] message) {
+		BotMiner.addToRefineries(new MapLocation(message[2], message[3]));
+		Debug.tlog("Reading transaction from id " + decryptID(message[0]) + " for 'refinery built' at " + BotMiner.refineries[BotMiner.refineriesSize - 1]);
 	}
 }
