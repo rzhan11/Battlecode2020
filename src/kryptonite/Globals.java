@@ -135,7 +135,7 @@ public class Globals {
 			// check if we went over the bytecode limit
 			int endTurn = rc.getRoundNum();
 			if (roundNum != endTurn) {
-				Debug.tlogi("ERROR: Exceeded the bytecode limit");
+				Debug.tlogi("BYTECODE LIMIT EXCEEDED");
 				int bytecodeOver = Clock.getBytecodeNum();
 				int turns = endTurn - roundNum;
 				Debug.ttlogi("Overused bytecode: " + (bytecodeOver + (turns - 1) * myType.bytecodeLimit));
