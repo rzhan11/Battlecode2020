@@ -6,8 +6,8 @@ public class BotLandscaper extends Globals {
 
 	private static MapLocation HQLocation;
 	private static MapLocation[] digSpots, smallWall, largeWall, completed;
-	private static int lsCount, digSpotsLength, smallWallLength, largeWallLength, smallWallDepth, completedLength;
-
+	private static int digSpotsLength, smallWallLength, largeWallLength, smallWallDepth,
+            completedLength, currentRing = -1, currentStep;
 
 	public static void loop() throws GameActionException {
 		while (true) {
@@ -17,7 +17,6 @@ public class BotLandscaper extends Globals {
 					// Identify HQ Location and Number of Prior Landscapers
 					for (RobotInfo ri: visibleAllies) {
 						if (ri.team == us && ri.type == RobotType.HQ) HQLocation = ri.location;
-						if (ri.team == us && ri.type == RobotType.LANDSCAPER) lsCount++;
 					}
 					if (HQLocation == null) {
 						Debug.tlogi("ERROR: Failed sanity check - Cannot find HQLocation");
@@ -50,6 +49,7 @@ public class BotLandscaper extends Globals {
 					}
 					smallWallLength = index;
 					smallWallDepth = rc.senseElevation(HQLocation) + 3;
+					Debug.ttlog("SMALL WALL LENGTH: " + smallWallLength + "\nSMALL WALL DEPTH: " + smallWallDepth);
 					completedLength = 0;
 
 					largeWall = new MapLocation[56];
@@ -101,6 +101,7 @@ public class BotLandscaper extends Globals {
 		// If in a Dig Spot Place, move to the Outward Radius
 		if(inArray(digSpots, here, digSpotsLength)) {
 			Direction move = HQLocation.directionTo(here);
+            Debug.ttlog("GOING TO OUTER RING");
 			landscaperMove(move);
 		}
 
@@ -142,10 +143,12 @@ public class BotLandscaper extends Globals {
 				MapLocation moveLoc = here.add(d);
 				if(inArray(digSpots, moveLoc, digSpotsLength)) {
 					// Go to Outer Ring
+                    Debug.ttlog("GOING TO OUTER RING");
 					Direction move = HQLocation.directionTo(here);
 					landscaperMove(move);
 				}
 				else {
+				    Debug.ttlog("ROTATING CLOCKWISE");
 					if(rc.canMove(d)) rc.move(d);
  				}
 			}
@@ -153,6 +156,82 @@ public class BotLandscaper extends Globals {
 		// Inner Wall Complete, Just Start Building Outer Wall
 		else {
 			// TODO: Implement
+
+            // If this is the first time here, you are still in the 5x5
+            if(currentRing == -1) {
+                Debug.ttlog("5x5 RING COMPLETE");
+                currentRing = 0;
+            }
+
+            // If you are in the 5x5, get to the 6x6. Acceptable distances from the HQ are 9 and 13 (10, 18 are holes)
+            if(currentRing == 0) {
+                for(Direction d: Direction.allDirections()) {
+                    MapLocation newloc = here.add(d);
+                    int dis = HQLocation.distanceSquaredTo(newloc);
+                    if(dis == 9 || dis == 13) {
+                        if(rc.canMove(d)) {
+                            currentRing = 1;
+                            Debug.ttlog("MOVING TO 6x6 RING");
+                            rc.move(d);
+                        }
+                    }
+                }
+            }
+            // If you are in the 6x6, get to the 7x7. All distances are acceptable
+            if(currentRing == 1) {
+                for(Direction d: Direction.allDirections()) {
+                    MapLocation newloc = here.add(d);
+                    int dis = HQLocation.distanceSquaredTo(newloc);
+                    if(dis >= 16 && dis != 18) {
+                        if(rc.canMove(d)) {
+                            currentRing = 2;
+                            Debug.ttlog("MOVING TO 7x7 RING");
+                            currentStep = 0;
+                            rc.move(d);
+                        }
+                    }
+                }
+            }
+            if(currentRing == 2) {
+                if(currentStep == 0) {
+                    Debug.ttlog("DIGGING");
+                    if(rc.getDirtCarrying() <= 5) {
+                        landscaperDig();
+                    }
+                    else {
+                        currentStep = 1;
+                    }
+                }
+                if(currentStep == 1) {
+                    Debug.ttlog("DEPOSITING");
+                    if(rc.getDirtCarrying() != 0) {
+                        int minDirt = 1000;
+                        Direction minDir = null;
+                        for(Direction d: Direction.allDirections()) {
+                            MapLocation newloc = here.add(d);
+                            if(inArray(largeWall, newloc, largeWallLength)) {
+                                if(minDirt > rc.senseElevation(newloc)) {
+                                    minDir = d;
+                                    minDirt = rc.senseElevation(newloc);
+                                }
+                            }
+                        }
+                        if(rc.canDepositDirt(minDir)) rc.depositDirt(minDir);
+                    }
+                    else {
+                        currentStep = 2;
+                    }
+                }
+                if(currentStep == 2) {
+                    Debug.ttlog("MOVING");
+                    Direction d = getClockwiseDir();
+                    // TODO: Make sure Landscapers do not get stuck in their path. 
+                    if(rc.canMove(d)) {
+                        currentStep = 0;
+                        rc.move(d);
+                    }
+                }
+            }
 		}
 	}
 
@@ -170,18 +249,18 @@ public class BotLandscaper extends Globals {
 		boolean yPos = absy == dely;
 
 		if(absx == absy) {
-			if(xPos && yPos) return Direction.SOUTH;
-			if(xPos) return Direction.WEST;
-			if(yPos) return Direction.EAST;
-			return Direction.NORTH;
+			if(xPos && yPos) return Direction.NORTH;
+			if(xPos) return Direction.EAST;
+			if(yPos) return Direction.WEST;
+			return Direction.SOUTH;
 		}
 		else if(absx > absy) {
-			if(xPos) return Direction.SOUTH;
-			return Direction.NORTH;
+			if(xPos) return Direction.NORTH;
+			return Direction.SOUTH;
 		}
 		else {
-			if(yPos) return Direction.EAST;
-			return Direction.WEST;
+			if(yPos) return Direction.WEST;
+			return Direction.EAST;
 		}
 	}
 
