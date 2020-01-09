@@ -9,6 +9,9 @@ public class BotFulfillmentCenter extends Globals {
 	public static void loop() throws GameActionException {
 		while (true) {
 			try {
+				if (firstTurn) {
+
+				}
 			    turn();
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -22,6 +25,7 @@ public class BotFulfillmentCenter extends Globals {
 			for (Direction d : Direction.allDirections()) {
 				if (teamSoup >= RobotType.DELIVERY_DRONE.cost && rc.canBuildRobot(RobotType.DELIVERY_DRONE, d) && dronesMade < 5) {
 					rc.buildRobot(RobotType.DELIVERY_DRONE, d);
+					teamSoup = rc.getTeamSoup();
 					dronesMade++;
 				}
 			}

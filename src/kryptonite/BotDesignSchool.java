@@ -3,13 +3,16 @@ package kryptonite;
 import battlecode.common.*;
 
 public class BotDesignSchool extends Globals {
-	
+
 	public static int landscapersMade = 0;
 
 	public static void loop() throws GameActionException {
 		while (true) {
 			try {
 				Globals.update();
+				if (firstTurn) {
+
+				}
 			    turn();
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -23,6 +26,7 @@ public class BotDesignSchool extends Globals {
 			for (Direction d : Direction.allDirections()) {
 				if (teamSoup >= RobotType.LANDSCAPER.cost && rc.canBuildRobot(RobotType.LANDSCAPER, d) && landscapersMade < 8) {
 					rc.buildRobot(RobotType.LANDSCAPER, d);
+					teamSoup = rc.getTeamSoup();
 					landscapersMade++;
 				}
 			}

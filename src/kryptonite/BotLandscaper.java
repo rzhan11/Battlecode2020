@@ -4,7 +4,6 @@ import battlecode.common.*;
 
 public class BotLandscaper extends Globals {
 
-	private static boolean firstTurn = true;
 	private static MapLocation HQLocation, buildLocation;
 	private static MapLocation[] wallPlaces, wall;
 	private static int lsCount;
@@ -12,10 +11,8 @@ public class BotLandscaper extends Globals {
 
 	public static void loop() throws GameActionException {
 		while (true) {
-			int startTurn = rc.getRoundNum();
 			try {
 				Globals.update();
-				Globals.updateRobot();
 				if (firstTurn) {
 					// Identify HQ Location and Number of Prior Landscapers
 					for (RobotInfo ri: visibleAllies) {
@@ -67,7 +64,6 @@ public class BotLandscaper extends Globals {
 					boolean isA = true;
 					buildLocation = wallPlaces[lsCount];
 				}
-				firstTurn = false;
 				turn();
 			} catch (Exception e) {
 				e.printStackTrace();

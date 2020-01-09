@@ -8,6 +8,9 @@ public class BotNetGun extends Globals {
 		while (true) {
 			try {
 				Globals.update();
+				if (firstTurn) {
+
+				}
 			    turn();
 			} catch (Exception e) {
 				e.printStackTrace();
