@@ -8,11 +8,13 @@ public class BotMiner extends Globals {
 	final private static int MIN_SOUP_WRITE_SOUP_CLUSTER = 500;
 	final private static int MIN_SOUP_BUILD_REFINERY = 1000;
 
-	private static MapLocation HQLocation;
+	// private static MapLocation HQLocation;
 
 	// Miner moves in the direction that it was spawned in, until it sees a soup deposit or hits a map edge
 	// If it hits a map edge, it will rotate left the currentExploringDirection
 
+	public static boolean isSymmetryMiner = false;
+	public static MapLocation symmetryLocation;
 	private static Direction currentExploringDirection;
 
 	// a soup deposit is a single soup location
@@ -45,21 +47,20 @@ public class BotMiner extends Globals {
 		while (true) {
 			try {
 				Globals.update();
-				Globals.updateRobot();
 
 				// Do first turn code here
 				if (firstTurn) {
 					// identify HQ MapLocation
-					for (RobotInfo ri: visibleAllies) {
-						if (ri.team == us && ri.type == RobotType.HQ) {
-							HQLocation = ri.location;
-						}
-					}
-					if (HQLocation == null) {
-						Debug.tlogi("ERROR: Failed sanity check - Cannot find HQLocation");
-					} else {
-						Debug.tlog("HQLocation: " + HQLocation);
-					}
+					// for (RobotInfo ri: visibleAllies) {
+					// 	if (ri.team == us && ri.type == RobotType.HQ) {
+					// 		HQLocation = ri.location;
+					// 	}
+					// }
+					// if (HQLocation == null) {
+					// 	Debug.tlogi("ERROR: Failed sanity check - Cannot find HQLocation");
+					// } else {
+					// 	Debug.tlog("HQLocation: " + HQLocation);
+					// }
 					currentExploringDirection = HQLocation.directionTo(here);
 
 					// store HQ as a refinery
@@ -72,35 +73,22 @@ public class BotMiner extends Globals {
 					}
 				}
 
-				turn();
+				/*
+				Skip the normal turn() actions if it is the firstTurn
+				This prevents the miner from exceeding the bytecode limit on the first turn
+				*/
+				if (!firstTurn) {
+					if (isSymmetryMiner) {
+						symmtryMinerTurn();
+					} else {
+						turn();
+					}
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			Globals.endTurn();
 		}
-	}
-
-	/*
-	Adds a location to soupClusters if not already added
-	*/
-	public static boolean addToSoupClusters (MapLocation loc) {
-		boolean isNew = true;
-		for (int i = 0; i < soupClustersSize; i++) {
-			if (loc.equals(soupClusters[i])) {
-				isNew = false;
-				break;
-			}
-		}
-		if (isNew) {
-			if (soupClustersSize == BIG_ARRAY_SIZE) {
-				Debug.tlogi("ERROR: soupClustersSize reached BIG_ARRAY_SIZE limit");
-				return false;
-			}
-			soupClusters[soupClustersSize] = loc;
-			soupClustersSize++;
-			Debug.tlog("Added a soupCluster at " + loc);
-		}
-		return isNew;
 	}
 
 	public static void turn() throws GameActionException {
@@ -118,6 +106,7 @@ public class BotMiner extends Globals {
 				//build design school
 				if(rc.isReady() && rc.canBuildRobot(RobotType.DESIGN_SCHOOL,here.directionTo(designSchoolLocation))){
 					rc.buildRobot(RobotType.DESIGN_SCHOOL,here.directionTo(designSchoolLocation));
+					teamSoup = rc.getTeamSoup();
 					designSchoolMade = true;
 				}
 
@@ -187,7 +176,7 @@ public class BotMiner extends Globals {
 				buildRefineryLocation = null;
 				buildRefineryVisibleSoup = buildRefineryVisibleSoup;
 				refineriesIndex = findClosestRefinery();
-				Debug.tlog("Refinery build location at " + buildRefineryLocation + " is not flooded/occupied.");
+				Debug.tlog("Refinery build location at " + buildRefineryLocation + " is flooded/occupied.");
 				Debug.tlog("Reverting to known refinery at " + refineries[refineriesIndex]);
 			} else {
 				// checks newly added refineries
@@ -209,12 +198,14 @@ public class BotMiner extends Globals {
 						Direction dir = here.directionTo(buildRefineryLocation);
 						if (rc.isReady() && rc.canBuildRobot(RobotType.REFINERY, dir)) {
 							rc.buildRobot(RobotType.REFINERY, dir);
+							teamSoup = rc.getTeamSoup();
 							Debug.tlog("Built refinery at " + buildRefineryLocation);
 							Communication.writeTransactionRefineryBuilt(buildRefineryLocation);
 							addToRefineries(buildRefineryLocation);
 
 							buildRefineryLocation = null;
 							buildRefineryVisibleSoup = -1;
+
 						} else {
 							buildRefineryLocation = null;
 							buildRefineryVisibleSoup = -1;
@@ -280,10 +271,8 @@ public class BotMiner extends Globals {
 				}
 			}
 			if (closestIndex != -1) {
-				if (closestDistance < 32 * 32) {
-					soupClusterIndex = closestIndex;
-					Debug.tlog("Targetting soupCluster at " + soupClusters[soupClusterIndex]);
-				}
+				soupClusterIndex = closestIndex;
+				Debug.tlog("Targetting soupCluster at " + soupClusters[soupClusterIndex]);
 			}
 		}
 
@@ -321,7 +310,7 @@ public class BotMiner extends Globals {
 				MapLocation dest = rc.adjacentLocation(currentExploringDirection);
 				// finds a Direction that points to a valid MapLocation
 				int count = 0; // technically not needed in non 1x1 maps
-				while (!rc.onTheMap(dest) && count < 4) {
+				while (!Nav.onMap(dest) && count < 4) {
 					currentExploringDirection = currentExploringDirection.rotateLeft();
 					currentExploringDirection = currentExploringDirection.rotateLeft();
 					dest = rc.adjacentLocation(currentExploringDirection);
@@ -352,6 +341,29 @@ public class BotMiner extends Globals {
 		}
 	}
 
+	/*
+	Adds a location to soupClusters if not already added
+	*/
+	public static boolean addToSoupClusters (MapLocation loc) {
+		boolean isNew = true;
+		for (int i = 0; i < soupClustersSize; i++) {
+			if (loc.equals(soupClusters[i])) {
+				isNew = false;
+				break;
+			}
+		}
+		if (isNew) {
+			if (soupClustersSize == BIG_ARRAY_SIZE) {
+				Debug.tlogi("ERROR: soupClustersSize reached BIG_ARRAY_SIZE limit");
+				return false;
+			}
+			soupClusters[soupClustersSize] = loc;
+			soupClustersSize++;
+			Debug.tlog("Added a soupCluster at " + loc);
+		}
+		return isNew;
+	}
+
 	public static boolean addToRefineries (MapLocation loc) {
 		boolean isNew = true;
 		for (int i = 0; i < refineriesSize; i++) {
@@ -373,27 +385,10 @@ public class BotMiner extends Globals {
 	}
 
 	/*
-	Updates our known refineries based on currently visible refineries
-	Returns false if no refineries were found
-	Returns true if refineries were found
-		Also saves their MapLocations in variable 'refineries'
-	*/
-	public static boolean locateRefineries() throws GameActionException {
-		boolean foundNewRefineries = false;
-
-		for (RobotInfo ri: visibleAllies) {
-			if (ri.type == RobotType.REFINERY) {
-				foundNewRefineries |= addToRefineries(ri.location);
-			}
-		}
-		return foundNewRefineries;
-	}
-
-	/*
 		If we have not found a soupDeposit yet, we try to find the closest soupDeposit
 		If we find a group of soupDeposits that satisfy the conditions for the soup cluster, submit a Transaction that signals this
 	*/
-	public static void locateSoup() throws GameActionException {
+	public static void locateSoup () throws GameActionException {
 		MapLocation[] soups = new MapLocation[sensableDirections.length];
 		int size = 0;
 
@@ -435,6 +430,23 @@ public class BotMiner extends Globals {
 				Communication.writeTransactionSoupCluster(centerOfVisibleSoup);
 			}
 		}
+	}
+
+	/*
+	Updates our known refineries based on currently visible refineries
+	Returns false if no refineries were found
+	Returns true if refineries were found
+		Also saves their MapLocations in variable 'refineries'
+	*/
+	public static boolean locateRefineries() throws GameActionException {
+		boolean foundNewRefineries = false;
+
+		for (RobotInfo ri: visibleAllies) {
+			if (ri.type == RobotType.REFINERY) {
+				foundNewRefineries |= addToRefineries(ri.location);
+			}
+		}
+		return foundNewRefineries;
 	}
 
 	/*
@@ -480,7 +492,7 @@ public class BotMiner extends Globals {
 		}
 
 		// try to build a refinery
-		if (teamSoup >= RobotType.REFINERY.cost && rc.isReady()) {
+		if (teamSoup >= RobotType.REFINERY.cost) {
 			if (visibleSoup >= MIN_SOUP_BUILD_REFINERY) { // enough soup to warrant a refinery
 				if (!rc.senseFlooding(centerOfVisibleSoup) && rc.senseRobotAtLocation(centerOfVisibleSoup) == null) { // centerOfVisibleSoup is not flooded/occupied
 					buildRefineryLocation = centerOfVisibleSoup;
@@ -494,5 +506,9 @@ public class BotMiner extends Globals {
 		// target the closest refinery since we cannot build one
 		refineriesIndex = closestIndex;
 		Debug.tlog("Targetting far refinery at " + refineries[refineriesIndex]);
+	}
+
+	public static void symmtryMinerTurn () {
+		Debug.tlog("Symmetry miner turn");
 	}
 }

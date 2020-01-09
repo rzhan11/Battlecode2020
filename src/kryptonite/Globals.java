@@ -17,6 +17,7 @@ public class Globals {
 	*/
 	public static RobotController rc;
 	public static Team us;
+	public static int spawnRound; // the first round this robot was called through RobotPlayer.java
 	public static Team them;
 	public static int myID;
 	public static RobotType myType;
@@ -30,6 +31,8 @@ public class Globals {
 	public static Direction[] allDirections = {Direction.NORTH, Direction.NORTHEAST, Direction.EAST, Direction.SOUTHEAST, Direction.SOUTH, Direction.SOUTHWEST, Direction.WEST, Direction.NORTHWEST, Direction.CENTER}; // includes center
 	public static Direction[] cardinalDirections = {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST}; // four cardinal directions
 	public static Direction[] diagonalDirections = {Direction.NORTHEAST, Direction.SOUTHEAST, Direction.SOUTHWEST, Direction.NORTHWEST}; // four diagonals
+
+	public static MapLocation HQLocation = null;
 
 	/*
 	Values that might change each turn
@@ -51,7 +54,7 @@ public class Globals {
 
 	public static RobotInfo[] visibleAllies = null;
 
-	public static int oldTransactionsIndex;
+	public static int oldTransactionsIndex = 1;
 
 	public static void init(RobotController theRC) throws GameActionException {
 		rc = theRC;
@@ -75,14 +78,20 @@ public class Globals {
 
 		here = rc.getLocation();
 		roundNum = rc.getRoundNum();
-		oldTransactionsIndex = roundNum - 2;
+		spawnRound = roundNum;
 	}
 
 	public static void update() throws GameActionException {
+		here = rc.getLocation();
 		roundNum = rc.getRoundNum();
 		teamSoup = rc.getTeamSoup();
 
 		Debug.log();
+		if (firstTurn) {
+			Debug.tlog("---------------");
+			Debug.tlog("--FIRST TURN---");
+			Debug.tlog("---------------");
+		}
 		Debug.tlog("Robot: " + myType);
 		Debug.tlog("roundNum: " + roundNum);
 		Debug.tlog("ID: " + myID);
@@ -102,25 +111,41 @@ public class Globals {
 		visibleAllies = rc.senseNearbyRobots(-1, us); // -1 uses all robots within sense radius
 
 		Communication.readTransactions(roundNum - 1);
-	}
 
-	public static void updateRobot() throws GameActionException {
-		here = rc.getLocation();
+		if (myType == RobotType.HQ) {
+			HQLocation = here;
+		} else {
+			while (HQLocation == null) {
+				if (oldTransactionsIndex == spawnRound - 1) {
+					Debug.tlogi("ERROR: Failed sanity check - Cannot find HQLocation");
+				}
+				Communication.readTransactions(oldTransactionsIndex);
+				oldTransactionsIndex++;
+			}
+		}
 	}
 
 	public static void endTurn() throws GameActionException {
-		firstTurn = false;
+		try {
+			firstTurn = false;
 
-		Communication.readOldTransactions();
+			Communication.readOldTransactions();
 
-		// check if we went over the bytecode limit
-		int endTurn = rc.getRoundNum();
-		if (roundNum != endTurn) {
-			Debug.tlogi("ERROR: Over the bytecode limit");
+			// check if we went over the bytecode limit
+			int endTurn = rc.getRoundNum();
+			if (roundNum != endTurn) {
+				Debug.tlogi("ERROR: Exceeded the bytecode limit");
+				int bytecodeOver = Clock.getBytecodeNum();
+				int turns = endTurn - roundNum;
+				Debug.ttlogi("Overused bytecode: " + (bytecodeOver + (turns - 1) * myType.bytecodeLimit));
+				Debug.ttlogi("Skipped turns: " + turns);
+			}
+
+			Debug.tlog("Ending turn with " + Clock.getBytecodesLeft() + " bytecodes");
+			Debug.log();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-
-		Debug.tlog("Ending turn with " + Clock.getBytecodesLeft() + " bytecodes");
-		Debug.log();
 		Clock.yield();
 	}
 
@@ -152,14 +177,14 @@ public class Globals {
 					temp[index][0] = dx;
 					temp[index][1] = dy;
 					index++;
-					temp[index][0] = -dx;
-					temp[index][1] = dy;
-					index++;
-					temp[index][0] = dx;
-					temp[index][1] = -dy;
+					temp[index][0] = dy;
+					temp[index][1] = -dx;
 					index++;
 					temp[index][0] = -dx;
 					temp[index][1] = -dy;
+					index++;
+					temp[index][0] = -dy;
+					temp[index][1] = dx;
 					index++;
 				}
 			}

@@ -7,8 +7,10 @@ public class Communication extends Globals {
 	final public static int READ_OLD_TRANSACTIONS_COST = 2000; // how many bytecodes readOldTransactions() will leave available
 
 	// each of these signals should be different
-	final public static int SOUP_CLUSTER_SIGNAL = 0;
-	final public static int REFINERY_BUILT_SIGNAL = 1;
+	final public static int HQ_FIRST_TURN_SIGNAL = 0;
+	final public static int SOUP_CLUSTER_SIGNAL = 1;
+	final public static int REFINERY_BUILT_SIGNAL = 2;
+	final public static int SYMMETRY_MINER_BUILT_SIGNAL = 3;
 
 	// used to alter our own data
 	public static int secretKey;
@@ -42,16 +44,16 @@ public class Communication extends Globals {
 	}
 
 	public static void readOldTransactions () throws GameActionException {
-		if (oldTransactionsIndex <= 0) {
+		if (oldTransactionsIndex >= spawnRound - 1) {
 			return;
 		}
-		int startTransactionIndex = oldTransactionsIndex;
-		while (Clock.getBytecodesLeft() >= READ_OLD_TRANSACTIONS_COST && oldTransactionsIndex > 0) {
+		int startTransactionsIndex = oldTransactionsIndex;
+		while (Clock.getBytecodesLeft() >= READ_OLD_TRANSACTIONS_COST && oldTransactionsIndex < spawnRound - 1) {
 			readTransactions(oldTransactionsIndex);
-			oldTransactionsIndex--;
+			oldTransactionsIndex++;
 		}
-		if (oldTransactionsIndex < startTransactionIndex) {
-			Debug.tlog("Read old transactions " + (oldTransactionsIndex + 1) + " to " + startTransactionIndex);
+		if (oldTransactionsIndex > startTransactionsIndex) {
+			Debug.tlog("Read old transactions " + startTransactionsIndex + " to " + (oldTransactionsIndex - 1));
 		} else {
 			Debug.tlog("Unable to read old transactions due to bytecode limit");
 		}
@@ -73,6 +75,9 @@ public class Communication extends Globals {
 				continue; // not submitted by our team
 			} else {
 		        switch (message[1]) {
+		            case HQ_FIRST_TURN_SIGNAL:
+						readTransactionHQFirstTurn(message, round);
+						break;
 		            case SOUP_CLUSTER_SIGNAL:
 						if (myType == RobotType.MINER) {
 							readTransactionSoupCluster(message, round);
@@ -83,9 +88,43 @@ public class Communication extends Globals {
 							readTransactionRefineryBuilt(message, round);
 						}
 						break;
+		            case SYMMETRY_MINER_BUILT_SIGNAL:
+						if (myType == RobotType.MINER) {
+							readTransactionSymmetryMinerBuilt(message, round);
+						}
+						break;
 		        }
 			}
 		}
+	}
+
+	/*
+	message[2] = x coordinate of our HQ
+	message[3] = y coordinate of our HQ
+
+	*/
+	public static void writeTransactionHQFirstTurn (MapLocation myHQLocation) throws GameActionException {
+		Debug.tlog("Writing transaction for 'HQ First Turn' at " + myHQLocation);
+		int[] message = new int[7];
+		message[0] = encryptID(myID);
+		message[1] = HQ_FIRST_TURN_SIGNAL;
+		message[2] = myHQLocation.x;
+		message[3] = myHQLocation.y;
+
+		if (teamSoup >= 10) {
+			rc.submitTransaction(message, 10);
+			teamSoup = rc.getTeamSoup();
+		} else {
+			Debug.tlog("WARNING: Could not afford transaction");
+		}
+	}
+
+	public static void readTransactionHQFirstTurn (int[] message, int round) {
+		Debug.tlog("Reading 'HQ First Turn' transaction");
+		HQLocation = new MapLocation(message[2], message[3]);
+		Debug.ttlog("Submitter ID: " + decryptID(message[0]));
+		Debug.ttlog("Location: " + HQLocation);
+		Debug.ttlog("Posted round: " + round);
 	}
 
 	/*
@@ -93,16 +132,17 @@ public class Communication extends Globals {
 	message[3] = y coordinate of cluster
 
 	*/
-	public static void writeTransactionSoupCluster (MapLocation soupClusterLoc) throws GameActionException {
-		Debug.tlog("Writing transaction for 'soup cluster' at " + soupClusterLoc);
+	public static void writeTransactionSoupCluster (MapLocation soupClusterLocation) throws GameActionException {
+		Debug.tlog("Writing transaction for 'Soup Cluster' at " + soupClusterLocation);
 		int[] message = new int[7];
 		message[0] = encryptID(myID);
 		message[1] = SOUP_CLUSTER_SIGNAL;
-		message[2] = soupClusterLoc.x;
-		message[3] = soupClusterLoc.y;
+		message[2] = soupClusterLocation.x;
+		message[3] = soupClusterLocation.y;
 
 		if (teamSoup >= 1) {
 			rc.submitTransaction(message, 1);
+			teamSoup = rc.getTeamSoup();
 		} else {
 			Debug.tlog("WARNING: Could not afford transaction");
 		}
@@ -110,7 +150,7 @@ public class Communication extends Globals {
 
 	public static void readTransactionSoupCluster (int[] message, int round) {
 		MapLocation loc = new MapLocation(message[2], message[3]);
-		Debug.tlog("Reading 'soup cluster' transaction");
+		Debug.tlog("Reading 'Soup Cluster' transaction");
 		Debug.ttlog("Submitter ID: " + decryptID(message[0]));
 		Debug.ttlog("Location: " + loc);
 		Debug.ttlog("Posted round: " + round);
@@ -122,17 +162,18 @@ public class Communication extends Globals {
 	message[3] = y coordinate of refinery
 
 	*/
-	public static void writeTransactionRefineryBuilt (MapLocation refineryLoc) throws GameActionException {
+	public static void writeTransactionRefineryBuilt (MapLocation refineryLocation) throws GameActionException {
 		// check money
-		Debug.tlog("Writing transaction for 'refinery built' at " + refineryLoc);
+		Debug.tlog("Writing transaction for 'Refinery Built' at " + refineryLocation);
 		int[] message = new int[7];
 		message[0] = encryptID(myID);
 		message[1] = REFINERY_BUILT_SIGNAL;
-		message[2] = refineryLoc.x;
-		message[3] = refineryLoc.y;
+		message[2] = refineryLocation.x;
+		message[3] = refineryLocation.y;
 
 		if (teamSoup >= 1) {
 			rc.submitTransaction(message, 1);
+			teamSoup = rc.getTeamSoup();
 		} else {
 			Debug.tlog("WARNING: Could not afford transaction");
 		}
@@ -140,10 +181,48 @@ public class Communication extends Globals {
 
 	public static void readTransactionRefineryBuilt (int[] message, int round) {
 		MapLocation loc = new MapLocation(message[2], message[3]);
-		Debug.tlog("Reading 'refinery' transaction");
+		Debug.tlog("Reading 'Refinery Built' transaction");
 		Debug.ttlog("Submitter ID: " + decryptID(message[0]));
 		Debug.ttlog("Location: " + loc);
 		Debug.ttlog("Posted round: " + round);
 		BotMiner.addToRefineries(loc);
+	}
+
+	/*
+	message[2] = x coordinate of refinery
+	message[3] = y coordinate of refinery
+
+	*/
+	public static void writeTransactionSymmetryMinerBuilt (int symmetryMinerID, MapLocation symmetryLocation) throws GameActionException {
+		// check money
+		Debug.tlog("Writing transaction for 'Symmetry Miner Built' with ID " + symmetryMinerID + " finding " + symmetryLocation);
+		int[] message = new int[7];
+		message[0] = encryptID(myID);
+		message[1] = SYMMETRY_MINER_BUILT_SIGNAL;
+		message[2] = symmetryMinerID;
+		message[3] = symmetryLocation.x;
+		message[4] = symmetryLocation.y;
+
+		if (teamSoup >= 1) {
+			rc.submitTransaction(message, 1);
+			teamSoup = rc.getTeamSoup();
+		} else {
+			Debug.tlog("WARNING: Could not afford transaction");
+		}
+	}
+
+	public static void readTransactionSymmetryMinerBuilt (int[] message, int round) {
+		Debug.tlog("Reading 'Symmetry Miner Built' transaction");
+		int symmetryMinerID = message[2];
+		MapLocation loc = new MapLocation(message[3], message[4]);
+		Debug.ttlog("Submitter ID: " + decryptID(message[0]));
+		Debug.ttlog("symmetryMinerID: " + symmetryMinerID);
+		Debug.ttlog("symmetryLocation: " + loc);
+		Debug.ttlog("Posted round: " + round);
+		if (myID == symmetryMinerID) {
+			BotMiner.isSymmetryMiner = true;
+			BotMiner.symmetryLocation = loc;
+			Debug.ttlog("I am the symmetry miner");
+		}
 	}
 }
