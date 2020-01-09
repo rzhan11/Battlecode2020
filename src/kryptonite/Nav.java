@@ -117,7 +117,7 @@ public class Nav extends Globals {
 	}
 
 	/*
-	Runs if we just encoutnered an obstacle
+	Runs if we just encountered an obstacle
 	*/
 	public static void bugStartTracing() throws GameActionException {
 		bugTracing = true;
