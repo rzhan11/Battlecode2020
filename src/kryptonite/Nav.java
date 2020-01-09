@@ -8,6 +8,14 @@ public class Nav extends Globals {
 	private static int closestDistance;
 
 	/*
+	NOTE: This is a temporary method that is in place of rc.onTheMap() since I believe there is an engine bug
+	Please DO NOT USE this method if possible - if you see places that use it, please let Richard know
+	*/
+	public static boolean onMap (MapLocation loc) {
+		return 0 <= loc.x && loc.x < mapWidth && 0 <= loc.y && loc.y < mapHeight;
+	}
+
+	/*
 	Uses the bug pathfinding algorithm to navigate around obstacles towards a target MapLocation
 	Details here: https://www.cs.cmu.edu/~motionplanning/lecture/Chap2-Bug-Alg_howie.pdf
 	We are using an implementation of "Bug 2"
@@ -56,7 +64,7 @@ public class Nav extends Globals {
 		boolean danger = false;
 		for (Direction dir: directions) {
 			MapLocation loc = rc.adjacentLocation(dir);
-			if (rc.senseFlooding(loc)) {
+			if (Nav.onMap(loc) && rc.senseFlooding(loc)) {
 				danger = true;
 				break;
 			}
@@ -102,7 +110,11 @@ public class Nav extends Globals {
 			int index = 0;
 			for (Direction dir: directions) {
 				MapLocation loc = rc.adjacentLocation(dir);
-				elevationDirection[index] = rc.senseElevation(loc);
+				if (Nav.onMap(loc)) {
+					elevationDirection[index] = rc.senseElevation(loc);
+				} else {
+					elevationDirection[index] = N_INF;
+				}
 				index++;
 			}
 
@@ -110,7 +122,7 @@ public class Nav extends Globals {
 			index = 0;
 			for (Direction dir: directions) {
 				MapLocation loc = rc.adjacentLocation(dir);
-				if (rc.senseFlooding(loc)) {
+				if (Nav.onMap(loc) && rc.senseFlooding(loc)) {
 					int ii = index;
 					dangerDirection[ii] |= elevationDirection[ii] <= waterLevel;
 					ii = (index + size - 1) % size;
