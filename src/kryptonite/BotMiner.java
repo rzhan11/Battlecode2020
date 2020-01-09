@@ -200,65 +200,98 @@ public class BotMiner extends Globals {
 		/*
 		If we are building a refinery, try to build the refinery or move towards the buildRefineryLocation
 		*/
-		if (buildRefineryLocation != null) {
+		while (buildRefineryLocation != null) { // this only ever runs one time, it is a while look to take advantage of break;
+			if (teamSoup < RobotType.REFINERY.cost) {
+				buildRefineryLocation = null;
+				buildRefineryVisibleSoup = -1;
+				Debug.tlog("Cannot afford to build refinery");
+
+				refineriesIndex = findClosestRefinery();
+				Debug.tlog("Reverting to known refinery at " + refineries[refineriesIndex]);
+				break;
+			}
 			// if centerOfVisibleSoup is better than buildRefineryLocation, replace it
 			// makes sure that centerOfVisibleSoup isn't flooded or occupied
 			if (visibleSoup > buildRefineryVisibleSoup && rc.senseFlooding(buildRefineryLocation) && rc.senseRobotAtLocation(buildRefineryLocation) == null) {
 				buildRefineryLocation = centerOfVisibleSoup;
 				buildRefineryVisibleSoup = visibleSoup;
-				Debug.tlog("Retargetting refinery build location at " + buildRefineryLocation + " with " + buildRefineryVisibleSoup + " soup");
+				Debug.tlog("Retargetting buildRefineryLocation to " + buildRefineryLocation + " with " + buildRefineryVisibleSoup + " soup");
 			}
 
 			// if buildRefineryLocation is occupied or is flooded, revert to closest refinery
 			if (rc.canSenseLocation(buildRefineryLocation) && (rc.senseRobotAtLocation(buildRefineryLocation) != null || rc.senseFlooding(buildRefineryLocation))) {
 				buildRefineryLocation = null;
-				buildRefineryVisibleSoup = 0;
-				refineriesIndex = findClosestRefinery();
+				buildRefineryVisibleSoup = -1;
 				Debug.tlog("Refinery build location at " + buildRefineryLocation + " is flooded/occupied.");
+
+				refineriesIndex = findClosestRefinery();
 				Debug.tlog("Reverting to known refinery at " + refineries[refineriesIndex]);
-			} else {
-				// checks newly added refineries against refinery that we are BUILDING
-				int closestIndex = -1;
-				int closestDist = P_INF;
-				for (int i = refineriesChecked; i < refineriesSize; i++) {
-					int dist = here.distanceSquaredTo(refineries[i]);
-					if (dist < closestDist) {
-						closestIndex = i;
-						closestDist = dist;
-					}
-				}
-				refineriesChecked = refineriesSize;
-				if (closestDist <= REFINERY_DISTANCE_LIMIT) { // if close enough to use a newly found refinery
-					refineriesIndex = closestIndex;
-					buildRefineryLocation = null;
-					buildRefineryVisibleSoup = 0;
-					Debug.tlog("Retargetting from 'build' to newly found refinery at " + refineries[refineriesIndex]);
-				} else {
-					// move to/build refinery
-					if (here.isAdjacentTo(buildRefineryLocation)) {
-						Direction dir = here.directionTo(buildRefineryLocation);
-						if (rc.isReady() && rc.canBuildRobot(RobotType.REFINERY, dir)) {
-							rc.buildRobot(RobotType.REFINERY, dir);
-							teamSoup = rc.getTeamSoup();
-							Debug.tlog("Built refinery at " + buildRefineryLocation);
-							Communication.writeTransactionRefineryBuilt(buildRefineryLocation);
-							addToRefineries(buildRefineryLocation);
+				break;
+			}
 
-							buildRefineryLocation = null;
-							buildRefineryVisibleSoup = -1;
-
-						} else {
-							buildRefineryLocation = null;
-							buildRefineryVisibleSoup = -1;
-							Debug.tlog("Refinery build location at " + buildRefineryLocation + " is too high/low. Resetting it.");
-						}
-					} else {
-						Nav.bugNavigate(buildRefineryLocation);
-						Debug.tlog("Moving to buildRefineryLocation at " + buildRefineryLocation);
-					}
-					return;
+			// checks newly added refineries against refinery that we are BUILDING
+			int closestIndex = -1;
+			int closestDist = P_INF;
+			for (int i = refineriesChecked; i < refineriesSize; i++) {
+				int dist = here.distanceSquaredTo(refineries[i]);
+				if (dist < closestDist) {
+					closestIndex = i;
+					closestDist = dist;
 				}
 			}
+			refineriesChecked = refineriesSize;
+			if (closestDist <= REFINERY_DISTANCE_LIMIT) { // if close enough to use a newly found refinery
+				refineriesIndex = closestIndex;
+				buildRefineryLocation = null;
+				buildRefineryVisibleSoup = -1;
+				Debug.tlog("Retargetting from 'build' to newly found refinery at " + refineries[refineriesIndex]);
+				break;
+			}
+
+			// move to/build refinery
+			if (here.isAdjacentTo(buildRefineryLocation)) {
+				Direction dir = here.directionTo(buildRefineryLocation);
+				MapLocation loc = rc.adjacentLocation(dir);
+				if (!Nav.checkElevation(loc)) {
+					// if I cannot build a refinery here because of elevation difference
+					buildRefineryLocation = null;
+					buildRefineryVisibleSoup = -1;
+					Debug.tlog("Refinery build location at " + buildRefineryLocation + " is too high/low.");
+
+					refineriesIndex = findClosestRefinery();
+					Debug.tlog("Reverting to known refinery at " + refineries[refineriesIndex]);
+					break;
+				}
+
+				// all conditions for building refinery have been met
+				if (rc.isReady()) {
+					rc.buildRobot(RobotType.REFINERY, dir);
+					teamSoup = rc.getTeamSoup();
+					Debug.tlog("Building refinery at " + buildRefineryLocation);
+					Communication.writeTransactionRefineryBuilt(buildRefineryLocation);
+					addToRefineries(buildRefineryLocation);
+
+					buildRefineryLocation = null;
+					buildRefineryVisibleSoup = -1;
+					return;
+				} else {
+					Debug.tlog("Would build refinery at " + buildRefineryLocation + ", but not ready");
+					return;
+				}
+			} else {
+				if (rc.isReady()) {
+					Direction dir = Nav.bugNavigate(buildRefineryLocation);
+					if (dir != null) {
+						Debug.tlog("Moving to buildRefineryLocation at " + buildRefineryLocation + ", moved " + dir);
+					} else {
+						Debug.tlog("Moving to buildRefineryLocation at " + buildRefineryLocation + ", but no move found");
+					}
+				} else {
+					Debug.tlog("Moving to buildRefineryLocation at " + buildRefineryLocation + ", but not ready");
+				}
+			}
+
+			return; // always returns since we only want the "while" loop to run once
 		}
 
 		/*
@@ -277,11 +310,22 @@ public class BotMiner extends Globals {
 					refineriesIndex = -1;
 
 					Debug.tlog("Deposited " + soupCarrying + " soup at refinery at " + loc);
+				} else {
+					Debug.tlog("Would deposit soup at refinery at " + loc + ", but not ready");
 				}
 				return;
 			}
-			Nav.bugNavigate(loc);
-			Debug.tlog("Moving to refinery at " + loc);
+
+			if (rc.isReady()) {
+				Direction dir = Nav.bugNavigate(refineries[refineriesIndex]);
+				if (dir != null) {
+					Debug.tlog("Moving to refinery at " + refineries[refineriesIndex] + ", moved " + dir);
+				} else {
+					Debug.tlog("Moving to refinery at " + refineries[refineriesIndex] + ", but no move found");
+				}
+			} else {
+				Debug.tlog("Moving to refinery at " + refineries[refineriesIndex] + ", but not ready");
+			}
 			return;
 		}
 
@@ -319,25 +363,44 @@ public class BotMiner extends Globals {
 		}
 
 		/*
-		PLEASE REMIND RICHARD TO FILL THIS OUT
+		Miners do one of the following:
+		1. Try to go to soupDeposits if they know of one
+		2. Try to go to any soupClusters that they learned from Transactions
+		3. Explore the direction they were spawned in
 		*/
 
 		if (soupDeposit != null) {
 			if (rc.isReady()) {
-				Nav.bugNavigate(soupDeposit);
+				Direction dir = Nav.bugNavigate(soupDeposit);
+				if (dir != null) {
+					Debug.tlog("Moving to soupDeposit at " + soupDeposit + ", moved " + dir);
+				} else {
+					Debug.tlog("Moving to soupDeposit at " + soupDeposit + ", but no move found");
+				}
+			} else {
+				Debug.tlog("Moving to soupDeposit at " + soupDeposit + ", but not ready");
 			}
-			Debug.tlog("Moving to soupDeposit at " + soupDeposit);
-
+			return;
 		} else {
 			// head to soupClusterIndex
 			if (soupClusterIndex != -1) {
 				MapLocation loc = soupClusters[soupClusterIndex];
-				if (here.isAdjacentTo(loc) || here.equals(loc)) { // flag emptySoupClusters if no soup deposits are found
+				if (here.isAdjacentTo(loc) || here.equals(loc)) { // flag emptySoupClusters if no soup deposits are found at this soup cluster
 					emptySoupClusters[soupClusterIndex] = true;
 					soupClusterIndex = -1;
-				} else if (rc.isReady()) {
-					Debug.tlog("Moving to soupCluster at " + soupClusters[soupClusterIndex]);
-					Nav.bugNavigate(loc);
+					// do not return, instead try to explore
+				} else {
+					if (rc.isReady()) {
+						Direction dir = Nav.bugNavigate(loc);
+						if (dir != null) {
+							Debug.tlog("Moving to soupCluster at " + soupClusters[soupClusterIndex] + ", moved " + dir);
+						} else {
+							Debug.tlog("Moving to soupCluster at " + soupClusters[soupClusterIndex] + ", but no move found");
+						}
+					} else {
+						Debug.tlog("Moving to soupCluster at " + soupClusters[soupClusterIndex] + ", but not ready");
+					}
+					return;
 				}
 			}
 
@@ -345,13 +408,13 @@ public class BotMiner extends Globals {
 			if (rc.isReady()) {
 
 				Direction dir = Nav.bugNavigate(exploreLocation);
-				if (dir == null) {
-					Debug.tlog("Exploring " + exploreLocation + ", but could not move");
-				} else {
+				if (dir != null) {
 					Debug.tlog("Exploring " + exploreLocation + ", moved " + dir);
+				} else {
+					Debug.tlog("Exploring " + exploreLocation + ", but no move found");
 				}
 			} else {
-				Debug.tlog("Exploring " + exploreLocation + ", but is not ready");
+				Debug.tlog("Exploring " + exploreLocation + ", but not ready");
 			}
 		}
 	}

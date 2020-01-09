@@ -21,6 +21,15 @@ public class Nav extends Globals {
 		return Nav.onMap(loc) && rc.canMove(dir) && !rc.senseFlooding(loc);
 	}
 
+	/*
+	Assumes that we can sense this tile
+	Returns true if this tile's elevation is within +/-3 of our tile's elevation
+	Returns false otherwise
+	*/
+	public static boolean checkElevation (MapLocation loc) throws GameActionException {
+		return Math.abs(rc.senseElevation(loc) - myElevation) <= GameConstants.MAX_DIRT_DIFFERENCE;
+	}
+
 
 	/*
 	Tries to move in the target direction, or rotateLeft/rotateRight of it
@@ -185,7 +194,7 @@ public class Nav extends Globals {
 				bugLastWall = rc.adjacentLocation(curDir);
 			}
 		}
-		
+
 		return null;
 	}
 
