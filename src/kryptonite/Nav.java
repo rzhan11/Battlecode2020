@@ -19,22 +19,30 @@ public class Nav extends Globals {
 	Uses the bug pathfinding algorithm to navigate around obstacles towards a target MapLocation
 	Details here: https://www.cs.cmu.edu/~motionplanning/lecture/Chap2-Bug-Alg_howie.pdf
 	We are using an implementation of "Bug 2"
+
+	Returns the Direction we moved in
+	Returns null if did not move
 	*/
-	public static void bugNavigate (MapLocation target) throws GameActionException {
+	public static Direction bugNavigate (MapLocation target) throws GameActionException {
 		if (!target.equals(prevBugTarget)) {
 			prevBugTarget = target;
-			closestDistance = here.distanceSquaredTo(target) + 1;
+			closestDistance = here.distanceSquaredTo(target);
 		}
+
+		Direction moveDir = null;
 
 		Direction curDir = here.directionTo(target);
 		MapLocation curDest = rc.adjacentLocation(curDir);
-		int curDist = here.distanceSquaredTo(target);
+		int curDist = curDest.distanceSquaredTo(target);
 		if (rc.canMove(curDir) && !rc.senseFlooding(curDest) && curDist < closestDistance) {
 			rc.move(curDir);
+			closestDistance = Math.min(closestDistance, curDist);
+			moveDir = curDir;
 		} else {
 			int count = 1;
 			curDir = curDir.rotateLeft();
 			curDest = rc.adjacentLocation(curDir);
+			curDist = curDest.distanceSquaredTo(target);
 			while ((!rc.canMove(curDir) || rc.senseFlooding(curDest)) && count < 8) {
 				curDir = curDir.rotateLeft();
 				curDest = rc.adjacentLocation(curDir);
@@ -42,12 +50,12 @@ public class Nav extends Globals {
 			}
 			if (count < 8) {
 				rc.move(curDir);
+				closestDistance = Math.min(closestDistance, curDist);
+				moveDir = curDir;
 			}
 		}
-		if (curDist < closestDistance) {
-			closestDistance = curDist;
-		}
 
+		return moveDir;
 	}
 
 	/*
@@ -84,6 +92,7 @@ public class Nav extends Globals {
 		boolean[] dangerDirection = new boolean[size];
 		if (false) { //(actualSensorRadiusSquared >= 8) { // 5x5 square centered at 'here'
 			// remind Richard about this
+			// this is a smarter (but more costly) way to avoid water
 			/*
 			int[][] elevations = new int[5][5];
 			boolean[][] flooded = new boolean[5][5];

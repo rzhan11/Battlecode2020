@@ -4,18 +4,21 @@ import battlecode.common.*;
 
 public class BotMiner extends Globals {
 
-	final private static int REFINERY_DISTANCE_LIMIT = 64; // distance at which we try to use refineries
+	// the explorer's target location will be this far from the map edge
+	final private static int EXPLORER_EDGE_DISTANCE = 4;
+
+	// distance at which we try to use refineries
+	final private static int REFINERY_DISTANCE_LIMIT = 64;
 	final private static int MIN_SOUP_WRITE_SOUP_CLUSTER = 500;
 	final private static int MIN_SOUP_BUILD_REFINERY = 1000;
 
-	// private static MapLocation HQLocation;
-
-	// Miner moves in the direction that it was spawned in, until it sees a soup deposit or hits a map edge
-	// If it hits a map edge, it will rotate left the currentExploringDirection
+	// spawnDirection is the direction that this Miner was spawned by the HQ
+	private static Direction spawnDirection;
+	// the target location that this Miner wants to explore, based on spawnDirection
+	private static MapLocation exploreLocation;
 
 	public static boolean isSymmetryMiner = false;
 	public static MapLocation symmetryLocation;
-	private static Direction currentExploringDirection;
 
 	// a soup deposit is a single soup location
 	private static MapLocation soupDeposit = null;
@@ -50,24 +53,53 @@ public class BotMiner extends Globals {
 
 				// Do first turn code here
 				if (firstTurn) {
-					// identify HQ MapLocation
-					// for (RobotInfo ri: visibleAllies) {
-					// 	if (ri.team == us && ri.type == RobotType.HQ) {
-					// 		HQLocation = ri.location;
-					// 	}
-					// }
-					// if (HQLocation == null) {
-					// 	Debug.tlogi("ERROR: Failed sanity check - Cannot find HQLocation");
-					// } else {
-					// 	Debug.tlog("HQLocation: " + HQLocation);
-					// }
-					currentExploringDirection = HQLocation.directionTo(here);
+
+					int distanceToEastEdge = mapWidth - 1 - HQLocation.x;
+					int distanceToWestEdge = HQLocation.x;
+					int distanceToNorthEdge = mapHeight - 1 - HQLocation.y;
+					int distanceToSouthEdge = HQLocation.y;
+
+					spawnDirection = HQLocation.directionTo(here);
+
+					int change;
+					switch (spawnDirection) {
+						case NORTH:
+							exploreLocation = new MapLocation(HQLocation.x, mapHeight - 1 - EXPLORER_EDGE_DISTANCE);
+							break;
+						case EAST:
+							exploreLocation = new MapLocation(mapWidth - 1 - EXPLORER_EDGE_DISTANCE, HQLocation.y);
+							break;
+						case SOUTH:
+							exploreLocation = new MapLocation(HQLocation.x, EXPLORER_EDGE_DISTANCE);
+							break;
+						case WEST:
+							exploreLocation = new MapLocation(EXPLORER_EDGE_DISTANCE, HQLocation.y);
+							break;
+						case NORTHEAST:
+							change = Math.min(distanceToEastEdge, distanceToNorthEdge) - EXPLORER_EDGE_DISTANCE;
+							exploreLocation = new MapLocation(HQLocation.x + change, HQLocation.y + change);
+							break;
+						case SOUTHEAST:
+							change = Math.min(distanceToEastEdge, distanceToSouthEdge) - EXPLORER_EDGE_DISTANCE;
+							exploreLocation = new MapLocation(HQLocation.x + change, HQLocation.y - change);
+							break;
+						case SOUTHWEST:
+							change = Math.min(distanceToWestEdge, distanceToSouthEdge) - EXPLORER_EDGE_DISTANCE;
+							exploreLocation = new MapLocation(HQLocation.x - change, HQLocation.y - change);
+							break;
+						case NORTHWEST:
+							change = Math.min(distanceToWestEdge, distanceToNorthEdge) - EXPLORER_EDGE_DISTANCE;
+							exploreLocation = new MapLocation(HQLocation.x - change, HQLocation.y + change);
+							break;
+					}
+					Debug.log("exploreLocation: " + exploreLocation);
+
 
 					// store HQ as a refinery
 					addToRefineries(HQLocation);
 
 					//If this is the first robot made, designate that robot as the one to build the design school
-					if(currentExploringDirection.equals(directions[0])){
+					if(spawnDirection.equals(directions[0])){
 						designSchoolMaker = true;
 						designSchoolLocation = new MapLocation(HQLocation.x-1,HQLocation.y);
 					}
@@ -287,13 +319,7 @@ public class BotMiner extends Globals {
 		}
 
 		/*
-		OLD INFORMATION
-		if I have already found a soup deposit or I see a soup deposit
-			flag this event and bug-nav towards it
-		else
-			move in the currentExploringDirection if possible
-			if I encounter a map edge, rotateLeft the currentExploringDirection
-			if I encounter a water/elevation obstacle, bug-nav around it
+		PLEASE REMIND RICHARD TO FILL THIS OUT
 		*/
 
 		if (soupDeposit != null) {
@@ -315,39 +341,17 @@ public class BotMiner extends Globals {
 				}
 			}
 
-			// explore
+			// go to explore location
 			if (rc.isReady()) {
-				MapLocation dest = rc.adjacentLocation(currentExploringDirection);
-				// finds a Direction that points to a valid MapLocation
-				int count = 0; // technically not needed in non 1x1 maps
-				while (!Nav.onMap(dest) && count < 4) {
-					currentExploringDirection = currentExploringDirection.rotateLeft();
-					currentExploringDirection = currentExploringDirection.rotateLeft();
-					dest = rc.adjacentLocation(currentExploringDirection);
-					count++;
-				}
-				// currentExploringDirection = currentExploringDirection.rotateLeft();
-				// while (!rc.onTheMap(dest) && count < 4) {
-				// 	currentExploringDirection = currentExploringDirection.rotateLeft();
-				// 	currentExploringDirection = currentExploringDirection.rotateLeft();
-				// 	dest = rc.adjacentLocation(currentExploringDirection);
-				// 	count++;
-				// }
+				Debug.tlog("Exploring " + exploreLocation);
 
-				Debug.tlog("Exploring " + currentExploringDirection);
-
-				count = 0;
-				Direction curDir = currentExploringDirection;
-				while ((!rc.canMove(curDir) || rc.senseFlooding(dest)) && count < 8) {
-					curDir = curDir.rotateLeft();
-					dest = rc.adjacentLocation(curDir);
-					count++;
-				}
-				if (count < 8) {
-					rc.move(curDir);
+				Direction dir = Nav.bugNavigate(exploreLocation);
+				if (dir == null) {
+					Debug.tlog("Did not move");
+				} else {
+					Debug.tlog("Moved " + dir);
 				}
 			}
-			myElevation = rc.senseElevation(here);
 		}
 	}
 
