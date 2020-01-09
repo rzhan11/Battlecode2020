@@ -128,11 +128,15 @@ public class BotMiner extends Globals {
 		If we are not moving to/building a refinery
 			Check if soupDeposit is depleted or if we are carrying maximum soup
 				If either is true, target a refinery
-		If we are going to a refinery
+		If we are movging to a refinery
 			Check if there is a better one
 		*/
 		if (buildRefineryLocation == null) {
 			if (refineriesIndex == -1) {
+				if (soupDeposit != null && rc.canSenseLocation(soupDeposit)) {
+
+					Debug.tlog(soupDeposit + " " + rc.canSenseLocation(soupDeposit));
+				}
 				if (soupDeposit != null && rc.canSenseLocation(soupDeposit) && rc.senseSoup(soupDeposit) == 0) {
 					soupDeposit = null;
 					if (soupCarrying > 0) {
@@ -143,7 +147,7 @@ public class BotMiner extends Globals {
 					pickRefinery();
 				}
 			} else {
-				// checks newly added refineries
+				// checks newly added refineries against the refinery that we are MOVING to
 				int closestIndex = -1;
 				int closestDist = P_INF;
 				for (int i = refineriesChecked; i < refineriesSize; i++) {
@@ -153,8 +157,10 @@ public class BotMiner extends Globals {
 						closestDist = dist;
 					}
 				}
+				refineriesChecked = refineriesSize;
 				if (closestDist < here.distanceSquaredTo(refineries[refineriesIndex])) {
 					refineriesIndex = closestIndex;
+					Debug.tlog("Retargetting from 'move' to newly found refinery at " + refineries[refineriesIndex]);
 				}
 			}
 		}
@@ -174,12 +180,12 @@ public class BotMiner extends Globals {
 			// if buildRefineryLocation is occupied or is flooded, revert to closest refinery
 			if (rc.canSenseLocation(buildRefineryLocation) && (rc.senseRobotAtLocation(buildRefineryLocation) != null || rc.senseFlooding(buildRefineryLocation))) {
 				buildRefineryLocation = null;
-				buildRefineryVisibleSoup = buildRefineryVisibleSoup;
+				buildRefineryVisibleSoup = 0;
 				refineriesIndex = findClosestRefinery();
 				Debug.tlog("Refinery build location at " + buildRefineryLocation + " is flooded/occupied.");
 				Debug.tlog("Reverting to known refinery at " + refineries[refineriesIndex]);
 			} else {
-				// checks newly added refineries
+				// checks newly added refineries against refinery that we are BUILDING
 				int closestIndex = -1;
 				int closestDist = P_INF;
 				for (int i = refineriesChecked; i < refineriesSize; i++) {
@@ -189,9 +195,12 @@ public class BotMiner extends Globals {
 						closestDist = dist;
 					}
 				}
+				refineriesChecked = refineriesSize;
 				if (closestDist <= REFINERY_DISTANCE_LIMIT) { // if close enough to use a newly found refinery
 					refineriesIndex = closestIndex;
-					Debug.tlog("Retargetting to newly found refinery at " + refineries[refineriesIndex]);
+					buildRefineryLocation = null;
+					buildRefineryVisibleSoup = 0;
+					Debug.tlog("Retargetting from 'build' to newly found refinery at " + refineries[refineriesIndex]);
 				} else {
 					// move to/build refinery
 					if (here.isAdjacentTo(buildRefineryLocation)) {
@@ -234,6 +243,7 @@ public class BotMiner extends Globals {
 				if (rc.isReady()) {
 					rc.depositSoup(here.directionTo(loc), soupCarrying);
 					refineriesIndex = -1;
+
 					Debug.tlog("Deposited " + soupCarrying + " soup at refinery at " + loc);
 				}
 				return;

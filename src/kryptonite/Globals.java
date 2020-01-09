@@ -96,6 +96,7 @@ public class Globals {
 		Debug.tlog("roundNum: " + roundNum);
 		Debug.tlog("ID: " + myID);
 		Debug.tlog("Location: " + here);
+		Debug.tlog("actualSensorRadiusSquared: " + actualSensorRadiusSquared);
 		Debug.tlog("Cooldown: " + rc.getCooldownTurns());
 
 		myElevation = rc.senseElevation(here);
