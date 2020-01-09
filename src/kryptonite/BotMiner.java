@@ -343,14 +343,15 @@ public class BotMiner extends Globals {
 
 			// go to explore location
 			if (rc.isReady()) {
-				Debug.tlog("Exploring " + exploreLocation);
 
 				Direction dir = Nav.bugNavigate(exploreLocation);
 				if (dir == null) {
-					Debug.tlog("Did not move");
+					Debug.tlog("Exploring " + exploreLocation + ", but could not move");
 				} else {
-					Debug.tlog("Moved " + dir);
+					Debug.tlog("Exploring " + exploreLocation + ", moved " + dir);
 				}
+			} else {
+				Debug.tlog("Exploring " + exploreLocation + ", but is not ready");
 			}
 		}
 	}

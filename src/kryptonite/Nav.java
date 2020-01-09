@@ -4,9 +4,6 @@ import battlecode.common.*;
 
 public class Nav extends Globals {
 
-	private static MapLocation prevBugTarget = null;
-	private static int closestDistance;
-
 	/*
 	NOTE: This is a temporary method that is in place of rc.onTheMap() since I believe there is an engine bug
 	Please DO NOT USE this method if possible - if you see places that use it, please let Richard know
@@ -16,46 +13,180 @@ public class Nav extends Globals {
 	}
 
 	/*
+	Returns true if we can move in a direction to a tile that is not occupied and not flooded
+	Returns false otherwise
+	*/
+	public static boolean checkDirectionMoveable (Direction dir) throws GameActionException {
+		MapLocation loc = rc.adjacentLocation(dir);
+		return Nav.onMap(loc) && rc.canMove(dir) && !rc.senseFlooding(loc);
+	}
+
+
+	/*
+	Tries to move in the target direction, or rotateLeft/rotateRight of it
+	Does not move into flooded tiles
+	Returns the Direction that we moved in
+	Returns null if did not move
+	*/
+	public static Direction tryMoveInDirection (Direction dir) throws GameActionException {
+		if (checkDirectionMoveable(dir)) {
+			rc.move(dir);
+			return dir;
+		}
+		Direction leftDir = dir.rotateLeft();
+		if (checkDirectionMoveable(leftDir)) {
+			rc.move(leftDir);
+			return leftDir;
+		}
+		Direction rightDir = dir.rotateRight();
+		if (checkDirectionMoveable(rightDir)) {
+			rc.move(rightDir);
+			return rightDir;
+		}
+		return null;
+	}
+
+	/*
+	---------------
+	BUG PATHFINDING
+	---------------
 	Uses the bug pathfinding algorithm to navigate around obstacles towards a target MapLocation
 	Details here: https://www.cs.cmu.edu/~motionplanning/lecture/Chap2-Bug-Alg_howie.pdf
-	We are using an implementation of "Bug 2"
 
+	Taken/adapted from TheDuck314 Battlecode 2016
+
+	Assumes that we are ready to move
 	Returns the Direction we moved in
 	Returns null if did not move
 	*/
+
+
+	private static MapLocation bugTarget = null;
+
+	private static boolean bugTracing = false;
+	private static MapLocation bugLastWall = null;
+	private static int bugClosestDistanceOnWall = P_INF;
+	private static int bugTurnsWithoutWall = 0;
+	private static boolean bugRotateLeft = true; // whether we are rotating left or right
+	private static boolean[][] bugVisitedLocations;
+
 	public static Direction bugNavigate (MapLocation target) throws GameActionException {
-		if (!target.equals(prevBugTarget)) {
-			prevBugTarget = target;
-			closestDistance = here.distanceSquaredTo(target);
+		if (!target.equals(bugTarget)) {
+			bugTarget = target;
+			bugTracing = false;
 		}
 
-		Direction moveDir = null;
+		if (here.equals(bugTarget)) {
+			return null;
+		}
 
-		Direction curDir = here.directionTo(target);
-		MapLocation curDest = rc.adjacentLocation(curDir);
-		int curDist = curDest.distanceSquaredTo(target);
-		if (rc.canMove(curDir) && !rc.senseFlooding(curDest) && curDist < closestDistance) {
-			rc.move(curDir);
-			closestDistance = Math.min(closestDistance, curDist);
-			moveDir = curDir;
-		} else {
-			int count = 1;
-			curDir = curDir.rotateLeft();
-			curDest = rc.adjacentLocation(curDir);
-			curDist = curDest.distanceSquaredTo(target);
-			while ((!rc.canMove(curDir) || rc.senseFlooding(curDest)) && count < 8) {
-				curDir = curDir.rotateLeft();
-				curDest = rc.adjacentLocation(curDir);
-				count++;
+		Direction destDir = here.directionTo(bugTarget);
+		if (!bugTracing) { // try to go directly towards the target
+			Direction tryMoveResult = tryMoveInDirection(destDir);
+			if (tryMoveResult != null) {
+				return tryMoveResult;
+			} else {
+				bugStartTracing();
 			}
-			if (count < 8) {
-				rc.move(curDir);
-				closestDistance = Math.min(closestDistance, curDist);
-				moveDir = curDir;
+		} else { // we are on obstacle, trying to get off of it
+			if (here.distanceSquaredTo(bugTarget) < bugClosestDistanceOnWall) {
+				Direction tryMoveResult = tryMoveInDirection(destDir);
+				if (tryMoveResult != null) { // we got off of the obstacle
+					bugTracing = false;
+					return tryMoveResult;
+				}
 			}
 		}
+
+		Direction moveDir = bugTraceMove(false);
+
+	    if (bugTurnsWithoutWall >= 2) {
+	    	bugTracing = false;
+	    }
 
 		return moveDir;
+	}
+
+	/*
+	Runs if we just encoutnered an obstacle
+	*/
+	public static void bugStartTracing() throws GameActionException {
+		bugTracing = true;
+		bugVisitedLocations = new boolean[MAX_MAP_SIZE][MAX_MAP_SIZE];
+
+		bugClosestDistanceOnWall = here.distanceSquaredTo(bugTarget);
+		bugTurnsWithoutWall = 0;
+
+		Direction destDir = here.directionTo(bugTarget);
+
+		Direction leftDir = destDir;
+		MapLocation leftDest = rc.adjacentLocation(leftDir);
+		int leftDist = Integer.MAX_VALUE;
+		for (int i = 0; i < 8; ++i) {
+			leftDir = leftDir.rotateLeft();
+			if (checkDirectionMoveable(leftDir)) {
+				leftDist = leftDest.distanceSquaredTo(bugTarget);
+				break;
+			}
+		}
+
+		Direction rightDir = destDir;
+		MapLocation rightDest = rc.adjacentLocation(rightDir);
+		int rightDist = Integer.MAX_VALUE;
+		for (int i = 0; i < 8; ++i) {
+			rightDir = rightDir.rotateRight();
+			if (checkDirectionMoveable(rightDir)) {
+				rightDist = rightDest.distanceSquaredTo(bugTarget);
+				break;
+			}
+		}
+
+		if (leftDist < rightDist) {
+			bugRotateLeft = true;
+			bugLastWall = rc.adjacentLocation(leftDir.rotateRight());
+		} else {
+			bugRotateLeft = false;
+			bugLastWall = rc.adjacentLocation(rightDir.rotateLeft());
+		}
+	}
+
+	/*
+	Returns the Direction that we moved in
+	Returns null if we did not move
+	*/
+	public static Direction bugTraceMove(boolean recursed) throws GameActionException {
+		Direction curDir = here.directionTo(bugLastWall);
+		bugVisitedLocations[here.x % MAX_MAP_SIZE][here.y % MAX_MAP_SIZE] = true;
+		if (rc.canMove(curDir)) {
+			bugTurnsWithoutWall += 1;
+		} else {
+			bugTurnsWithoutWall = 0;
+		}
+
+		for (int i = 0; i < 8; ++i) {
+			if (bugRotateLeft) {
+				curDir = curDir.rotateLeft();
+			} else {
+				curDir = curDir.rotateRight();
+			}
+			MapLocation dirLoc = rc.adjacentLocation(curDir);
+			if (!Nav.onMap(dirLoc) && !recursed) {
+				// if we hit the edge of the map, reverse direction and recurse
+				bugRotateLeft = !bugRotateLeft;
+				return bugTraceMove(true);
+			}
+			if (checkDirectionMoveable(curDir)) {
+				rc.move(curDir);
+				if (bugVisitedLocations[here.x % MAX_MAP_SIZE][here.y % MAX_MAP_SIZE]) {
+					bugTracing = false;
+				}
+				return curDir;
+			} else {
+				bugLastWall = rc.adjacentLocation(curDir);
+			}
+		}
+		
+		return null;
 	}
 
 	/*
@@ -131,7 +262,7 @@ public class Nav extends Globals {
 			index = 0;
 			for (Direction dir: directions) {
 				MapLocation loc = rc.adjacentLocation(dir);
-				if (Nav.onMap(loc) && rc.senseFlooding(loc)) {
+				if (checkDirectionMoveable(dir)) {
 					int ii = index;
 					dangerDirection[ii] |= elevationDirection[ii] <= waterLevel;
 					ii = (index + size - 1) % size;
