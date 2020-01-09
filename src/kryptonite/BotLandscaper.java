@@ -43,8 +43,10 @@ public class BotLandscaper extends Globals {
 					for(int i = 0; i < 5; i++) for(int j = 0; j < 5; j++) {
 						MapLocation newl = templ.translate(-1 * i, -1 * j);
 						if (isInMap(newl) && !HQLocation.equals(newl) && !inArray(digSpots, newl, digSpotsLength)) {
-							smallWall[index] = newl;
-							index++;
+                            // HARDCODED
+                            if(i == 3 && j == 2) continue;
+                            smallWall[index] = newl;
+                            index++;
 						}
 					}
 					smallWallLength = index;
