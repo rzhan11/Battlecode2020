@@ -225,10 +225,13 @@ public class BotLandscaper extends Globals {
                 if(currentStep == 2) {
                     Debug.ttlog("MOVING");
                     Direction d = getClockwiseDir();
-                    // TODO: Make sure Landscapers do not get stuck in their path. 
+                    // TODO: Make sure Landscapers do not get stuck in their path.
                     if(rc.canMove(d)) {
                         currentStep = 0;
                         rc.move(d);
+                    }
+                    if(rc.senseElevation(here.add(d)) + 3 < rc.senseElevation(here)) {
+                        currentStep = 0;
                     }
                 }
             }
