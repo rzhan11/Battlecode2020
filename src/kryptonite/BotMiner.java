@@ -54,42 +54,46 @@ public class BotMiner extends Globals {
 				// Do first turn code here
 				if (firstTurn) {
 
-					int distanceToEastEdge = mapWidth - 1 - HQLocation.x;
-					int distanceToWestEdge = HQLocation.x;
-					int distanceToNorthEdge = mapHeight - 1 - HQLocation.y;
-					int distanceToSouthEdge = HQLocation.y;
-
 					spawnDirection = HQLocation.directionTo(here);
+
+					// explore horizontal/vertical lower/middle/upper bound
+					int hLowerBound = EXPLORER_EDGE_DISTANCE;
+					int hMiddleBound = mapWidth / 2;
+					int hUpperBound = mapWidth - 1 - EXPLORER_EDGE_DISTANCE;
+					int vLowerBound = EXPLORER_EDGE_DISTANCE;
+					int vMiddleBound = mapHeight / 2;
+					int vUpperBound = mapHeight - 1 - EXPLORER_EDGE_DISTANCE;
+
+					// int distanceToEastEdge = mapWidth - 1 - HQLocation.x;
+					// int distanceToWestEdge = HQLocation.x;
+					// int distanceToNorthEdge = mapHeight - 1 - HQLocation.y;
+					// int distanceToSouthEdge = HQLocation.y;
 
 					int change;
 					switch (spawnDirection) {
 						case NORTH:
-							exploreLocation = new MapLocation(HQLocation.x, mapHeight - 1 - EXPLORER_EDGE_DISTANCE);
+							exploreLocation = new MapLocation(hMiddleBound, vUpperBound);
 							break;
 						case EAST:
-							exploreLocation = new MapLocation(mapWidth - 1 - EXPLORER_EDGE_DISTANCE, HQLocation.y);
+							exploreLocation = new MapLocation(hUpperBound, vMiddleBound);
 							break;
 						case SOUTH:
-							exploreLocation = new MapLocation(HQLocation.x, EXPLORER_EDGE_DISTANCE);
+							exploreLocation = new MapLocation(hMiddleBound, vLowerBound);
 							break;
 						case WEST:
-							exploreLocation = new MapLocation(EXPLORER_EDGE_DISTANCE, HQLocation.y);
+							exploreLocation = new MapLocation(hLowerBound, vMiddleBound);
 							break;
 						case NORTHEAST:
-							change = Math.min(distanceToEastEdge, distanceToNorthEdge) - EXPLORER_EDGE_DISTANCE;
-							exploreLocation = new MapLocation(HQLocation.x + change, HQLocation.y + change);
+							exploreLocation = new MapLocation(hUpperBound, vUpperBound);
 							break;
 						case SOUTHEAST:
-							change = Math.min(distanceToEastEdge, distanceToSouthEdge) - EXPLORER_EDGE_DISTANCE;
-							exploreLocation = new MapLocation(HQLocation.x + change, HQLocation.y - change);
+							exploreLocation = new MapLocation(hUpperBound, vLowerBound);
 							break;
 						case SOUTHWEST:
-							change = Math.min(distanceToWestEdge, distanceToSouthEdge) - EXPLORER_EDGE_DISTANCE;
-							exploreLocation = new MapLocation(HQLocation.x - change, HQLocation.y - change);
+							exploreLocation = new MapLocation(hLowerBound, vLowerBound);
 							break;
 						case NORTHWEST:
-							change = Math.min(distanceToWestEdge, distanceToNorthEdge) - EXPLORER_EDGE_DISTANCE;
-							exploreLocation = new MapLocation(HQLocation.x - change, HQLocation.y + change);
+							exploreLocation = new MapLocation(hLowerBound, vUpperBound);
 							break;
 					}
 					Debug.log("exploreLocation: " + exploreLocation);
