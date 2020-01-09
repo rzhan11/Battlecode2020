@@ -25,7 +25,7 @@ public class BotLandscaper extends Globals {
 						Debug.tlog("HQ is located at " + HQLocation);
 					}
 
-					digSpots = new MapLocation[15];
+					digSpots = new MapLocation[16];
 					MapLocation templ = HQLocation.translate(3,3);
 					int index = 0;
 					for(int i = 0; i < 4; i++) for(int j = 0; j < 4; j++) {
