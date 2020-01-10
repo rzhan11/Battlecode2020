@@ -48,11 +48,12 @@ public class BotHQ extends Globals {
 
 		//if explorer miners have been build and have enough money, build a BuilderMiner
 		if(true) {
-			if (explorerMinerCount >= 8 && !madeBuilderMiner && teamSoup >= RobotType.MINER.cost && rc.isReady()) {
+			if (explorerMinerCount >= 8 && !madeBuilderMiner && teamSoup >= (RobotType.MINER.cost + 1) && rc.isReady()) {
 				//try building
 				for (int k = 0; k < 8; k++) {
 					if (rc.canBuildRobot(RobotType.MINER, directions[k])) {
 						rc.buildRobot(RobotType.MINER, directions[k]);
+						teamSoup = rc.getTeamSoup();
 						madeBuilderMiner = true;
 
 						//make transaction
@@ -83,13 +84,13 @@ public class BotHQ extends Globals {
 	Does not affect HQ yet - Remind Richard
 	*/
 	public static void locateNearbySoup () throws GameActionException {
-		MapLocation[] soups = new MapLocation[sensableDirections.length];
+		MapLocation[] soups = new MapLocation[senseDirections.length];
 		int size = 0;
 
 		int totalX = 0;
 		int totalY = 0;
 		int visibleSoup = 0;
-		for (int[] dir: sensableDirections) {
+		for (int[] dir: senseDirections) {
 			MapLocation loc = here.translate(dir[0], dir[1]);
 			if (rc.canSenseLocation(loc) && rc.senseSoup(loc) > 0) {
 				totalX += loc.x;
