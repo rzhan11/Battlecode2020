@@ -30,3 +30,17 @@ battlecode-scaffold.iws
 .classpath
 .project
 .settings/
+
+
+.gradle/
+.idea/
+build/
+build.gradle
+client/
+gradle/
+gradle.properties
+gradlew
+gradlew.bat
+matches/
+test/
+version.txt
