@@ -525,15 +525,19 @@ public class BotMiner extends Globals {
 		If we find a group of soupDeposits that satisfy the conditions for the soup cluster, submit a Transaction that signals this
 	*/
 	public static void locateSoup () throws GameActionException {
-		MapLocation[] soups = new MapLocation[sensableDirections.length];
+		MapLocation[] soups = new MapLocation[senseDirections.length];
 		int size = 0;
 
 		int totalX = 0;
 		int totalY = 0;
 		visibleSoup = 0;
-		for (int[] dir: sensableDirections) {
+		
+		for (int[] dir: senseDirections) {
+			if (actualSensorRadiusSquared < dir[2]) {
+				break;
+			}
 			MapLocation loc = here.translate(dir[0], dir[1]);
-			if (inMap(loc) && rc.canSenseLocation(loc) && rc.senseSoup(loc) > 0) {
+			if (rc.canSenseLocation(loc) && rc.senseSoup(loc) > 0) {
 				totalX += loc.x;
 				totalY += loc.y;
 				visibleSoup += rc.senseSoup(loc);
@@ -542,6 +546,7 @@ public class BotMiner extends Globals {
 				size++;
 			}
 		}
+
 		if (size == 0) {
 			return;
 		}
@@ -644,6 +649,9 @@ public class BotMiner extends Globals {
 		Debug.tlog("Targetting far refinery at " + refineries[refineriesIndex]);
 	}
 
+	/*
+	Remind Richard to do stuff about this
+	*/
 	public static void symmtryMinerTurn () {
 		Debug.tlog("Symmetry miner turn");
 	}

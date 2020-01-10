@@ -24,7 +24,7 @@ public class Globals {
 	public static RobotType myType;
 	public static int baseSensorRadiusSquared;
 
-	public static int[][] sensableDirections = null; // stores (dx, dy, magnitude) of locations that can be sensed
+	public static int[][] senseDirections = null; // stores (dx, dy, magnitude) of locations that can be sensed
 
 	public static int mapWidth;
 	public static int mapHeight;
@@ -69,7 +69,7 @@ public class Globals {
 		myID = rc.getID();
 		myType = rc.getType();
 		baseSensorRadiusSquared = myType.sensorRadiusSquared;
-		sensableDirections = calculateSensableDirections(baseSensorRadiusSquared);
+		senseDirections = HardCode.getSenseDirections(myType); //calculateSenseDirections(baseSensorRadiusSquared);
 
 		mapWidth = rc.getMapWidth();
 		mapHeight = rc.getMapHeight();
@@ -167,7 +167,7 @@ public class Globals {
 		Clock.yield();
 	}
 
-	public static int[][] calculateSensableDirections(int sensorRadiusSquared) {
+	public static int[][] calculateSenseDirections(int sensorRadiusSquared) {
 		int maxRadius = 6; // 6 for HQ sensor radius of 48
 
 		int[] maxdy = new int[maxRadius + 1];
@@ -216,5 +216,12 @@ public class Globals {
 	*/
 	public static boolean inMap(MapLocation ml) {
 		return ml.x >= 0 && ml.x < mapWidth && ml.y >= 0 && ml.y < mapHeight;
+	}
+
+	/*
+	Useful for ring structures
+	*/
+	public static int maxXYDistance(MapLocation ml1, MapLocation ml2) {
+		return Math.max(Math.abs(ml1.x - ml2.x), Math.abs(ml1.y - ml2.y));
 	}
 }
