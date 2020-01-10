@@ -24,23 +24,47 @@ public class Nav extends Globals {
 
 	/*
 	Tries to move in the target direction, or rotateLeft/rotateRight of it
+	Ignores flooded tiles
+	Returns the Direction that we moved in
+	Returns null if did not move
+	*/
+	public static Direction tryMoveInDirectionDrone (Direction dir) throws GameActionException {
+		if (rc.canMove(dir)) {
+			Actions.doMove(dir);
+			return dir;
+		}
+		Direction leftDir = dir.rotateLeft();
+		if (rc.canMove(leftDir)) {
+			Actions.doMove(leftDir);
+			return leftDir;
+		}
+		Direction rightDir = dir.rotateRight();
+		if (rc.canMove(rightDir)) {
+			Actions.doMove(rightDir);
+			return rightDir;
+		}
+		return null;
+	}
+
+	/*
+	Tries to move in the target direction, or rotateLeft/rotateRight of it
 	Does not move into flooded tiles
 	Returns the Direction that we moved in
 	Returns null if did not move
 	*/
 	public static Direction tryMoveInDirection (Direction dir) throws GameActionException {
 		if (checkDirectionMoveable(dir)) {
-			rc.move(dir);
+			Actions.doMove(dir);
 			return dir;
 		}
 		Direction leftDir = dir.rotateLeft();
 		if (checkDirectionMoveable(leftDir)) {
-			rc.move(leftDir);
+			Actions.doMove(leftDir);
 			return leftDir;
 		}
 		Direction rightDir = dir.rotateRight();
 		if (checkDirectionMoveable(rightDir)) {
-			rc.move(rightDir);
+			Actions.doMove(rightDir);
 			return rightDir;
 		}
 		return null;
@@ -176,7 +200,7 @@ public class Nav extends Globals {
 				return bugTraceMove(true);
 			}
 			if (checkDirectionMoveable(curDir)) {
-				rc.move(curDir);
+				Actions.doMove(curDir);
 				if (bugVisitedLocations[here.x % MAX_MAP_SIZE][here.y % MAX_MAP_SIZE]) {
 					bugTracing = false;
 				}
@@ -295,7 +319,7 @@ public class Nav extends Globals {
 			if (bestIndex == -1) {
 				Debug.tlog("No safe directions. I am dying to water! :(");
 			} else {
-				rc.move(directions[bestIndex]);
+				Actions.doMove(directions[bestIndex]);
 				return true;
 			}
 		}

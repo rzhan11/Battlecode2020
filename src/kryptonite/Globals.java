@@ -16,9 +16,10 @@ public class Globals {
 	Constants that will never change
 	*/
 	public static RobotController rc;
-	public static Team us;
 	public static int spawnRound; // the first round this robot was called through RobotPlayer.java
+	public static Team us;
 	public static Team them;
+	public static Team cowTeam;
 	public static int myID;
 	public static RobotType myType;
 	public static int baseSensorRadiusSquared;
@@ -53,6 +54,8 @@ public class Globals {
 	public static boolean extremePollution; // when
 
 	public static RobotInfo[] visibleAllies = null;
+	public static RobotInfo[] visibleEnemies = null;
+	public static RobotInfo[] visibleCows = null;
 
 	public static int oldTransactionsIndex = 1;
 
@@ -61,6 +64,7 @@ public class Globals {
 
 		us = rc.getTeam();
 		them = us.opponent();
+		cowTeam = Team.NEUTRAL;
 
 		myID = rc.getID();
 		myType = rc.getType();
@@ -106,6 +110,8 @@ public class Globals {
 		printMyInfo();
 
 		visibleAllies = rc.senseNearbyRobots(-1, us); // -1 uses all robots within sense radius
+		visibleEnemies = rc.senseNearbyRobots(-1, them); // -1 uses all robots within sense radius
+		visibleCows = rc.senseNearbyRobots(-1, cowTeam); // -1 uses all robots within sense radius
 
 		Communication.readTransactions(roundNum - 1);
 

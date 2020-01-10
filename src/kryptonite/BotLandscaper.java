@@ -178,7 +178,7 @@ public class BotLandscaper extends Globals {
 				}
 				else {
 				    Debug.ttlog("ROTATING CLOCKWISE");
-					if(rc.canMove(d)) rc.move(d);
+					if(rc.canMove(d)) Actions.doMove(d);
  				}
 			}
 		}
@@ -201,7 +201,7 @@ public class BotLandscaper extends Globals {
                         if(rc.canMove(d)) {
                             currentRing = 1;
                             Debug.ttlog("MOVING TO 6x6 RING");
-                            rc.move(d);
+                            Actions.doMove(d);
                         }
                     }
                 }
@@ -216,7 +216,7 @@ public class BotLandscaper extends Globals {
                             currentRing = 2;
                             Debug.ttlog("MOVING TO 7x7 RING");
                             currentStep = 0;
-                            rc.move(d);
+                            Actions.doMove(d);
                         }
                     }
                 }
@@ -257,7 +257,7 @@ public class BotLandscaper extends Globals {
                     // TODO: Make sure Landscapers do not get stuck in their path.
                     if(rc.canMove(d)) {
                         currentStep = 0;
-                        rc.move(d);
+                        Actions.doMove(d);
                     }
                     if(rc.senseElevation(here.add(d)) + 3 < rc.senseElevation(here)) {
                         currentStep = 0;
@@ -301,7 +301,7 @@ public class BotLandscaper extends Globals {
 	}
 
 	private static void landscaperMove(Direction d) throws GameActionException {
-		if(rc.canMove(d)) rc.move(d);
+		if(rc.canMove(d)) Actions.doMove(d);
 		else if(rc.senseElevation(here.add(d)) > 3 + rc.senseElevation(here))
 			if(rc.canDigDirt(d)) rc.digDirt(d);
 		else
