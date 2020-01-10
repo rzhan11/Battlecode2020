@@ -4,7 +4,6 @@ import battlecode.common.*;
 
 public class BotLandscaper extends Globals {
 
-	private static MapLocation HQLocation;
 	private static MapLocation[] digSpots, smallWall, largeWall, completed;
 	private static int digSpotsLength, smallWallLength, largeWallLength, smallWallDepth,
             completedLength, currentRing = -1, currentStep;
@@ -14,22 +13,13 @@ public class BotLandscaper extends Globals {
 			try {
 				Globals.update();
 				if (firstTurn) {
-					// Identify HQ Location and Number of Prior Landscapers
-					for (RobotInfo ri: visibleAllies) {
-						if (ri.team == us && ri.type == RobotType.HQ) HQLocation = ri.location;
-					}
-					if (HQLocation == null) {
-						Debug.tlogi("ERROR: Failed sanity check - Cannot find HQLocation");
-					} else {
-						Debug.tlog("HQ is located at " + HQLocation);
-					}
 
 					digSpots = new MapLocation[16];
 					MapLocation templ = HQLocation.translate(3,3);
 					int index = 0;
 					for(int i = 0; i < 4; i++) for(int j = 0; j < 4; j++) {
 						MapLocation newl = templ.translate(-2*i, -2*j);
-						if(isInMap(newl) && !HQLocation.equals(newl)) {
+						if(inMap(newl) && !HQLocation.equals(newl)) {
 							digSpots[index] = newl;
 							index++;
 						}
@@ -42,7 +32,7 @@ public class BotLandscaper extends Globals {
 					templ = HQLocation.translate(2, 2);
 					for(int i = 0; i < 5; i++) for(int j = 0; j < 5; j++) {
 						MapLocation newl = templ.translate(-1 * i, -1 * j);
-						if (isInMap(newl) && !HQLocation.equals(newl) && !inArray(digSpots, newl, digSpotsLength)) {
+						if (inMap(newl) && !HQLocation.equals(newl) && !inArray(digSpots, newl, digSpotsLength)) {
                             // HARDCODED
                             if(i == 3 && j == 2) continue;
                             smallWall[index] = newl;
@@ -59,7 +49,7 @@ public class BotLandscaper extends Globals {
 					templ = HQLocation.translate(4, 4);
 					for(int i = 0; i < 2; i++) for(int j = 0; j < 9; j++) {
 						MapLocation newl = templ.translate(-1*i, -1*j);
-						if(isInMap(newl) && !inArray(digSpots, newl, digSpotsLength)) {
+						if(inMap(newl) && !inArray(digSpots, newl, digSpotsLength)) {
 							largeWall[index] = newl;
 							index++;
 						}
@@ -67,7 +57,7 @@ public class BotLandscaper extends Globals {
 					templ = HQLocation.translate(-4, -4);
 					for(int i = 0; i < 2; i++) for(int j = 0; j < 9; j++) {
 						MapLocation newl = templ.translate(i, j);
-						if(isInMap(newl) && !inArray(digSpots, newl, digSpotsLength)) {
+						if(inMap(newl) && !inArray(digSpots, newl, digSpotsLength)) {
 							largeWall[index] = newl;
 							index++;
 						}
@@ -75,7 +65,7 @@ public class BotLandscaper extends Globals {
 					templ = HQLocation.translate(2, 4);
 					for(int i = 0; i < 5; i++) for(int j = 0; j < 2; j++) {
 						MapLocation newl = templ.translate(-1*i, -1*j);
-						if(isInMap(newl) && !inArray(digSpots, newl, digSpotsLength)) {
+						if(inMap(newl) && !inArray(digSpots, newl, digSpotsLength)) {
 							largeWall[index] = newl;
 							index++;
 						}
@@ -83,7 +73,7 @@ public class BotLandscaper extends Globals {
 					templ = HQLocation.translate(2, -4);
 					for(int i = 0; i < 5; i++) for(int j = 0; j < 2; j++) {
 						MapLocation newl = templ.translate(-1*i, j);
-						if(isInMap(newl) && !inArray(digSpots, newl, digSpotsLength)) {
+						if(inMap(newl) && !inArray(digSpots, newl, digSpotsLength)) {
 							largeWall[index] = newl;
 							index++;
 						}

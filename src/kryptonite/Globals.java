@@ -194,7 +194,7 @@ public class Globals {
 		return temp;
 	}
 
-	public static boolean isInMap(MapLocation ml) {
+	public static boolean inMap(MapLocation ml) {
 		return ml.x >= 0 && ml.x < mapWidth && ml.y >= 0 && ml.y < mapHeight;
 	}
 }

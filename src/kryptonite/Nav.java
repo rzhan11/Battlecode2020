@@ -5,20 +5,12 @@ import battlecode.common.*;
 public class Nav extends Globals {
 
 	/*
-	NOTE: This is a temporary method that is in place of rc.onTheMap() since I believe there is an engine bug
-	Please DO NOT USE this method if possible - if you see places that use it, please let Richard know
-	*/
-	public static boolean onMap (MapLocation loc) {
-		return 0 <= loc.x && loc.x < mapWidth && 0 <= loc.y && loc.y < mapHeight;
-	}
-
-	/*
 	Returns true if we can move in a direction to a tile that is not occupied and not flooded
 	Returns false otherwise
 	*/
 	public static boolean checkDirectionMoveable (Direction dir) throws GameActionException {
 		MapLocation loc = rc.adjacentLocation(dir);
-		return Nav.onMap(loc) && rc.canMove(dir) && !rc.senseFlooding(loc);
+		return inMap(loc) && rc.canMove(dir) && !rc.senseFlooding(loc);
 	}
 
 	/*
@@ -29,7 +21,6 @@ public class Nav extends Globals {
 	public static boolean checkElevation (MapLocation loc) throws GameActionException {
 		return Math.abs(rc.senseElevation(loc) - myElevation) <= GameConstants.MAX_DIRT_DIFFERENCE;
 	}
-
 
 	/*
 	Tries to move in the target direction, or rotateLeft/rotateRight of it
@@ -179,7 +170,7 @@ public class Nav extends Globals {
 				curDir = curDir.rotateRight();
 			}
 			MapLocation dirLoc = rc.adjacentLocation(curDir);
-			if (!Nav.onMap(dirLoc) && !recursed) {
+			if (!inMap(dirLoc) && !recursed) {
 				// if we hit the edge of the map, reverse direction and recurse
 				bugRotateLeft = !bugRotateLeft;
 				return bugTraceMove(true);
@@ -212,7 +203,7 @@ public class Nav extends Globals {
 		boolean danger = false;
 		for (Direction dir: directions) {
 			MapLocation loc = rc.adjacentLocation(dir);
-			if (Nav.onMap(loc) && rc.senseFlooding(loc)) {
+			if (inMap(loc) && rc.senseFlooding(loc)) {
 				danger = true;
 				break;
 			}
@@ -259,7 +250,7 @@ public class Nav extends Globals {
 			int index = 0;
 			for (Direction dir: directions) {
 				MapLocation loc = rc.adjacentLocation(dir);
-				if (Nav.onMap(loc)) {
+				if (inMap(loc)) {
 					elevationDirection[index] = rc.senseElevation(loc);
 				} else {
 					elevationDirection[index] = N_INF;

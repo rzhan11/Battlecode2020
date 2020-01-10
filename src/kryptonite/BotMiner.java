@@ -533,7 +533,7 @@ public class BotMiner extends Globals {
 		visibleSoup = 0;
 		for (int[] dir: sensableDirections) {
 			MapLocation loc = here.translate(dir[0], dir[1]);
-			if (rc.canSenseLocation(loc) && rc.senseSoup(loc) > 0) {
+			if (inMap(loc) && rc.canSenseLocation(loc) && rc.senseSoup(loc) > 0) {
 				totalX += loc.x;
 				totalY += loc.y;
 				visibleSoup += rc.senseSoup(loc);
