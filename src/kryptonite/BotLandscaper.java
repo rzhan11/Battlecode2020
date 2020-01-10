@@ -20,7 +20,7 @@ public class BotLandscaper extends Globals {
 					for(int i = 0; i < 4; i++) for(int j = 0; j < 4; j++) {
 						MapLocation newl = templ.translate(-2*i, -2*j);
 						if(inMap(newl) && !HQLocation.equals(newl)) {
-							if (HQLocation.distanceSquaredTo(newl) >= 9) { // excludes holes inside the 5x5 plot
+							if (maxXYDistance(HQLocation, newl) > 2) { // excludes holes inside the 5x5 plot
 								digSpots[index] = newl;
 								index++;
 							}
@@ -120,12 +120,12 @@ public class BotLandscaper extends Globals {
 		}
 
 		// From Richard - added a check for if we are in the inner 3x3 ring
-		if(inArray(digSpots, here, digSpotsLength) || HQLocation.distanceSquaredTo(here) <= 3) {
+		if(inArray(digSpots, here, digSpotsLength) || maxXYDistance(HQLocation, here) <= 1) {
 			Debug.ttlog("Trying to move out of 3x3 ring");
 			for (Direction dir: directions) {
 				MapLocation loc = rc.adjacentLocation(dir);
 				// if the target location is in the 5x5 ring and is not occupied/flooded
-				if (HQLocation.distanceSquaredTo(loc) > 3 && rc.senseRobotAtLocation(loc) == null) {
+				if (maxXYDistance(HQLocation, loc) >= 2 && rc.senseRobotAtLocation(loc) == null) {
 					landscaperMove(dir);
 				}
 			}
