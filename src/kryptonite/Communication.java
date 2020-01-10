@@ -252,8 +252,8 @@ public class Communication extends Globals {
 		int builderMinerID = message[2];
 		Debug.tlog("Reading 'Builder Miner Built' transaction");
 		Debug.ttlog("Submitter ID: " + decryptID(message[0]));
-		Debug.ttlog(":ID " + builderMinerID);
+		Debug.ttlog("builderMinerID: " + builderMinerID);
 		Debug.ttlog("Posted round: " + round);
-		BotMiner.builderMinerID = builderMinerID;p
+		BotMiner.builderMinerID = builderMinerID;
 	}
 }

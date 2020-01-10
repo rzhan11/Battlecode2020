@@ -92,22 +92,23 @@ public class Globals {
 			Debug.tlog("--FIRST TURN---");
 			Debug.tlog("---------------");
 		}
+
+		myElevation = rc.senseElevation(here);
+		waterLevel = (int) GameConstants.getWaterLevel(roundNum);
+
+		myPollution = rc.sensePollution(here);
+		actualSensorRadiusSquared = rc.getCurrentSensorRadiusSquared();
+		extremePollution = actualSensorRadiusSquared < 2;
+		if (extremePollution) {
+			Debug.tlog("WARNING: Extreme pollution has made actualSensorRadiusSquared < 2, so errors may occur. Ask Richard.");
+		}
+
 		Debug.tlog("Robot: " + myType);
 		Debug.tlog("roundNum: " + roundNum);
 		Debug.tlog("ID: " + myID);
 		Debug.tlog("Location: " + here);
 		Debug.tlog("actualSensorRadiusSquared: " + actualSensorRadiusSquared);
 		Debug.tlog("Cooldown: " + rc.getCooldownTurns());
-
-		myElevation = rc.senseElevation(here);
-		waterLevel = (int) GameConstants.getWaterLevel(roundNum);
-
-		myPollution = rc.sensePollution(here);
-		actualSensorRadiusSquared = (int) (baseSensorRadiusSquared * GameConstants.getSensorRadiusPollutionCoefficient(myPollution));
-		extremePollution = actualSensorRadiusSquared < 2;
-		if (extremePollution) {
-			Debug.tlog("WARNING: Extreme pollution has made actualSensorRadiusSquared < 2, so errors may occur. Ask Richard.");
-		}
 
 		visibleAllies = rc.senseNearbyRobots(-1, us); // -1 uses all robots within sense radius
 

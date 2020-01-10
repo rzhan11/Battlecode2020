@@ -107,38 +107,40 @@ public class BotMiner extends Globals {
 	public static void turn() throws GameActionException {
 
 		//builder miner code
-		if(builderMinerID == rc.getID()){
-			if(teamSoup >= RobotType.DESIGN_SCHOOL.cost && !designSchoolBuilt) {
+		if (builderMinerID == rc.getID()) {
+			Debug.tlog("I am the builder miner");
+			if (teamSoup >= RobotType.DESIGN_SCHOOL.cost && !designSchoolBuilt) {
 				// potential bug - what if we are already on the designSchoolLocation?
 				if(here.isAdjacentTo(designSchoolLocation)){
 					//build design school
-					if(rc.isReady() && rc.canBuildRobot(RobotType.DESIGN_SCHOOL,here.directionTo(designSchoolLocation))){
-						rc.buildRobot(RobotType.DESIGN_SCHOOL,here.directionTo(designSchoolLocation));
+					Direction dir = here.directionTo(fulfillmentCenterLocation);
+					if (rc.canBuildRobot(RobotType.DESIGN_SCHOOL, dir)) {
+						rc.buildRobot(RobotType.DESIGN_SCHOOL, dir);
 						teamSoup = rc.getTeamSoup();
 						designSchoolBuilt = true;
 					}
 
 				} else {
 					Nav.bugNavigate(designSchoolLocation);
-					Debug.tlog("Going to Design School Location");
+					Debug.tlog("Going to designSchoolLocation");
 				}
-				return;
-			} else if (teamSoup >= RobotType.FULFILLMENT_CENTER.cost && !fulfillmentCenterBuilt){
-				// potential bug - what if we are already on the designSchoolLocation?
-				if(here.isAdjacentTo(fulfillmentCenterLocation)){
-					//build design school
-					if(rc.isReady() && rc.canBuildRobot(RobotType.FULFILLMENT_CENTER,here.directionTo(fulfillmentCenterLocation))){
-						rc.buildRobot(RobotType.FULFILLMENT_CENTER,here.directionTo(fulfillmentCenterLocation));
+			} else if (teamSoup >= RobotType.FULFILLMENT_CENTER.cost && !fulfillmentCenterBuilt) {
+				// potential bug - what if we are already on the fulfillmentCenterLocation?
+				if (here.isAdjacentTo(fulfillmentCenterLocation)) {
+					// build fulfillment center
+					Direction dir = here.directionTo(fulfillmentCenterLocation);
+					if(rc.isReady() && rc.canBuildRobot(RobotType.FULFILLMENT_CENTER, dir)){
+						rc.buildRobot(RobotType.FULFILLMENT_CENTER, dir);
 						teamSoup = rc.getTeamSoup();
 						fulfillmentCenterBuilt = true;
 					}
 
 				} else {
 					Nav.bugNavigate(fulfillmentCenterLocation);
-					Debug.tlog("Going to Design School Location");
+					Debug.tlog("Going to fulfillmentCenterLocation");
 				}
-				return;
 			}
+			return;
 		}
 
 
@@ -154,22 +156,22 @@ public class BotMiner extends Globals {
 		Builds design school if certain conditions are met
 		Obsolete with builderminer
 		*/
-		if(teamSoup >= RobotType.DESIGN_SCHOOL.cost && designSchoolMaker && !designSchoolMade) {
-			// potential bug - what if we are already on the designSchoolLocation?
-			if(here.isAdjacentTo(designSchoolLocation)){
-				//build design school
-				if(rc.isReady() && rc.canBuildRobot(RobotType.DESIGN_SCHOOL,here.directionTo(designSchoolLocation))){
-					rc.buildRobot(RobotType.DESIGN_SCHOOL,here.directionTo(designSchoolLocation));
-					teamSoup = rc.getTeamSoup();
-					designSchoolMade = true;
-				}
-
-			} else {
-				Nav.bugNavigate(designSchoolLocation);
-				Debug.tlog("Going to Design School Location");
-			}
-			return;
-		}
+		// if(teamSoup >= RobotType.DESIGN_SCHOOL.cost && designSchoolMaker && !designSchoolMade) {
+		// 	// potential bug - what if we are already on the designSchoolLocation?
+		// 	if(here.isAdjacentTo(designSchoolLocation)){
+		// 		//build design school
+		// 		if(rc.isReady() && rc.canBuildRobot(RobotType.DESIGN_SCHOOL,here.directionTo(designSchoolLocation))){
+		// 			rc.buildRobot(RobotType.DESIGN_SCHOOL,here.directionTo(designSchoolLocation));
+		// 			teamSoup = rc.getTeamSoup();
+		// 			designSchoolMade = true;
+		// 		}
+		//
+		// 	} else {
+		// 		Nav.bugNavigate(designSchoolLocation);
+		// 		Debug.tlog("Going to Design School Location");
+		// 	}
+		// 	return;
+		// }
 
 		soupCarrying = rc.getSoupCarrying();
 
