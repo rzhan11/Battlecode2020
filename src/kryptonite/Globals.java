@@ -227,4 +227,10 @@ public class Globals {
 	public static int maxXYDistance(MapLocation ml1, MapLocation ml2) {
 		return Math.max(Math.abs(ml1.x - ml2.x), Math.abs(ml1.y - ml2.y));
 	}
+
+	public static boolean inArray(Object[] arr, Object item, int length) {
+		for(int i = 0; i < length; i++) if(arr[i].equals(item)) return true;
+		return false;
+	}
+
 }

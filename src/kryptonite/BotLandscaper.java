@@ -4,8 +4,8 @@ import battlecode.common.*;
 
 public class BotLandscaper extends Globals {
 
-	private static MapLocation[] digSpots, smallWall, largeWall, smallWallCompleted;
-	private static int digSpotsLength, smallWallLength, largeWallLength, smallWallDepth,
+	private static MapLocation[] digLocations, smallWall, largeWall, smallWallCompleted;
+	private static int digLocationsLength, smallWallLength, largeWallLength, smallWallDepth,
             smallWallCompletedLength, currentRing = -1, currentStep;
 	private static boolean moveClockwise = true;
 
@@ -16,19 +16,19 @@ public class BotLandscaper extends Globals {
 				Globals.update();
 				if (firstTurn) {
 					// finds spots that can be used for digging
-					digSpots = new MapLocation[12];
+					digLocations = new MapLocation[12];
 					MapLocation templ = HQLocation.translate(3,3);
 					int index = 0;
 					for(int i = 0; i < 4; i++) for(int j = 0; j < 4; j++) {
 						MapLocation newl = templ.translate(-2*i, -2*j);
 						if(inMap(newl) && !HQLocation.equals(newl)) {
 							if (maxXYDistance(HQLocation, newl) > 2) { // excludes holes inside the 5x5 plot
-								digSpots[index] = newl;
+								digLocations[index] = newl;
 								index++;
 							}
 						}
 					}
-					digSpotsLength = index;
+					digLocationsLength = index;
 
 					Globals.endTurn();
 					Globals.update();
@@ -40,7 +40,7 @@ public class BotLandscaper extends Globals {
 					templ = HQLocation.translate(2, 2);
 					for(int i = 0; i < 5; i++) for(int j = 0; j < 5; j++) {
 						MapLocation newl = templ.translate(-i, -j);
-						if (inMap(newl) && !HQLocation.equals(newl) && !inArray(digSpots, newl, digSpotsLength)) {
+						if (inMap(newl) && !HQLocation.equals(newl) && !inArray(digLocations, newl, digLocationsLength)) {
                             smallWall[index] = newl;
                             index++;
 						}
@@ -66,7 +66,7 @@ public class BotLandscaper extends Globals {
 					templ = HQLocation.translate(cornerDist, cornerDist);
 					for(int i = 0; i < largeWallRingSize - 1; i++) {
 						MapLocation newl = templ.translate(0, -i);
-						if(inMap(newl) && !inArray(digSpots, newl, digSpotsLength)) {
+						if(inMap(newl) && !inArray(digLocations, newl, digLocationsLength)) {
 							largeWall[index] = newl;
 							index++;
 						}
@@ -75,7 +75,7 @@ public class BotLandscaper extends Globals {
 					templ = HQLocation.translate(cornerDist, -cornerDist);
 					for(int i = 0; i < largeWallRingSize - 1; i++) {
 						MapLocation newl = templ.translate(-i, 0);
-						if(inMap(newl) && !inArray(digSpots, newl, digSpotsLength)) {
+						if(inMap(newl) && !inArray(digLocations, newl, digLocationsLength)) {
 							largeWall[index] = newl;
 							index++;
 						}
@@ -84,7 +84,7 @@ public class BotLandscaper extends Globals {
 					templ = HQLocation.translate(-cornerDist, -cornerDist);
 					for(int i = 0; i < largeWallRingSize - 1; i++) {
 						MapLocation newl = templ.translate(0, i);
-						if(inMap(newl) && !inArray(digSpots, newl, digSpotsLength)) {
+						if(inMap(newl) && !inArray(digLocations, newl, digLocationsLength)) {
 							largeWall[index] = newl;
 							index++;
 						}
@@ -93,7 +93,7 @@ public class BotLandscaper extends Globals {
 					templ = HQLocation.translate(-cornerDist, cornerDist);
 					for(int i = 0; i < largeWallRingSize - 1; i++) {
 						MapLocation newl = templ.translate(i, 0);
-						if(inMap(newl) && !inArray(digSpots, newl, digSpotsLength)) {
+						if(inMap(newl) && !inArray(digLocations, newl, digLocationsLength)) {
 							largeWall[index] = newl;
 							index++;
 						}
@@ -115,14 +115,14 @@ public class BotLandscaper extends Globals {
 	public static void turn() throws GameActionException {
 		if(!rc.isReady()) return;
 		// If in a Dig Spot Place, move to the Outward Radius
-		if(inArray(digSpots, here, digSpotsLength)) {
+		if(inArray(digLocations, here, digLocationsLength)) {
 			Direction move = HQLocation.directionTo(here);
             Debug.ttlog("GOING TO OUTER RING");
 			landscaperMove(move);
 		}
 
 		// From Richard - added a check for if we are in the inner 3x3 ring
-		if(inArray(digSpots, here, digSpotsLength) || maxXYDistance(HQLocation, here) <= 1) {
+		if(inArray(digLocations, here, digLocationsLength) || maxXYDistance(HQLocation, here) <= 1) {
 			Debug.ttlog("Trying to move out of 3x3 ring");
 			for (Direction dir: directions) {
 				MapLocation loc = rc.adjacentLocation(dir);
@@ -173,7 +173,7 @@ public class BotLandscaper extends Globals {
 				if(moveClockwise) {
 					Direction d = getClockwiseDir();
 					MapLocation moveLoc = here.add(d);
-					if (inArray(digSpots, moveLoc, digSpotsLength)) {
+					if (inArray(digLocations, moveLoc, digLocationsLength)) {
 						// Go to Outer Ring
 						Debug.ttlog("GOING TO OUTER RING");
 						Direction move = HQLocation.directionTo(here);
@@ -192,7 +192,7 @@ public class BotLandscaper extends Globals {
 				else {
 					Direction d = getCounterClockwiseDir();
 					MapLocation moveLoc = here.add(d);
-					if (inArray(digSpots, moveLoc, digSpotsLength)) {
+					if (inArray(digLocations, moveLoc, digLocationsLength)) {
 						// Go to Outer Ring
 						Debug.ttlog("GOING TO OUTER RING");
 						Direction move = HQLocation.directionTo(here);
@@ -313,12 +313,6 @@ public class BotLandscaper extends Globals {
             }
 		}
 	}
-
-	private static boolean inArray(Object[] arr, Object item, int length) {
-		for(int i = 0; i < length; i++) if(arr[i].equals(item)) return true;
-		return false;
-	}
-
 	private static Direction getClockwiseDir() {
 		int delx = HQLocation.x - here.x;
 		int dely = HQLocation.y - here.y;
@@ -382,7 +376,7 @@ public class BotLandscaper extends Globals {
 
 	private static void landscaperDig() throws GameActionException {
 		for(Direction d: Direction.allDirections()) {
-			if(inArray(digSpots, here.add(d), digSpotsLength)) if(rc.canDigDirt(d)) rc.digDirt(d);
+			if(inArray(digLocations, here.add(d), digLocationsLength)) if(rc.canDigDirt(d)) rc.digDirt(d);
 		}
 	}
 }
