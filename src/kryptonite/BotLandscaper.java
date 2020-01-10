@@ -14,73 +14,88 @@ public class BotLandscaper extends Globals {
 				Globals.update();
 				if (firstTurn) {
 
-					digSpots = new MapLocation[16];
+					digSpots = new MapLocation[12];
 					MapLocation templ = HQLocation.translate(3,3);
 					int index = 0;
 					for(int i = 0; i < 4; i++) for(int j = 0; j < 4; j++) {
 						MapLocation newl = templ.translate(-2*i, -2*j);
 						if(inMap(newl) && !HQLocation.equals(newl)) {
-							digSpots[index] = newl;
-							index++;
+							if (HQLocation.distanceSquaredTo(newl) >= 9) { // excludes holes inside the 5x5 plot
+								digSpots[index] = newl;
+								index++;
+							}
 						}
 					}
 					digSpotsLength = index;
 
-					smallWall = new MapLocation[20];
-					completed = new MapLocation[20];
+					smallWall = new MapLocation[24];
+					completed = new MapLocation[24];
 					index = 0;
 					templ = HQLocation.translate(2, 2);
 					for(int i = 0; i < 5; i++) for(int j = 0; j < 5; j++) {
-						MapLocation newl = templ.translate(-1 * i, -1 * j);
+						MapLocation newl = templ.translate(-i, -j);
 						if (inMap(newl) && !HQLocation.equals(newl) && !inArray(digSpots, newl, digSpotsLength)) {
-                            // HARDCODED
-                            if(i == 3 && j == 2) continue;
                             smallWall[index] = newl;
                             index++;
 						}
 					}
+
 					smallWallLength = index;
 					smallWallDepth = rc.senseElevation(HQLocation) + 3;
-					Debug.ttlog("SMALL WALL LENGTH: " + smallWallLength + "\nSMALL WALL DEPTH: " + smallWallDepth);
+					Debug.ttlog("SMALL WALL LENGTH: " + smallWallLength);
+					Debug.ttlog("SMALL WALL DEPTH: " + smallWallDepth);
+
 					completedLength = 0;
 
-					largeWall = new MapLocation[56];
+					int largeWallRingSize = 9; // must be odd
+					int cornerDist = largeWallRingSize / 2;
+
+					largeWall = new MapLocation[36];
 					index = 0;
-					templ = HQLocation.translate(4, 4);
-					for(int i = 0; i < 2; i++) for(int j = 0; j < 9; j++) {
-						MapLocation newl = templ.translate(-1*i, -1*j);
+
+					// move down along right wall
+					templ = HQLocation.translate(cornerDist, cornerDist);
+					for(int i = 0; i < largeWallRingSize - 1; i++) {
+						MapLocation newl = templ.translate(0, -i);
 						if(inMap(newl) && !inArray(digSpots, newl, digSpotsLength)) {
 							largeWall[index] = newl;
 							index++;
 						}
 					}
-					templ = HQLocation.translate(-4, -4);
-					for(int i = 0; i < 2; i++) for(int j = 0; j < 9; j++) {
-						MapLocation newl = templ.translate(i, j);
+					// move left along bottom wall
+					templ = HQLocation.translate(cornerDist, -cornerDist);
+					for(int i = 0; i < largeWallRingSize - 1; i++) {
+						MapLocation newl = templ.translate(-i, 0);
 						if(inMap(newl) && !inArray(digSpots, newl, digSpotsLength)) {
 							largeWall[index] = newl;
 							index++;
 						}
 					}
-					templ = HQLocation.translate(2, 4);
-					for(int i = 0; i < 5; i++) for(int j = 0; j < 2; j++) {
-						MapLocation newl = templ.translate(-1*i, -1*j);
+					// move up along left wall
+					templ = HQLocation.translate(-cornerDist, -cornerDist);
+					for(int i = 0; i < largeWallRingSize - 1; i++) {
+						MapLocation newl = templ.translate(0, i);
 						if(inMap(newl) && !inArray(digSpots, newl, digSpotsLength)) {
 							largeWall[index] = newl;
 							index++;
 						}
 					}
-					templ = HQLocation.translate(2, -4);
-					for(int i = 0; i < 5; i++) for(int j = 0; j < 2; j++) {
-						MapLocation newl = templ.translate(-1*i, j);
+					// move right along top wall
+					templ = HQLocation.translate(-cornerDist, cornerDist);
+					for(int i = 0; i < largeWallRingSize - 1; i++) {
+						MapLocation newl = templ.translate(i, 0);
 						if(inMap(newl) && !inArray(digSpots, newl, digSpotsLength)) {
 							largeWall[index] = newl;
 							index++;
 						}
 					}
 					largeWallLength = index;
+					Debug.ttlog("LARGE WALL LENGTH: " + smallWallLength);
 				}
-				turn();
+
+				if (!firstTurn) {
+					turn();
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -97,6 +112,18 @@ public class BotLandscaper extends Globals {
 			landscaperMove(move);
 		}
 
+		// From Richard - added a check for if we are in the inner 3x3 ring
+		if(inArray(digSpots, here, digSpotsLength) || HQLocation.distanceSquaredTo(here) <= 3) {
+			Debug.ttlog("Trying to move out of 3x3 ring");
+			for (Direction dir: directions) {
+				MapLocation loc = rc.adjacentLocation(dir);
+				// if the target location is in the 5x5 ring and is not occupied/flooded
+				if (HQLocation.distanceSquaredTo(loc) > 3 && rc.senseRobotAtLocation(loc) == null) {
+					landscaperMove(dir);
+				}
+			}
+		}
+
 		// If the First Wall isn't Complete and you can do stuff in your current position, do it
 		if(!wallComplete()) {
 			// Update Completed Array
@@ -111,7 +138,7 @@ public class BotLandscaper extends Globals {
 			}
 			// Find an action to do
 			boolean actionComplete = false;
-			for(Direction d: Direction.allDirections()) {
+			for(Direction d: allDirections) {
 				MapLocation tempLoc = here.add(d);
 				if(inArray(smallWall, tempLoc, smallWallLength) && !inArray(completed, tempLoc, completedLength)) {
 					if(rc.senseElevation(tempLoc) < smallWallDepth) {

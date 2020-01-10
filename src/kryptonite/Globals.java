@@ -194,6 +194,10 @@ public class Globals {
 		return temp;
 	}
 
+	/*
+	Returns true if the location is within the map boundaries
+	Returns false if not
+	*/
 	public static boolean inMap(MapLocation ml) {
 		return ml.x >= 0 && ml.x < mapWidth && ml.y >= 0 && ml.y < mapHeight;
 	}
