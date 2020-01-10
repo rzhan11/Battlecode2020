@@ -42,9 +42,20 @@ public class BotMiner extends Globals {
 	public static MapLocation buildRefineryLocation = null;
 	public static int buildRefineryVisibleSoup;
 
+	//obsolete with builder miner
 	private static boolean designSchoolMaker = false;
 	private static boolean designSchoolMade = false;
+
 	private static MapLocation designSchoolLocation;
+	private static MapLocation fulfillmentCenterLocation;
+
+	//builder miner
+
+	public static int builderMinerID = -1;
+	private static boolean designSchoolBuilt = false;
+	private static boolean fulfillmentCenterBuilt = false;
+
+
 
 	public static void loop() throws GameActionException {
 
@@ -66,10 +77,13 @@ public class BotMiner extends Globals {
 					addToRefineries(HQLocation);
 
 					//If this is the first robot made, designate that robot as the one to build the design school
+					//obsolete with builderminer
 					if(spawnDirection.equals(directions[0])){
 						designSchoolMaker = true;
 						designSchoolLocation = new MapLocation(HQLocation.x-1,HQLocation.y);
 					}
+					designSchoolLocation = new MapLocation(HQLocation.x-1,HQLocation.y);
+					fulfillmentCenterLocation = new MapLocation(HQLocation.x+1,HQLocation.y);
 				}
 
 				/*
@@ -92,12 +106,53 @@ public class BotMiner extends Globals {
 
 	public static void turn() throws GameActionException {
 
+		//builder miner code
+		if(builderMinerID == rc.getID()){
+			if(teamSoup >= RobotType.DESIGN_SCHOOL.cost && !designSchoolBuilt) {
+				// potential bug - what if we are already on the designSchoolLocation?
+				if(here.isAdjacentTo(designSchoolLocation)){
+					//build design school
+					if(rc.isReady() && rc.canBuildRobot(RobotType.DESIGN_SCHOOL,here.directionTo(designSchoolLocation))){
+						rc.buildRobot(RobotType.DESIGN_SCHOOL,here.directionTo(designSchoolLocation));
+						teamSoup = rc.getTeamSoup();
+						designSchoolBuilt = true;
+					}
+
+				} else {
+					Nav.bugNavigate(designSchoolLocation);
+					Debug.tlog("Going to Design School Location");
+				}
+				return;
+			} else if (teamSoup >= RobotType.FULFILLMENT_CENTER.cost && !fulfillmentCenterBuilt){
+				// potential bug - what if we are already on the designSchoolLocation?
+				if(here.isAdjacentTo(fulfillmentCenterLocation)){
+					//build design school
+					if(rc.isReady() && rc.canBuildRobot(RobotType.FULFILLMENT_CENTER,here.directionTo(fulfillmentCenterLocation))){
+						rc.buildRobot(RobotType.FULFILLMENT_CENTER,here.directionTo(fulfillmentCenterLocation));
+						teamSoup = rc.getTeamSoup();
+						fulfillmentCenterBuilt = true;
+					}
+
+				} else {
+					Nav.bugNavigate(fulfillmentCenterLocation);
+					Debug.tlog("Going to Design School Location");
+				}
+				return;
+			}
+		}
+
+
+
+
+
+
 		locateSoup();
 		// updates known refineries based on what we can sense this turn
 		locateRefineries();
 
 		/*
 		Builds design school if certain conditions are met
+		Obsolete with builderminer
 		*/
 		if(teamSoup >= RobotType.DESIGN_SCHOOL.cost && designSchoolMaker && !designSchoolMade) {
 			// potential bug - what if we are already on the designSchoolLocation?

@@ -13,6 +13,9 @@ public class BotHQ extends Globals {
 	private static MapLocation[] symmetryHQLocations = new MapLocation[3];
 	private static int symmetryMinerCount = 0;
 
+
+	private static boolean madeBuilderMiner = false;
+
 	public static void loop() throws GameActionException {
 		while (true) {
 			try {
@@ -42,6 +45,25 @@ public class BotHQ extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
+
+		//if explorer miners have been build and have enough money, build a BuilderMiner
+		if(true) {
+			if (explorerMinerCount >= 8 && !madeBuilderMiner && teamSoup >= RobotType.MINER.cost && rc.isReady()) {
+				//try building
+				for (int k = 0; k < 8; k++) {
+					if (rc.canBuildRobot(RobotType.MINER, directions[k])) {
+						rc.buildRobot(RobotType.MINER, directions[k]);
+						madeBuilderMiner = true;
+
+						//make transaction
+						RobotInfo ri = rc.senseRobotAtLocation(here.add(directions[k]));
+						//SEND TRANSACTION
+						Communication.writeTransactionBuilderMinerBuilt(ri.ID);
+						return;
+					}
+				}
+			}
+		}
 		/*
 		build explorer miners
 		build three Miners to explore symmetries

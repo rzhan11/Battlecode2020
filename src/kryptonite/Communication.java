@@ -11,6 +11,7 @@ public class Communication extends Globals {
 	final public static int SOUP_CLUSTER_SIGNAL = 1;
 	final public static int REFINERY_BUILT_SIGNAL = 2;
 	final public static int SYMMETRY_MINER_BUILT_SIGNAL = 3;
+	final public static int BUILDER_MINER_BUILT_SIGNAL = 4;
 
 	// used to alter our own data
 	public static int secretKey;
@@ -93,6 +94,12 @@ public class Communication extends Globals {
 							readTransactionSymmetryMinerBuilt(message, round);
 						}
 						break;
+
+					case BUILDER_MINER_BUILT_SIGNAL:
+						if(myType == RobotType.MINER) {
+							readTransactionBuilderMinerBuilt(message,round);
+						}
+
 		        }
 			}
 		}
@@ -224,5 +231,29 @@ public class Communication extends Globals {
 			BotMiner.symmetryLocation = loc;
 			Debug.ttlog("I am the symmetry miner");
 		}
+	}
+
+	public static void writeTransactionBuilderMinerBuilt(int id) throws GameActionException{
+		Debug.tlog("Writing transaction for Builder Miner of ID: " + id);
+		int[] message = new int[7];
+		message[0] = encryptID(myID);
+		message[1] = BUILDER_MINER_BUILT_SIGNAL;
+		message[2] = id;
+
+		if (teamSoup >= 1) {
+			rc.submitTransaction(message, 1);
+			teamSoup = rc.getTeamSoup();
+		} else {
+			Debug.tlog("WARNING: Could not afford transaction");
+		}
+	}
+
+	public static void readTransactionBuilderMinerBuilt(int[] message, int round) {
+		int builderMinerID = message[2];
+		Debug.tlog("Reading 'Builder Miner Built' transaction");
+		Debug.ttlog("Submitter ID: " + decryptID(message[0]));
+		Debug.ttlog(":ID " + builderMinerID);
+		Debug.ttlog("Posted round: " + round);
+		BotMiner.builderMinerID = builderMinerID;p
 	}
 }
