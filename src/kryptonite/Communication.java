@@ -15,6 +15,7 @@ public class Communication extends Globals {
 
 	// used to alter our own data
 	public static int secretKey;
+	public static int secretXORKey = 0B01011011101111011111011111101111;
 
 	/*
 		Communication is made up of 7 integers (32-bit)
@@ -22,6 +23,18 @@ public class Communication extends Globals {
 		The second integer is used to denote the "type" of message
 		The rest of the five integers are used as data
 	*/
+
+	/*
+	Encrypts and decrypts an entire message with XOR key
+	*/
+	public static void xorMessage (int[] message) {
+		Debug.tlog("len " + message.length);
+		for (int i = 0; i < message.length; i++) {
+			Debug.tlog(" " + message[i]);
+			message[i] ^= secretXORKey;
+			Debug.tlog("^ " + message[i]);
+		}
+	}
 
 	/*
 	Returns the integer value of the code based on the id
@@ -71,6 +84,8 @@ public class Communication extends Globals {
 		Transaction[] block = rc.getBlock(round);
 		for (Transaction t: block) {
 			int[] message = t.getMessage();
+			xorMessage(message);
+
 			int submitterID = decryptID(message[0]);
 			if (submitterID == -1) {
 				continue; // not submitted by our team
@@ -118,6 +133,7 @@ public class Communication extends Globals {
 		message[2] = myHQLocation.x;
 		message[3] = myHQLocation.y;
 
+		xorMessage(message);
 		if (teamSoup >= 10) {
 			rc.submitTransaction(message, 10);
 			teamSoup = rc.getTeamSoup();
@@ -147,6 +163,7 @@ public class Communication extends Globals {
 		message[2] = soupClusterLocation.x;
 		message[3] = soupClusterLocation.y;
 
+		xorMessage(message);
 		if (teamSoup >= 1) {
 			rc.submitTransaction(message, 1);
 			teamSoup = rc.getTeamSoup();
@@ -178,6 +195,7 @@ public class Communication extends Globals {
 		message[2] = refineryLocation.x;
 		message[3] = refineryLocation.y;
 
+		xorMessage(message);
 		if (teamSoup >= 1) {
 			rc.submitTransaction(message, 1);
 			teamSoup = rc.getTeamSoup();
@@ -210,6 +228,7 @@ public class Communication extends Globals {
 		message[3] = symmetryLocation.x;
 		message[4] = symmetryLocation.y;
 
+		xorMessage(message);
 		if (teamSoup >= 1) {
 			rc.submitTransaction(message, 1);
 			teamSoup = rc.getTeamSoup();
@@ -240,6 +259,7 @@ public class Communication extends Globals {
 		message[1] = BUILDER_MINER_BUILT_SIGNAL;
 		message[2] = id;
 
+		xorMessage(message);
 		if (teamSoup >= 1) {
 			rc.submitTransaction(message, 1);
 			teamSoup = rc.getTeamSoup();
