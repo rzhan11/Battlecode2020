@@ -113,7 +113,7 @@ public class BotMiner extends Globals {
 				// potential bug - what if we are already on the designSchoolLocation?
 				if(here.isAdjacentTo(designSchoolLocation)){
 					//build design school
-					Direction dir = here.directionTo(fulfillmentCenterLocation);
+					Direction dir = here.directionTo(designSchoolLocation);
 					if (rc.canBuildRobot(RobotType.DESIGN_SCHOOL, dir)) {
 						rc.buildRobot(RobotType.DESIGN_SCHOOL, dir);
 						teamSoup = rc.getTeamSoup();
