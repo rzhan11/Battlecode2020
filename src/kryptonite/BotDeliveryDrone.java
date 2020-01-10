@@ -24,7 +24,7 @@ public class BotDeliveryDrone extends Globals {
 	public static boolean canPickUp (RobotType rt) {
 		return rt == RobotType.MINER || rt == RobotType.LANDSCAPER || rt == RobotType.COW;
 	}
-    // TODO: Identify if we are one a low elevation, pick up robots here, and move to clean space
+    // @todo: Identify if we are one a low elevation, pick up robots here, and move to clean space
 	public static void turn() throws GameActionException {
 		if (rc.isCurrentlyHoldingUnit()) {
 			//move to adjacent square that is higher elevation

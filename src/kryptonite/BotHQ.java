@@ -79,9 +79,9 @@ public class BotHQ extends Globals {
 			// }
 		}
 
-		// TODO: Shoot Enemy Bots
+		// @todo: Shoot Enemy Bots
 
-		// TODO: Create Attack Miners
+		// @todo: Create Attack Miners
 	}
 
 	/*
