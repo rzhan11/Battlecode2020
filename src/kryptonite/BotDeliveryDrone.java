@@ -39,7 +39,7 @@ public class BotDeliveryDrone extends Globals {
 				MapLocation loc = rc.adjacentLocation(dir);
 				if (inMap(loc)) {
 					RobotInfo ri = rc.senseRobotAtLocation(loc);
-					if (ri != null && rc.canPickUpUnit(ri.ID)) {
+					if (ri != null && ri.team == them && rc.canPickUpUnit(ri.ID)) {
 						rc.pickUpUnit(ri.ID);
 						Debug.tlog("Picked up unit at " + loc);
 						return;
