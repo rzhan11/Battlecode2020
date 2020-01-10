@@ -22,7 +22,7 @@ public class BotDeliveryDrone extends Globals {
 	public static boolean canPickUp (RobotType rt) {
 		return rt == RobotType.MINER || rt == RobotType.LANDSCAPER || rt == RobotType.COW;
 	}
-
+    // TODO: Be Better.
 	public static void turn() throws GameActionException {
 		if (rc.isCurrentlyHoldingUnit()) {
 			for (Direction dir: directions) {

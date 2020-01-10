@@ -131,7 +131,10 @@ public class Globals {
 	/*
 	Prints various useful debuggin information
 	*/
+	final public static boolean noTurnLog = false;
+
 	public static void printMyInfo () {
+		if(noTurnLog) return;
 		Debug.tlog("Robot: " + myType);
 		Debug.tlog("roundNum: " + roundNum);
 		Debug.tlog("ID: " + myID);
@@ -145,7 +148,6 @@ public class Globals {
 			firstTurn = false;
 
 			Communication.readOldTransactions();
-
 			// check if we went over the bytecode limit
 			int endTurn = rc.getRoundNum();
 			if (roundNum != endTurn) {
@@ -155,12 +157,13 @@ public class Globals {
 				Debug.ttlogi("Overused bytecode: " + (bytecodeOver + (turns - 1) * myType.bytecodeLimit));
 				Debug.ttlogi("Skipped turns: " + turns);
 			}
-
-			Debug.tlog("Remaining bytecode: " + Clock.getBytecodesLeft());
-			Debug.tlog("---------------");
-			Debug.tlog("---END TURN----");
-			Debug.tlog("---------------");
-			Debug.log();
+			if(!noTurnLog) {
+				Debug.tlog("Remaining bytecode: " + Clock.getBytecodesLeft());
+				Debug.tlog("---------------");
+				Debug.tlog("---END TURN----");
+				Debug.tlog("---------------");
+				Debug.log();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
