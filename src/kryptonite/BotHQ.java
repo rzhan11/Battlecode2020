@@ -67,6 +67,7 @@ public class BotHQ extends Globals {
 		/*
 		build explorer miners
 		build three Miners to explore symmetries
+		EDIT: DRONES SHOULD EXPLORE SYMMETRIES
 		*/
 		if (teamSoup >= RobotType.MINER.cost && rc.isReady()) {
 			buildMiner();
@@ -77,6 +78,9 @@ public class BotHQ extends Globals {
 			// }
 		}
 
+		// TODO: Shoot Enemy Bots
+
+		// TODO: Create Attack Miners
 	}
 
 	/*

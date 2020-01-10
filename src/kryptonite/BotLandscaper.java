@@ -9,6 +9,7 @@ public class BotLandscaper extends Globals {
             smallWallCompletedLength, currentRing = -1, currentStep;
 	private static boolean moveClockwise = true;
 
+	// TODO: Create Capabilities for Non-Wall Landscapers
 	public static void loop() throws GameActionException {
 		while (true) {
 			try {
@@ -110,7 +111,7 @@ public class BotLandscaper extends Globals {
 			Globals.endTurn();
 		}
 	}
-
+    // TODO: Enable Landscaper Defenses for Buildings that Come to HQ
 	public static void turn() throws GameActionException {
 		if(!rc.isReady()) return;
 		// If in a Dig Spot Place, move to the Outward Radius
