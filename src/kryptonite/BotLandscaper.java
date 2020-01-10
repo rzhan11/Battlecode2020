@@ -7,6 +7,7 @@ public class BotLandscaper extends Globals {
 	private static MapLocation[] digSpots, smallWall, largeWall, smallWallCompleted;
 	private static int digSpotsLength, smallWallLength, largeWallLength, smallWallDepth,
             smallWallCompletedLength, currentRing = -1, currentStep;
+	private static boolean moveClockwise = true;
 
 	public static void loop() throws GameActionException {
 		while (true) {
@@ -97,7 +98,7 @@ public class BotLandscaper extends Globals {
 						}
 					}
 					largeWallLength = index;
-					Debug.ttlog("LARGE WALL LENGTH: " + smallWallLength);
+					Debug.ttlog("LARGE WALL LENGTH: " + largeWallLength);
 				}
 
 				if (!firstTurn) {
@@ -168,24 +169,48 @@ public class BotLandscaper extends Globals {
 			}
 			// The Wall here is Done, Rotate Clockwise
 			if(!actionComplete) {
-				Direction d = getClockwiseDir();
-				MapLocation moveLoc = here.add(d);
-				if(inArray(digSpots, moveLoc, digSpotsLength)) {
-					// Go to Outer Ring
-                    Debug.ttlog("GOING TO OUTER RING");
-					Direction move = HQLocation.directionTo(here);
-					landscaperMove(move);
+				if(moveClockwise) {
+					Direction d = getClockwiseDir();
+					MapLocation moveLoc = here.add(d);
+					if (inArray(digSpots, moveLoc, digSpotsLength)) {
+						// Go to Outer Ring
+						Debug.ttlog("GOING TO OUTER RING");
+						Direction move = HQLocation.directionTo(here);
+						landscaperMove(move);
+					} else {
+						Debug.ttlog("ROTATING CLOCKWISE");
+						if (rc.canMove(d)) {
+							Actions.doMove(d);
+						}
+						else if(rc.senseRobotAtLocation(moveLoc) != null) {
+							moveClockwise = false;
+							Debug.ttlog("COLLIDING, SWAPPING DIRECTION");
+						}
+					}
 				}
 				else {
-				    Debug.ttlog("ROTATING CLOCKWISE");
-					if(rc.canMove(d)) Actions.doMove(d);
- 				}
+					Direction d = getCounterClockwiseDir();
+					MapLocation moveLoc = here.add(d);
+					if (inArray(digSpots, moveLoc, digSpotsLength)) {
+						// Go to Outer Ring
+						Debug.ttlog("GOING TO OUTER RING");
+						Direction move = HQLocation.directionTo(here);
+						landscaperMove(move);
+					} else {
+						Debug.ttlog("ROTATING COUNTERCLOCKWISE");
+						if (rc.canMove(d)) {
+							Actions.doMove(d);
+						}
+						else if(rc.senseRobotAtLocation(moveLoc) != null) {
+							moveClockwise = true;
+							Debug.ttlog("COLLIDING, SWAPPING DIRECTION");
+						}
+					}
+				}
 			}
 		}
 		// Inner Wall Complete, Just Start Building Outer Wall
 		else {
-			// TODO: Implement
-
             // If this is the first time here, you are still in the 5x5
             if(currentRing == -1) {
                 Debug.ttlog("5x5 RING COMPLETE");
@@ -224,7 +249,7 @@ public class BotLandscaper extends Globals {
             if(currentRing == 2) {
                 if(currentStep == 0) {
                     Debug.ttlog("DIGGING");
-                    if(rc.getDirtCarrying() <= 5) {
+                    if(rc.getDirtCarrying() <= 2) {
                         landscaperDig();
                     }
                     else {
@@ -253,15 +278,36 @@ public class BotLandscaper extends Globals {
                 }
                 if(currentStep == 2) {
                     Debug.ttlog("MOVING");
-                    Direction d = getClockwiseDir();
-                    // TODO: Make sure Landscapers do not get stuck in their path.
-                    if(rc.canMove(d)) {
-                        currentStep = 0;
-                        Actions.doMove(d);
-                    }
-                    if(rc.senseElevation(here.add(d)) + 3 < rc.senseElevation(here)) {
-                        currentStep = 0;
-                    }
+                    if(moveClockwise) {
+						Direction d = getClockwiseDir();
+						Debug.ttlog("MOVING IN " + d);
+						if (rc.canMove(d)) {
+							currentStep = 0;
+							Actions.doMove(d);
+						}
+						else if (rc.senseElevation(here.add(d)) + 3 < rc.senseElevation(here)) {
+							currentStep = 0;
+						}
+						else if(rc.senseRobotAtLocation(here.add(d)) != null) {
+							Debug.ttlog("Colliding with: " + rc.senseRobotAtLocation(here.add(d)));
+							moveClockwise = false;
+						}
+					}
+                    else {
+						Direction d = getCounterClockwiseDir();
+						Debug.ttlog("MOVING IN " + d);
+						if (rc.canMove(d)) {
+							currentStep = 0;
+							Actions.doMove(d);
+						}
+						else if (rc.senseElevation(here.add(d)) + 3 < rc.senseElevation(here)) {
+							currentStep = 0;
+						}
+						else if(rc.senseRobotAtLocation(here.add(d)) != null) {
+							Debug.ttlog("Colliding with: " + rc.senseRobotAtLocation(here.add(d)));
+							moveClockwise = true;
+						}
+					}
                 }
             }
 		}
@@ -293,6 +339,30 @@ public class BotLandscaper extends Globals {
 		else {
 			if(yPos) return Direction.WEST;
 			return Direction.EAST;
+		}
+	}
+
+	private static Direction getCounterClockwiseDir() {
+		int delx = HQLocation.x - here.x;
+		int dely = HQLocation.y - here.y;
+		int absx = Math.abs(delx);
+		int absy = Math.abs(dely);
+		boolean xPos = absx == delx;
+		boolean yPos = absy == dely;
+
+		if(absx == absy) {
+			if(xPos && yPos) return Direction.EAST;
+			if(xPos) return Direction.SOUTH;
+			if(yPos) return Direction.NORTH;
+			return Direction.WEST;
+		}
+		else if(absx > absy) {
+			if(xPos) return Direction.SOUTH;
+			return Direction.NORTH;
+		}
+		else {
+			if(yPos) return Direction.EAST;
+			return Direction.WEST;
 		}
 	}
 
