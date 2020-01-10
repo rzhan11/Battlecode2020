@@ -15,7 +15,13 @@ public class Communication extends Globals {
 
 	// used to alter our own data
 	public static int secretKey;
-	public static int secretXORKey = 0B01011011101111011111011111101111;
+	public static int[] secretXORKeys = {0B01011011101111011111011111101111,
+										 0B10110111011110111110111111011110,
+										 0B01101110111101111101111110111101,
+										 0B11011101111011111011111101111010,
+										 0B10111011110111110111111011110101,
+										 0B01110111101111101111110111101011,
+										 0B11101111011111011111101111010110};
 
 	/*
 		Communication is made up of 7 integers (32-bit)
@@ -28,11 +34,8 @@ public class Communication extends Globals {
 	Encrypts and decrypts an entire message with XOR key
 	*/
 	public static void xorMessage (int[] message) {
-		Debug.tlog("len " + message.length);
 		for (int i = 0; i < message.length; i++) {
-			Debug.tlog(" " + message[i]);
-			message[i] ^= secretXORKey;
-			Debug.tlog("^ " + message[i]);
+			message[i] ^= secretXORKeys[i];
 		}
 	}
 
