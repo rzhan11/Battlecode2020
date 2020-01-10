@@ -9,6 +9,7 @@ public class BotFulfillmentCenter extends Globals {
 	public static void loop() throws GameActionException {
 		while (true) {
 			try {
+				Globals.update();
 				if (firstTurn) {
 
 				}

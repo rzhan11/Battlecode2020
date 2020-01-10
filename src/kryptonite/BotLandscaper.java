@@ -13,7 +13,7 @@ public class BotLandscaper extends Globals {
 			try {
 				Globals.update();
 				if (firstTurn) {
-
+					// finds spots that can be used for digging
 					digSpots = new MapLocation[12];
 					MapLocation templ = HQLocation.translate(3,3);
 					int index = 0;
@@ -28,6 +28,10 @@ public class BotLandscaper extends Globals {
 					}
 					digSpotsLength = index;
 
+					Globals.endTurn();
+					Globals.update();
+
+					// finds tiles that are on the 5x5 plot
 					smallWall = new MapLocation[24];
 					completed = new MapLocation[24];
 					index = 0;
@@ -44,6 +48,9 @@ public class BotLandscaper extends Globals {
 					smallWallDepth = rc.senseElevation(HQLocation) + 3;
 					Debug.ttlog("SMALL WALL LENGTH: " + smallWallLength);
 					Debug.ttlog("SMALL WALL DEPTH: " + smallWallDepth);
+
+					Globals.endTurn();
+					Globals.update();
 
 					completedLength = 0;
 

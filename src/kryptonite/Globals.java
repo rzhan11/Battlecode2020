@@ -103,12 +103,7 @@ public class Globals {
 			Debug.tlog("WARNING: Extreme pollution has made actualSensorRadiusSquared < 2, so errors may occur. Ask Richard.");
 		}
 
-		Debug.tlog("Robot: " + myType);
-		Debug.tlog("roundNum: " + roundNum);
-		Debug.tlog("ID: " + myID);
-		Debug.tlog("Location: " + here);
-		Debug.tlog("actualSensorRadiusSquared: " + actualSensorRadiusSquared);
-		Debug.tlog("Cooldown: " + rc.getCooldownTurns());
+		printMyInfo();
 
 		visibleAllies = rc.senseNearbyRobots(-1, us); // -1 uses all robots within sense radius
 
@@ -127,6 +122,18 @@ public class Globals {
 		}
 	}
 
+	/*
+	Prints various useful debuggin information
+	*/
+	public static void printMyInfo () {
+		Debug.tlog("Robot: " + myType);
+		Debug.tlog("roundNum: " + roundNum);
+		Debug.tlog("ID: " + myID);
+		Debug.tlog("Location: " + here);
+		Debug.tlog("actualSensorRadiusSquared: " + actualSensorRadiusSquared);
+		Debug.tlog("Cooldown: " + rc.getCooldownTurns());
+	}
+
 	public static void endTurn() throws GameActionException {
 		try {
 			firstTurn = false;
@@ -143,7 +150,10 @@ public class Globals {
 				Debug.ttlogi("Skipped turns: " + turns);
 			}
 
-			Debug.tlog("Ending turn with " + Clock.getBytecodesLeft() + " bytecodes");
+			Debug.tlog("Remaining bytecode: " + Clock.getBytecodesLeft());
+			Debug.tlog("---------------");
+			Debug.tlog("---END TURN----");
+			Debug.tlog("---------------");
 			Debug.log();
 		} catch (Exception e) {
 			e.printStackTrace();
