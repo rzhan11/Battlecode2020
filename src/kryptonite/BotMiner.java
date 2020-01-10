@@ -8,14 +8,15 @@ public class BotMiner extends Globals {
 	final private static int EXPLORER_EDGE_DISTANCE = 4;
 
 	// distance at which we try to use refineries
-	final private static int REFINERY_DISTANCE_LIMIT = 64;
+	final private static int REFINERY_DISTANCE_LIMIT = 25;
 	final private static int MIN_SOUP_WRITE_SOUP_CLUSTER = 500;
 	final private static int MIN_SOUP_BUILD_REFINERY = 1000;
 
 	// spawnDirection is the direction that this Miner was spawned by the HQ
 	private static Direction spawnDirection;
 	// the target location that this Miner wants to explore, based on spawnDirection
-	private static MapLocation exploreLocation;
+	private static Direction myExploreDirection;
+	private static MapLocation myExploreLocation;
 
 	public static boolean isSymmetryMiner = false;
 	public static MapLocation symmetryLocation;
@@ -56,47 +57,9 @@ public class BotMiner extends Globals {
 
 					spawnDirection = HQLocation.directionTo(here);
 
-					// explore horizontal/vertical lower/middle/upper bound
-					int hLowerBound = EXPLORER_EDGE_DISTANCE;
-					int hMiddleBound = mapWidth / 2;
-					int hUpperBound = mapWidth - 1 - EXPLORER_EDGE_DISTANCE;
-					int vLowerBound = EXPLORER_EDGE_DISTANCE;
-					int vMiddleBound = mapHeight / 2;
-					int vUpperBound = mapHeight - 1 - EXPLORER_EDGE_DISTANCE;
-
-					// int distanceToEastEdge = mapWidth - 1 - HQLocation.x;
-					// int distanceToWestEdge = HQLocation.x;
-					// int distanceToNorthEdge = mapHeight - 1 - HQLocation.y;
-					// int distanceToSouthEdge = HQLocation.y;
-
-					int change;
-					switch (spawnDirection) {
-						case NORTH:
-							exploreLocation = new MapLocation(hMiddleBound, vUpperBound);
-							break;
-						case EAST:
-							exploreLocation = new MapLocation(hUpperBound, vMiddleBound);
-							break;
-						case SOUTH:
-							exploreLocation = new MapLocation(hMiddleBound, vLowerBound);
-							break;
-						case WEST:
-							exploreLocation = new MapLocation(hLowerBound, vMiddleBound);
-							break;
-						case NORTHEAST:
-							exploreLocation = new MapLocation(hUpperBound, vUpperBound);
-							break;
-						case SOUTHEAST:
-							exploreLocation = new MapLocation(hUpperBound, vLowerBound);
-							break;
-						case SOUTHWEST:
-							exploreLocation = new MapLocation(hLowerBound, vLowerBound);
-							break;
-						case NORTHWEST:
-							exploreLocation = new MapLocation(hLowerBound, vUpperBound);
-							break;
-					}
-					Debug.log("exploreLocation: " + exploreLocation);
+					myExploreDirection = spawnDirection;
+					myExploreLocation = findExploreLocation(myExploreDirection);
+					Debug.log("myExploreLocation: " + myExploreLocation);
 
 
 					// store HQ as a refinery
@@ -169,10 +132,6 @@ public class BotMiner extends Globals {
 		*/
 		if (buildRefineryLocation == null) {
 			if (refineriesIndex == -1) {
-				if (soupDeposit != null && rc.canSenseLocation(soupDeposit)) {
-
-					Debug.tlog(soupDeposit + " " + rc.canSenseLocation(soupDeposit));
-				}
 				if (soupDeposit != null && rc.canSenseLocation(soupDeposit) && rc.senseSoup(soupDeposit) == 0) {
 					soupDeposit = null;
 					if (soupCarrying > 0) {
@@ -390,6 +349,7 @@ public class BotMiner extends Globals {
 			if (soupClusterIndex != -1) {
 				MapLocation loc = soupClusters[soupClusterIndex];
 				if (here.isAdjacentTo(loc) || here.equals(loc)) { // flag emptySoupClusters if no soup deposits are found at this soup cluster
+					Debug.tlog("Reached and removing soupCluster at " + soupClusters[soupClusterIndex]);
 					emptySoupClusters[soupClusterIndex] = true;
 					soupClusterIndex = -1;
 					// do not return, instead try to explore
@@ -409,18 +369,55 @@ public class BotMiner extends Globals {
 			}
 
 			// go to explore location
+			if (here.equals(myExploreLocation)) {
+				myExploreDirection = myExploreDirection.rotateLeft();
+				myExploreLocation = findExploreLocation(myExploreDirection);
+				Debug.tlog("Finished exploring " + myExploreDirection);
+			}
 			if (rc.isReady()) {
 
-				Direction dir = Nav.bugNavigate(exploreLocation);
+				Direction dir = Nav.bugNavigate(myExploreLocation);
 				if (dir != null) {
-					Debug.tlog("Exploring " + exploreLocation + ", moved " + dir);
+					Debug.tlog("Exploring " + myExploreLocation + ", moved " + dir);
 				} else {
-					Debug.tlog("Exploring " + exploreLocation + ", but no move found");
+					Debug.tlog("Exploring " + myExploreLocation + ", but no move found");
 				}
 			} else {
-				Debug.tlog("Exploring " + exploreLocation + ", but not ready");
+				Debug.tlog("Exploring " + myExploreLocation + ", but not ready");
 			}
 		}
+	}
+
+	/*
+	Returns the exploreLocation for each direction
+	*/
+	public static MapLocation findExploreLocation (Direction dir) {
+		int hLowerBound = EXPLORER_EDGE_DISTANCE;
+		int hMiddleBound = mapWidth / 2;
+		int hUpperBound = mapWidth - 1 - EXPLORER_EDGE_DISTANCE;
+		int vLowerBound = EXPLORER_EDGE_DISTANCE;
+		int vMiddleBound = mapHeight / 2;
+		int vUpperBound = mapHeight - 1 - EXPLORER_EDGE_DISTANCE;
+
+		switch (dir) {
+			case NORTH:
+				return new MapLocation(hMiddleBound, vUpperBound);
+			case EAST:
+				return new MapLocation(hUpperBound, vMiddleBound);
+			case SOUTH:
+				return new MapLocation(hMiddleBound, vLowerBound);
+			case WEST:
+				return new MapLocation(hLowerBound, vMiddleBound);
+			case NORTHEAST:
+				return new MapLocation(hUpperBound, vUpperBound);
+			case SOUTHEAST:
+				return new MapLocation(hUpperBound, vLowerBound);
+			case SOUTHWEST:
+				return new MapLocation(hLowerBound, vLowerBound);
+			case NORTHWEST:
+				return new MapLocation(hLowerBound, vUpperBound);
+		}
+		return null;
 	}
 
 	/*
