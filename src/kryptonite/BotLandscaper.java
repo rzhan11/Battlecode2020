@@ -4,9 +4,9 @@ import battlecode.common.*;
 
 public class BotLandscaper extends Globals {
 
-	private static MapLocation[] digSpots, smallWall, largeWall, completed;
+	private static MapLocation[] digSpots, smallWall, largeWall, smallWallCompleted;
 	private static int digSpotsLength, smallWallLength, largeWallLength, smallWallDepth,
-            completedLength, currentRing = -1, currentStep;
+            smallWallCompletedLength, currentRing = -1, currentStep;
 
 	public static void loop() throws GameActionException {
 		while (true) {
@@ -33,7 +33,7 @@ public class BotLandscaper extends Globals {
 
 					// finds tiles that are on the 5x5 plot
 					smallWall = new MapLocation[24];
-					completed = new MapLocation[24];
+					smallWallCompleted = new MapLocation[24];
 					index = 0;
 					templ = HQLocation.translate(2, 2);
 					for(int i = 0; i < 5; i++) for(int j = 0; j < 5; j++) {
@@ -52,7 +52,7 @@ public class BotLandscaper extends Globals {
 					Globals.endTurn();
 					Globals.update();
 
-					completedLength = 0;
+					smallWallCompletedLength = 0;
 
 					int largeWallRingSize = 9; // must be odd
 					int cornerDist = largeWallRingSize / 2;
@@ -133,13 +133,16 @@ public class BotLandscaper extends Globals {
 
 		// If the First Wall isn't Complete and you can do stuff in your current position, do it
 		if(!wallComplete()) {
-			// Update Completed Array
+			// Update smallWallCompleted Array
 			for(Direction d: Direction.allDirections()) {
 				MapLocation tempLoc = here.add(d);
-				if(inArray(smallWall, tempLoc, smallWallLength) && !inArray(completed, tempLoc, completedLength)) {
-					if(rc.senseElevation(tempLoc) == smallWallDepth) {
-						completed[completedLength] = tempLoc;
-						completedLength++;
+				if(inArray(smallWall, tempLoc, smallWallLength) && !inArray(smallWallCompleted, tempLoc, smallWallCompletedLength)) {
+					if (rc.canSenseLocation(tempLoc)) {
+						RobotInfo ri = rc.senseRobotAtLocation(tempLoc);
+						if (rc.senseElevation(tempLoc) == smallWallDepth || (ri != null && ri.type.isBuilding())) {
+							smallWallCompleted[smallWallCompletedLength] = tempLoc;
+							smallWallCompletedLength++;
+						}
 					}
 				}
 			}
@@ -147,7 +150,7 @@ public class BotLandscaper extends Globals {
 			boolean actionComplete = false;
 			for(Direction d: allDirections) {
 				MapLocation tempLoc = here.add(d);
-				if(inArray(smallWall, tempLoc, smallWallLength) && !inArray(completed, tempLoc, completedLength)) {
+				if(inArray(smallWall, tempLoc, smallWallLength) && !inArray(smallWallCompleted, tempLoc, smallWallCompletedLength)) {
 					if(rc.senseElevation(tempLoc) < smallWallDepth) {
 						actionComplete = true;
 						if(rc.getDirtCarrying() == 0) {
@@ -294,7 +297,7 @@ public class BotLandscaper extends Globals {
 	}
 
 	private static boolean wallComplete() {
-		return smallWallLength == completedLength;
+		return smallWallLength == smallWallCompletedLength;
 	}
 
 	private static void landscaperMove(Direction d) throws GameActionException {
