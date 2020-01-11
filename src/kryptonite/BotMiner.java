@@ -97,7 +97,7 @@ public class BotMiner extends Globals {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			Globals.endTurn();
+			Globals.endTurn(false);
 		}
 	}
 
@@ -171,7 +171,7 @@ public class BotMiner extends Globals {
 		If we are not moving to/building a refinery
 			Check if soupDeposit is depleted or if we are carrying maximum soup
 				If either is true, target a refinery
-		If we are movging to a refinery
+		If we are moving to a refinery
 			Check if there is a better one
 		*/
 		if (buildRefineryLocation == null) {
@@ -219,7 +219,7 @@ public class BotMiner extends Globals {
 			}
 			// if centerOfVisibleSoup is better than buildRefineryLocation, replace it
 			// makes sure that centerOfVisibleSoup isn't flooded or occupied
-			if (visibleSoup > buildRefineryVisibleSoup && rc.senseFlooding(buildRefineryLocation) && rc.senseRobotAtLocation(buildRefineryLocation) == null) {
+			if (visibleSoup > buildRefineryVisibleSoup && !rc.senseFlooding(centerOfVisibleSoup) && rc.senseRobotAtLocation(centerOfVisibleSoup) == null) {
 				buildRefineryLocation = centerOfVisibleSoup;
 				buildRefineryVisibleSoup = visibleSoup;
 				Debug.tlog("Retargetting buildRefineryLocation to " + buildRefineryLocation + " with " + buildRefineryVisibleSoup + " soup");
@@ -339,7 +339,7 @@ public class BotMiner extends Globals {
 		/*
 		mine dat soup
 		*/
-		if (soupDeposit != null && here.isAdjacentTo(soupDeposit)) {
+		if (soupDeposit != null && here.distanceSquaredTo(soupDeposit) <= 2) {
 			if (rc.isReady()) {
 				Debug.tlog("Mining soup at " + soupDeposit);
 				rc.mineSoup(here.directionTo(soupDeposit));
@@ -392,7 +392,7 @@ public class BotMiner extends Globals {
 			// head to soupClusterIndex
 			if (soupClusterIndex != -1) {
 				MapLocation loc = soupClusters[soupClusterIndex];
-				if (here.isAdjacentTo(loc) || here.equals(loc)) { // flag emptySoupClusters if no soup deposits are found at this soup cluster
+				if (here.distanceSquaredTo(loc) <= 2) { // flag emptySoupClusters if no soup deposits are found at this soup cluster
 					Debug.tlog("Reached and removing soupCluster at " + soupClusters[soupClusterIndex]);
 					emptySoupClusters[soupClusterIndex] = true;
 					soupClusterIndex = -1;
