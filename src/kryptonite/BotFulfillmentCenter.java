@@ -24,7 +24,7 @@ public class BotFulfillmentCenter extends Globals {
 	public static void turn() throws GameActionException {
 		if (rc.isReady()) {
 			for (Direction d : Direction.allDirections()) {
-				if (teamSoup >= RobotType.DELIVERY_DRONE.cost && rc.canBuildRobot(RobotType.DELIVERY_DRONE, d) && dronesMade < 5) {
+				if (teamSoup >= RobotType.DELIVERY_DRONE.cost && rc.canBuildRobot(RobotType.DELIVERY_DRONE, d) && dronesMade < 12) {
 					rc.buildRobot(RobotType.DELIVERY_DRONE, d);
 					teamSoup = rc.getTeamSoup();
 					dronesMade++;

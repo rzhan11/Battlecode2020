@@ -50,6 +50,9 @@ public class BotMiner extends Globals {
 	private static boolean designSchoolBuilt = false;
 	private static boolean fulfillmentCenterBuilt = false;
 
+	private static int netGunsBuilt = 0;
+	private static int[][] dnetGunLocations;					//where netguns are to be built relative to hq
+	private static int[][] dnetGunBuildLocations;			//where builderminer is when it builds netguns relative to hq
 
 
 	public static void loop() throws GameActionException {
@@ -74,6 +77,10 @@ public class BotMiner extends Globals {
 					// hardcoded locations of design school and fulfillment center
 					designSchoolLocation = new MapLocation(HQLocation.x-1,HQLocation.y);
 					fulfillmentCenterLocation = new MapLocation(HQLocation.x+1,HQLocation.y);
+
+					dnetGunBuildLocations = new int[][]{{-2,2},{-2,2},{-2,-2},{-2,-2},{2,-2},{2,-2},{2,2},{2,2}};
+					dnetGunLocations = new int[][]{{-2,3},{-3,2},{-2,-3},{-3,-2},{2,-3},{3,-2},{2,3},{3,2}};
+
 				}
 
 				/*
@@ -128,6 +135,17 @@ public class BotMiner extends Globals {
 				} else {
 					Nav.bugNavigate(fulfillmentCenterLocation);
 					Debug.tlog("Going to fulfillmentCenterLocation");
+				}
+			} else if (netGunsBuilt < 8 && fulfillmentCenterBuilt && designSchoolBuilt && teamSoup >= RobotType.NET_GUN.cost){
+				MapLocation buildFromLocation = new MapLocation(HQLocation.x + dnetGunBuildLocations[netGunsBuilt][0],HQLocation.y + dnetGunBuildLocations[netGunsBuilt][1]);
+				MapLocation buildAtLocation = new MapLocation(HQLocation.x + dnetGunLocations[netGunsBuilt][0],HQLocation.y + dnetGunLocations[netGunsBuilt][1]);
+				if(rc.getLocation().equals(buildFromLocation)){
+					if(rc.canBuildRobot(RobotType.NET_GUN,rc.getLocation().directionTo(buildAtLocation))){
+						rc.buildRobot(RobotType.NET_GUN,rc.getLocation().directionTo(buildAtLocation));
+						netGunsBuilt++;
+					}
+				} else {
+					Nav.bugNavigate(buildFromLocation);
 				}
 			}
 			return;
