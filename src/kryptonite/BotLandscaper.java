@@ -144,7 +144,7 @@ public class BotLandscaper extends Globals {
 			}
 
 			// If the First Wall isn't Complete and you can do stuff in your current position, do it
-			if (!wallComplete()) {
+			if (!smallWallComplete) {
 				// Update smallWallCompleted Array
 				for (Direction d : Direction.allDirections()) {
 					MapLocation tempLoc = here.add(d);
@@ -395,10 +395,6 @@ public class BotLandscaper extends Globals {
 			if(yPos) return Direction.EAST;
 			return Direction.WEST;
 		}
-	}
-
-	private static boolean wallComplete() {
-		return smallWallLength == smallWallCompletedLength;
 	}
 
 	private static void landscaperMove(Direction d) throws GameActionException {

@@ -12,6 +12,7 @@ public class Communication extends Globals {
 	final public static int REFINERY_BUILT_SIGNAL = 2;
 	final public static int SYMMETRY_MINER_BUILT_SIGNAL = 3;
 	final public static int BUILDER_MINER_BUILT_SIGNAL = 4;
+	final public static int SMALL_WALL_BUILD_SIGNAL = 5;
 
 	// used to alter our own data
 	public static int secretKey;
@@ -117,7 +118,10 @@ public class Communication extends Globals {
 						if(myType == RobotType.MINER) {
 							readTransactionBuilderMinerBuilt(message,round);
 						}
+						break;
 
+					case SMALL_WALL_BUILD_SIGNAL:
+						readTransactionSmallWallComplete(message,round);
 		        }
 			}
 		}
@@ -150,6 +154,33 @@ public class Communication extends Globals {
 		HQLocation = new MapLocation(message[2], message[3]);
 		Debug.ttlog("Submitter ID: " + decryptID(message[0]));
 		Debug.ttlog("Location: " + HQLocation);
+		Debug.ttlog("Posted round: " + round);
+	}
+
+	/*
+message[2] = x coordinate of our HQ
+message[3] = y coordinate of our HQ
+
+*/
+	public static void writeTransactionSmallWallComplete () throws GameActionException {
+		Debug.tlog("Writing transaction for 'Small Wall Complete'");
+		int[] message = new int[7];
+		message[0] = encryptID(myID);
+		message[1] = SMALL_WALL_BUILD_SIGNAL;
+
+		xorMessage(message);
+		if (teamSoup >= 10) {
+			rc.submitTransaction(message, 10);
+			teamSoup = rc.getTeamSoup();
+		} else {
+			Debug.tlog("WARNING: Could not afford transaction");
+		}
+	}
+
+	public static void readTransactionSmallWallComplete (int[] message, int round) {
+		Debug.tlog("Reading 'Small Wall Complete' transaction");
+		smallWallComplete = true;
+		Debug.ttlog("Submitter ID: " + decryptID(message[0]));
 		Debug.ttlog("Posted round: " + round);
 	}
 
@@ -221,7 +252,7 @@ public class Communication extends Globals {
 	message[3] = y coordinate of refinery
 
 	*/
-	public static void writeTransactionSymmetryMinerBuilt (int symmetryMinerID, MapLocation symmetryLocation) throws GameActionException {
+	public static void writeTransactionSymmetryMinerBuilt(int symmetryMinerID, MapLocation symmetryLocation) throws GameActionException {
 		// check money
 		Debug.tlog("Writing transaction for 'Symmetry Miner Built' with ID " + symmetryMinerID + " finding " + symmetryLocation);
 		int[] message = new int[7];
