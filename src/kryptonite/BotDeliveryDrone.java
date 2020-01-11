@@ -7,6 +7,7 @@ public class BotDeliveryDrone extends Globals {
 	public static int smallWallDepth;
 
 	public static MapLocation[] digLocations;
+	public static boolean[] digLocationsOccupiedMemory; // the last time this digLocation was visible, was it occupied?
 	public static int digLocationsLength;
 
 	public static MapLocation[] largeWall;
@@ -23,6 +24,7 @@ public class BotDeliveryDrone extends Globals {
 					smallWallDepth = rc.senseElevation(HQLocation) + 3;
 
 					digLocations = new MapLocation[12];
+					digLocationsOccupiedMemory = new boolean[digLocations.length];
 					MapLocation templ = HQLocation.translate(3,3);
 					int index = 0;
 					for(int i = 0; i < 4; i++) for(int j = 0; j < 4; j++) {
@@ -98,7 +100,7 @@ public class BotDeliveryDrone extends Globals {
 	public static boolean canPickUpType (RobotType rt) {
 		return rt == RobotType.MINER || rt == RobotType.LANDSCAPER || rt == RobotType.COW;
 	}
-	
+
     // @todo: Identify if we are one a low elevation, pick up robots here, and move to clean space
 	public static void turn() throws GameActionException {
 		if (rc.isCurrentlyHoldingUnit()) {
@@ -168,10 +170,21 @@ public class BotDeliveryDrone extends Globals {
 				// find the closest empty dig location
 				int closestDigDist = P_INF;
 				MapLocation closestDigLocation = null;
+				boolean visibleDigLocation = false;
 				for (int i = 0; i < digLocationsLength; i++) {
-					if (rc.canSenseLocation(digLocations[i]) && rc.senseRobotAtLocation(digLocations[i]) == null) {
-						int dist = here.distanceSquaredTo(digLocations[i]);
-						if (dist < closestDigDist) {
+					int dist = here.distanceSquaredTo(digLocations[i]);
+					if (dist < closestDigDist) {
+						if (rc.canSenseLocation(digLocations[i])) { // prioritize visible digLocations
+							if (rc.senseRobotAtLocation(digLocations[i]) == null) {
+								digLocationsOccupiedMemory[i] = false;
+								closestDigDist = dist;
+								closestDigLocation = digLocations[i];
+							} else {
+								digLocationsOccupiedMemory[i] = true;
+							}
+						} else if (closestDigLocation == null && !digLocationsOccupiedMemory[i]) {
+							// only check not visible digLocation if we haven't found any digLocations yet
+							// this digLocation also must not have been occupied (in previous turns)
 							closestDigDist = dist;
 							closestDigLocation = digLocations[i];
 						}
@@ -192,6 +205,8 @@ public class BotDeliveryDrone extends Globals {
 						Debug.ttlog("But not ready");
 					}
 					return;
+				} else {
+					Debug.tlog("I can see all the digLocations and they are occupied.");
 				}
 			}
 		}
@@ -208,7 +223,7 @@ public class BotDeliveryDrone extends Globals {
 				}
 			}
 		} else {
-			// checks for adjacent enemies that can be picked upup
+			// checks for adjacent enemies that can be picked up
 			for (Direction dir: directions) {
 				MapLocation loc = rc.adjacentLocation(dir);
 				if (inMap(loc)) {
