@@ -54,6 +54,10 @@ public class BotMiner extends Globals {
 	private static int[][] dnetGunLocations;					//where netguns are to be built relative to hq
 	private static int[][] dnetGunBuildLocations;			//where builderminer is when it builds netguns relative to hq
 
+	private static int vaporatorsBuilt = 0;
+	private static int[][] dvaporatorLocations;					//where vaporators are to be built relative to hq
+	private static int[][] dvaporatorBuildLocations;			//where builderminer is when it builds vaporator relative to hq
+
 
 	public static void loop() throws GameActionException {
 
@@ -78,8 +82,11 @@ public class BotMiner extends Globals {
 					designSchoolLocation = new MapLocation(HQLocation.x-1,HQLocation.y);
 					fulfillmentCenterLocation = new MapLocation(HQLocation.x+1,HQLocation.y);
 
-					dnetGunBuildLocations = new int[][]{{-2,2},{-2,2},{-2,-2},{-2,-2},{2,-2},{2,-2},{2,2},{2,2}};
-					dnetGunLocations = new int[][]{{-2,3},{-3,2},{-2,-3},{-3,-2},{2,-3},{3,-2},{2,3},{3,2}};
+					dnetGunBuildLocations = new int[][]{{-2,2},{-2,-2},{2,-2},{2,2},{-2,2},{-2,-2},{2,-2},{2,2}};
+					dnetGunLocations = new int[][]{{-2,3},{-2,-3},{2,-3},{2,3},{-3,2},{-3,-2},{3,-2},{3,2}};
+
+					dvaporatorBuildLocations = new int[][]{{0,-1},{0,-1},{0,1},{0,1}};
+					dvaporatorLocations = new int[][]{{-1,-1},{1,-1},{-1,1},{1,1}};
 
 				}
 
@@ -136,13 +143,24 @@ public class BotMiner extends Globals {
 					Nav.bugNavigate(fulfillmentCenterLocation);
 					Debug.tlog("Going to fulfillmentCenterLocation");
 				}
-			} else if (netGunsBuilt < 8 && fulfillmentCenterBuilt && designSchoolBuilt && teamSoup >= RobotType.NET_GUN.cost){
+			} else if ((netGunsBuilt < 4 || (netGunsBuilt < 8 && vaporatorsBuilt >= 4)) && fulfillmentCenterBuilt && designSchoolBuilt && teamSoup >= RobotType.NET_GUN.cost){
 				MapLocation buildFromLocation = new MapLocation(HQLocation.x + dnetGunBuildLocations[netGunsBuilt][0],HQLocation.y + dnetGunBuildLocations[netGunsBuilt][1]);
 				MapLocation buildAtLocation = new MapLocation(HQLocation.x + dnetGunLocations[netGunsBuilt][0],HQLocation.y + dnetGunLocations[netGunsBuilt][1]);
 				if(rc.getLocation().equals(buildFromLocation)){
 					if(rc.canBuildRobot(RobotType.NET_GUN,rc.getLocation().directionTo(buildAtLocation))){
 						rc.buildRobot(RobotType.NET_GUN,rc.getLocation().directionTo(buildAtLocation));
 						netGunsBuilt++;
+					}
+				} else {
+					Nav.bugNavigate(buildFromLocation);
+				}
+			} else if(netGunsBuilt >= 4 && vaporatorsBuilt < 4){
+				MapLocation buildFromLocation = new MapLocation(HQLocation.x + dvaporatorBuildLocations[vaporatorsBuilt][0],HQLocation.y + dvaporatorBuildLocations[vaporatorsBuilt][1]);
+				MapLocation buildAtLocation = new MapLocation(HQLocation.x + dvaporatorLocations[vaporatorsBuilt][0],HQLocation.y + dvaporatorLocations[vaporatorsBuilt][1]);
+				if(rc.getLocation().equals(buildFromLocation)){
+					if(rc.canBuildRobot(RobotType.VAPORATOR,rc.getLocation().directionTo(buildAtLocation))){
+						rc.buildRobot(RobotType.VAPORATOR,rc.getLocation().directionTo(buildAtLocation));
+						vaporatorsBuilt++;
 					}
 				} else {
 					Nav.bugNavigate(buildFromLocation);
