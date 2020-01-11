@@ -4,20 +4,16 @@ import battlecode.common.*;
 
 public class BotDeliveryDrone extends Globals {
 
+	// 5x5 plot information
+	public static int smallWallDepth;
+
+	// wall information
 	public static int wallRingDistance = 4;
 	public static boolean insideWall;
 	public static boolean onWall;
 	public static boolean outsideWall;
 
-	public static boolean movingRobotToPlot;
-	public static boolean movingRobotToWall;
-	public static boolean movingRobotInwards;
-
-	public static MapLocation movingOutwardsLocation = null;
-	public static boolean movingRobotOutwards;
-
-	public static int smallWallDepth;
-
+	// information about digLocations
 	public static MapLocation[] innerDigLocations;
 	public static boolean[] innerDigLocationsOccupiedMemory; // the last time this digLocation was visible, was it occupied?
 	public static int innerDigLocationsLength;
@@ -28,6 +24,17 @@ public class BotDeliveryDrone extends Globals {
 
 	public static MapLocation[] largeWall;
 	public static int largeWallLength;
+
+	// nearby pick-up-able robots
+	public static RobotInfo[] allyMoveableRobots;
+	public static int allyMoveableRobotsLength;
+
+	// what type of robot transport are we doing
+	public static boolean movingRobotToPlot;
+	public static boolean movingRobotToWall;
+	public static boolean movingRobotInwards;
+	public static boolean movingRobotOutwards;
+	public static MapLocation movingOutwardsLocation = null;
 
 	public static void loop() throws GameActionException {
 		while (true) {
@@ -56,7 +63,7 @@ public class BotDeliveryDrone extends Globals {
 					}
 					innerDigLocationsLength = index;
 
-					Globals.endTurn();
+					Globals.endTurn(true);
 					Globals.update();
 
 					// determine outerDigLocations
@@ -79,7 +86,7 @@ public class BotDeliveryDrone extends Globals {
 					outerDigLocationsLength = index;
 
 
-					Globals.endTurn();
+					Globals.endTurn(true);
 					Globals.update();
 
 					int largeWallRingSize = 9; // must be odd
@@ -127,14 +134,14 @@ public class BotDeliveryDrone extends Globals {
 					largeWallLength = index;
 					Debug.ttlog("LARGE WALL LENGTH: " + largeWallLength);
 
-					Globals.endTurn();
+					Globals.endTurn(true);
 					Globals.update();
 				}
 			    turn();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			Globals.endTurn();
+			Globals.endTurn(false);
 		}
 	}
 
@@ -148,6 +155,15 @@ public class BotDeliveryDrone extends Globals {
 		onWall = wallRingDistance == maxXYDistance(HQLocation, here);
 		outsideWall = wallRingDistance < maxXYDistance(HQLocation, here);
 
+		allyMoveableRobots = new RobotInfo[69]; // for sensorRadiusSquared = 24
+		int index = 0;
+		for (RobotInfo ri: visibleAllies) {
+			if (canPickUpType(ri.type)) {
+				allyMoveableRobots[index] = ri;
+				index++;
+			}
+		}
+		allyMoveableRobotsLength = index;
 
 		if (rc.isCurrentlyHoldingUnit()) {
 
@@ -160,7 +176,7 @@ public class BotDeliveryDrone extends Globals {
 						Debug.tlog("Dropped robot inside the wall at " +  loc);
 						if (rc.isReady()) {
 							Debug.ttlog("Dropped " +  dir);
-							rc.dropUnit(dir);
+							Actions.doDropUnit(dir);
 							movingRobotInwards = false;
 						} else {
 							Debug.ttlog("But not ready");
@@ -194,7 +210,7 @@ public class BotDeliveryDrone extends Globals {
 						Debug.tlog("Dropped robot outside the wall at " +  loc);
 						if (rc.isReady()) {
 							Debug.ttlog("Dropped " +  dir);
-							rc.dropUnit(dir);
+							Actions.doDropUnit(dir);
 							movingRobotOutwards = false;
 							movingOutwardsLocation = null;
 						} else {
@@ -228,7 +244,7 @@ public class BotDeliveryDrone extends Globals {
 						Debug.tlog("Dropped robot on the wall at " +  loc);
 						if (rc.isReady()) {
 							Debug.ttlog("Dropped " +  dir);
-							rc.dropUnit(dir);
+							Actions.doDropUnit(dir);
 							movingRobotToWall = false;
 						} else {
 							Debug.ttlog("But not ready");
@@ -250,7 +266,7 @@ public class BotDeliveryDrone extends Globals {
 						Debug.tlog("Dropped robot on the 5x5 plot at " +  loc);
 						if (rc.isReady()) {
 							Debug.ttlog("Dropped " +  dir);
-							rc.dropUnit(dir);
+							Actions.doDropUnit(dir);
 							movingRobotToPlot = false;
 						} else {
 							Debug.ttlog("But not ready");
@@ -293,14 +309,14 @@ public class BotDeliveryDrone extends Globals {
 				if (here.distanceSquaredTo(closestAllyInfo.location) <= 2) {
 					Debug.tlog("Picking up ally at digLocation " + closestAllyInfo.location);
 					if (rc.isReady()) {
-						rc.pickUpUnit(closestAllyInfo.ID);
+						Actions.doPickUpUnit(closestAllyInfo.ID);
 						Debug.ttlog("Success");
 					} else {
 						Debug.ttlog("But not ready");
 					}
 				} else {
 					// go to ally that is stuck
-					Debug.tlog("Moving to ally at digLocation " + closestAllyInfo.location);
+					Debug.tlog("Moving to pick up ally at digLocation " + closestAllyInfo.location);
 					if (rc.isReady()) {
 						Direction move = Nav.bugNavigate(closestAllyInfo.location);
 						if (move != null) {
@@ -315,73 +331,80 @@ public class BotDeliveryDrone extends Globals {
 
 				return;
 			}
-			
-			// checks if we are already in an innerDigLocation
-			if (inArray(innerDigLocations, here, innerDigLocationsLength)) {
-				Debug.tlog("Already in an innerDigLocation");
-				for (Direction dir: directions) {
-					MapLocation loc = rc.adjacentLocation(dir);
-					if (inMap(loc) && maxXYDistance(HQLocation, loc) == maxXYDistance(HQLocation, here)) { // if on the same ring as me
-						RobotInfo ri = rc.senseRobotAtLocation(loc);
-						if (ri != null && canPickUpType(ri.type)) {
-							Debug.tlog("Picking up robot on inner transport tile at " +  loc);
-							if (rc.isReady()) {
-								Debug.ttlog("Picked up " +  dir);
-								rc.pickUpUnit(ri.ID);
-								if (ri.type == RobotType.LANDSCAPER) {
-									movingRobotToWall = true;
-									Debug.ttlog("Moving robot to wall from inner");
-								} else {
-									movingRobotOutwards = true;
-									Direction dirFromHQ = HQLocation.directionTo(here);
-									movingOutwardsLocation = here.add(dirFromHQ).add(dirFromHQ);
-									Debug.ttlog("Moving robot outwards");
-								}
-							} else {
-								Debug.ttlog("But not ready");
-							}
-							return;
+
+			// check if adjacent robots are on transport tiles/wall
+			for (RobotInfo ri: adjacentAllies) {
+				boolean result = tryPickUpTransport(ri);
+				if (result) {
+					return;
+				}
+			}
+
+			// STATE: no adjacent, pick-up-able ally robots are on inner/outer transport tiles or wall
+
+			// try to move towards the closest visible robot that is on transport tiles/wall
+			for (RobotInfo ri: visibleAllies) {
+				if (canPickUpType(ri.type)) {
+					boolean shouldTransport = false;
+
+					int curRing = maxXYDistance(HQLocation, ri.location);
+					Direction dirFromHQ = HQLocation.directionTo(ri.location);
+
+					if (curRing == wallRingDistance - 1 && ri.type == RobotType.MINER) {
+						// inner transport tile
+						MapLocation wallLoc = ri.location.add(dirFromHQ);
+						if (!rc.canSenseLocation(wallLoc) || !Nav.checkElevation(ri.location, wallLoc)) {
+							shouldTransport = true;
+						}
+					} else if (curRing == wallRingDistance && ri.type == RobotType.MINER) {
+						// wall tile
+						MapLocation outerLoc = ri.location.add(dirFromHQ);
+						if (!rc.canSenseLocation(outerLoc) || !Nav.checkElevation(ri.location, outerLoc)) {
+							shouldTransport = true;
+						}
+					} else if (curRing == wallRingDistance + 1) {
+						// outer transport tile
+						MapLocation wallLoc = ri.location.subtract(dirFromHQ);
+						if (!rc.canSenseLocation(wallLoc) || !Nav.checkElevation(ri.location, wallLoc)) {
+							shouldTransport = true;
 						}
 					}
+
+					if (shouldTransport) {
+						Debug.tlog("Moving to pick up ally at " + ri.location);
+						if (rc.isReady()) {
+							Direction move = Nav.bugNavigate(ri.location);
+							if (move != null) {
+								Debug.ttlog("Moved " + move);
+							} else {
+								Debug.ttlog("But no move found");
+							}
+						} else {
+							Debug.ttlog("But not ready");
+						}
+						return;
+					}
 				}
-				Debug.tlog("Nobody on the inner transport tiles");
+			}
+
+			// STATE: no visible, pick-up-able ally robots are on inner/outer transport tiles or wall
+
+			// checks if we are already in an innerDigLocation
+			/*
+			if (inArray(innerDigLocations, here, innerDigLocationsLength)) {
+				Debug.tlog("Already in an innerDigLocation, just chilling here.");
 				return;
 			}
+			*/
 
 			// checks if we are already in an outerDigLocation
 			if (inArray(outerDigLocations, here, outerDigLocationsLength)) {
-				Debug.tlog("Already in an outerDigLocation");
-				for (Direction dir: directions) {
-					MapLocation loc = rc.adjacentLocation(dir);
-					if (inMap(loc) && maxXYDistance(HQLocation, loc) == maxXYDistance(HQLocation, here)) { // if on the same ring as me
-						RobotInfo ri = rc.senseRobotAtLocation(loc);
-						if (ri != null && canPickUpType(ri.type)) {
-							Debug.tlog("Picking up robot on outer transport tile at " +  loc);
-							if (rc.isReady()) {
-								Debug.ttlog("Picked up " +  dir);
-								rc.pickUpUnit(ri.ID);
-								if (ri.type == RobotType.LANDSCAPER) {
-									movingRobotToWall = true;
-									Debug.ttlog("Moving robot to wall from outer");
-								} else {
-									movingRobotInwards = true;
-									Debug.ttlog("Moving robot inwards");
-								}
-							} else {
-								Debug.ttlog("But not ready");
-							}
-							return;
-						}
-					}
-				}
-				Debug.tlog("Nobody on the outer transport tiles");
+				Debug.tlog("Already in an outerDigLocation, just chilling here.");
 				return;
 			}
 
-			// STATE == no ally robots are stuck in a dig location or on a transport tile
-
+			/*
 			MapLocation closestInnerDigLocation = findClosestOpenLocation(innerDigLocations, innerDigLocationsOccupiedMemory, innerDigLocationsLength);
-
 			if (closestInnerDigLocation != null) {
 				// go to dig location
 				Debug.tlog("Moving to closestInnerDigLocation at " + closestInnerDigLocation);
@@ -397,6 +420,9 @@ public class BotDeliveryDrone extends Globals {
 				}
 				return;
 			}
+			*/
+
+			// STATE == not in an outerDigLocation
 
 			MapLocation closestOuterDigLocation = findClosestOpenLocation(outerDigLocations, outerDigLocationsOccupiedMemory, outerDigLocationsLength);
 			if (closestOuterDigLocation != null) {
@@ -450,12 +476,94 @@ public class BotDeliveryDrone extends Globals {
 		return closestTargetLocation;
 	}
 
+	/*
+	Given a robot, tries to pick up the unit for transport
+	Returns true if the unit is valid (even if drone is not ready)
+	Returns false otherwise
+	*/
+	public static boolean tryPickUpTransport (RobotInfo ri) throws GameActionException {
+		if (canPickUpType(ri.type)) {
+			int curRing = maxXYDistance(HQLocation, ri.location);
+			Direction dirFromHQ = HQLocation.directionTo(ri.location);
+
+			// if miner is on inner transport tile and is blocked by high elevation wall, move him outwards
+			// ignore landscapers for now
+			if (curRing == wallRingDistance - 1 && ri.type == RobotType.MINER) {
+				MapLocation wallLoc = ri.location.add(dirFromHQ);
+				// if we cannot sense the wallLoc, assume it is high and pick up the miner
+				if (!rc.canSenseLocation(wallLoc) || !Nav.checkElevation(ri.location, wallLoc)) {
+					Debug.tlog("Picking up robot on inner transport tile at " + ri.location);
+					if (rc.isReady()) {
+						Actions.doPickUpUnit(ri.ID);
+						movingRobotOutwards = true;
+						movingOutwardsLocation = here.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
+						if (!inMap(movingOutwardsLocation)) {
+							Debug.ttlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
+							movingOutwardsLocation = symmetryHQLocations[2];
+						}
+						Debug.ttlog("Moving robot outwards");
+					} else {
+						Debug.ttlog("But not ready");
+					}
+					return true;
+				}
+			}
+
+			// if miner is on wall that has high elevation, move him outwards
+			if (curRing == wallRingDistance && ri.type == RobotType.MINER) {
+				MapLocation outerLoc = ri.location.add(dirFromHQ);
+				// if we cannot sense the outerLoc, assume it is high and pick up the miner
+				if (!rc.canSenseLocation(outerLoc) || !Nav.checkElevation(ri.location, outerLoc)) {
+					Debug.tlog("Picking up miner on wall at " + ri.location);
+					if (rc.isReady()) {
+						Actions.doPickUpUnit(ri.ID);
+						movingRobotOutwards = true;
+						movingOutwardsLocation = here.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
+						if (!inMap(movingOutwardsLocation)) {
+							Debug.ttlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
+							movingOutwardsLocation = symmetryHQLocations[2];
+						}
+						Debug.ttlog("Moving robot outwards");
+					} else {
+						Debug.ttlog("But not ready");
+					}
+					return true;
+				}
+			}
+
+			// if miner is on inner transport tile and is blocked by high elevation wall, move him outwards
+			if (curRing == wallRingDistance + 1) {
+				MapLocation wallLoc = ri.location.subtract(dirFromHQ);
+				// if we cannot sense the wallLoc, assume it is high and pick up the miner
+				if (!rc.canSenseLocation(wallLoc) || !Nav.checkElevation(ri.location, wallLoc)) {
+					Debug.tlog("Picking up robot on outer transport tile at " + ri.location);
+					if (rc.isReady()) {
+						Actions.doPickUpUnit(ri.ID);
+						if (ri.type == RobotType.LANDSCAPER) {
+							// move landscapers to wall
+							movingRobotToWall = true;
+							Debug.ttlog("Moving landscaper to wall from inner");
+						} else {
+							// move miners inside
+							movingRobotInwards = true;
+							Debug.ttlog("Moving miner inwards");
+						}
+					} else {
+						Debug.ttlog("But not ready");
+					}
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	public static void richardMethod() throws GameActionException {
 		if (rc.isCurrentlyHoldingUnit()) {
 			for (Direction dir: directions) {
 				MapLocation loc = rc.adjacentLocation(dir);
 				if (inMap(loc) && rc.senseFlooding(loc) && rc.canDropUnit(dir)) {
-					rc.dropUnit(dir);
+					Actions.doDropUnit(dir);
 					Debug.tlog("Dropped unit into water at " + loc);
 					return;
 				}
@@ -467,7 +575,7 @@ public class BotDeliveryDrone extends Globals {
 				if (inMap(loc)) {
 					RobotInfo ri = rc.senseRobotAtLocation(loc);
 					if (ri != null && ri.team == them && rc.canPickUpUnit(ri.ID)) {
-						rc.pickUpUnit(ri.ID);
+						Actions.doPickUpUnit(ri.ID);
 						Debug.tlog("Picked up unit at " + loc);
 						return;
 					}
