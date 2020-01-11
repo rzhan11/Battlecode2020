@@ -132,7 +132,7 @@ public class Globals {
 		} else {
 			while (HQLocation == null) {
 				if (oldTransactionsIndex == spawnRound - 1) {
-					Debug.tlogi("WARNING: Cannot find HQLocation");
+					Debug.tlogi("Cannot find HQLocation");
 					Globals.endTurn(true);
 					Globals.update();
 				}
