@@ -220,6 +220,12 @@ public class BotDeliveryDrone extends Globals {
 					}
 				}
 
+				// if movingOutwardsLocation is flooded, revert to symmetry
+				if (rc.canSenseLocation(movingOutwardsLocation) && rc.senseFlooding(movingOutwardsLocation)) {
+					Debug.tlog("movingOutwardsLocation is flooded, reverting to symmetry");
+					movingOutwardsLocation = symmetryHQLocations[0];
+				}
+
 				// go towards movingOutwardsLocation
 				Debug.tlog("Moving to drop outwards at " + movingOutwardsLocation);
 				if (rc.isReady()) {
@@ -503,7 +509,7 @@ public class BotDeliveryDrone extends Globals {
 						movingOutwardsLocation = here.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
 						if (!inMap(movingOutwardsLocation)) {
 							Debug.ttlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
-							movingOutwardsLocation = symmetryHQLocations[2];
+							movingOutwardsLocation = symmetryHQLocations[0];
 						}
 						Debug.ttlog("Moving robot outwards");
 					} else {
@@ -525,7 +531,7 @@ public class BotDeliveryDrone extends Globals {
 						movingOutwardsLocation = here.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
 						if (!inMap(movingOutwardsLocation)) {
 							Debug.ttlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
-							movingOutwardsLocation = symmetryHQLocations[2];
+							movingOutwardsLocation = symmetryHQLocations[0];
 						}
 						Debug.ttlog("Moving robot outwards");
 					} else {
