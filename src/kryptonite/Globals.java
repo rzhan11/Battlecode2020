@@ -159,6 +159,9 @@ public class Globals {
 		Debug.tlog("Cooldown: " + rc.getCooldownTurns());
 	}
 
+	/*
+	earlyEnd should be true, unless this method was called at the end of the loop() method
+	*/
 	public static void endTurn (boolean earlyEnd) throws GameActionException {
 		try {
 			firstTurn = false;

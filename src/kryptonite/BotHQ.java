@@ -43,7 +43,7 @@ public class BotHQ extends Globals {
 					}
 					digLocationsLength = index;
 
-					Globals.endTurn();
+					Globals.endTurn(true);
 					Globals.update();
 
 					// finds tiles that are on the 5x5 plot
