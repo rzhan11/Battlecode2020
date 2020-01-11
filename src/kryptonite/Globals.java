@@ -178,7 +178,7 @@ public class Globals {
 	*/
 	public static void endTurn (boolean earlyEnd) throws GameActionException {
 		try {
-			firstTurn = earlyEnd; // if early end, do not count as full turn
+			firstTurn &= earlyEnd; // if early end, do not count as full turn
 
 			Communication.readOldTransactions();
 			// check if we went over the bytecode limit

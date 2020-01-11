@@ -49,12 +49,26 @@ public class Nav extends Globals {
 	}
 
 	/*
-	Tries to move in the target direction, or rotateLeft/rotateRight of it
+	Tries to move in the target direction
 	If we are not a drone, it does not move into flooded tiles
 	Returns the Direction that we moved in
 	Returns null if did not move
 	*/
 	public static Direction tryMoveInDirection (Direction dir) throws GameActionException {
+		if (checkDirectionMoveable(dir)) {
+			Actions.doMove(dir);
+			return dir;
+		}
+		return null;
+	}
+
+	/*
+	Tries to move in the target direction, or rotateLeft/rotateRight of it
+	If we are not a drone, it does not move into flooded tiles
+	Returns the Direction that we moved in
+	Returns null if did not move
+	*/
+	public static Direction tryMoveInGeneralDirection (Direction dir) throws GameActionException {
 		if (checkDirectionMoveable(dir)) {
 			Actions.doMove(dir);
 			return dir;
@@ -91,7 +105,7 @@ public class Nav extends Globals {
 
 	private static boolean bugTracing = false;
 	private static MapLocation bugLastWall = null;
-	private static int bugClosestDistanceOnWall = P_INF;
+	private static int bugClosestDistanceToTarget = P_INF;
 	private static int bugTurnsWithoutWall = 0;
 	private static boolean bugRotateLeft = true; // whether we are rotating left or right
 	private static boolean[][] bugVisitedLocations;
@@ -104,11 +118,19 @@ public class Nav extends Globals {
 		if (!target.equals(bugTarget)) {
 			bugTarget = target;
 			bugTracing = false;
+			bugClosestDistanceToTarget = here.distanceSquaredTo(bugTarget);
+
 		}
 
 		if (here.equals(bugTarget)) {
 			return null;
 		}
+		Debug.tlog("bugClosestDistanceToTarget " + bugClosestDistanceToTarget);
+		Debug.tlog("bugTurnsWithoutWall " + bugTurnsWithoutWall);
+		Debug.tlog("bugTracing " + bugTracing);
+		Debug.tlog("bugRotateLeft " + bugRotateLeft);
+
+		bugClosestDistanceToTarget = Math.min(bugClosestDistanceToTarget, here.distanceSquaredTo(bugTarget));
 
 		Direction destDir = here.directionTo(bugTarget);
 		if (!bugTracing) { // try to go directly towards the target
@@ -119,7 +141,7 @@ public class Nav extends Globals {
 				bugStartTracing();
 			}
 		} else { // we are on obstacle, trying to get off of it
-			if (here.distanceSquaredTo(bugTarget) < bugClosestDistanceOnWall) {
+			if (here.distanceSquaredTo(bugTarget) < bugClosestDistanceToTarget) {
 				Direction tryMoveResult = tryMoveInDirection(destDir);
 				if (tryMoveResult != null) { // we got off of the obstacle
 					bugTracing = false;
@@ -141,16 +163,14 @@ public class Nav extends Globals {
 	Runs if we just encountered an obstacle
 	*/
 	public static void bugStartTracing() throws GameActionException {
-		// Ends turn early to avoid exceeding bytecode limit due to large array creation
 
+		// Ends turn early to avoid exceeding bytecode limit due to large array creation
 		Globals.endTurn(true);
 		Globals.update();
 
 		bugTracing = true;
 		bugVisitedLocations = new boolean[MAX_MAP_SIZE][MAX_MAP_SIZE];
 
-
-		bugClosestDistanceOnWall = here.distanceSquaredTo(bugTarget);
 		bugTurnsWithoutWall = 0;
 
 		Direction destDir = here.directionTo(bugTarget);
@@ -177,7 +197,9 @@ public class Nav extends Globals {
 			}
 		}
 
-		if (leftDist < rightDist) {
+		Debug.tlog("start " + leftDist + "<" + rightDist);
+
+		if (leftDist < rightDist) { // prefer rotate right if equal
 			bugRotateLeft = true;
 			bugLastWall = rc.adjacentLocation(leftDir.rotateRight());
 		} else {
@@ -191,6 +213,8 @@ public class Nav extends Globals {
 	Returns null if we did not move
 	*/
 	public static Direction bugTraceMove(boolean recursed) throws GameActionException {
+		Debug.tlog("brl " + bugRotateLeft + " " + bugLastWall);
+
 		Direction curDir = here.directionTo(bugLastWall);
 		bugVisitedLocations[here.x % MAX_MAP_SIZE][here.y % MAX_MAP_SIZE] = true;
 		if (rc.canMove(curDir)) {

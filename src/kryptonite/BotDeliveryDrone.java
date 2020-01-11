@@ -609,7 +609,7 @@ public class BotDeliveryDrone extends Globals {
 			// if there is a nearby enemy that can be picked up, try to chase it
 			if (closestEnemyIndex != -1) {
 				MapLocation loc = visibleEnemies[closestEnemyIndex].location;
-				Direction move = Nav.tryMoveInDirection(here.directionTo(loc));
+				Direction move = Nav.tryMoveInGeneralDirection(here.directionTo(loc));
 				Debug.tlog("Chasing enemy at " + loc + ", moved " + move);
 			}
 		}

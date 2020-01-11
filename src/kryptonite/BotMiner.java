@@ -142,26 +142,39 @@ public class BotMiner extends Globals {
 					Debug.tlog("Going to fulfillmentCenterLocation");
 				}
 			} else if ((netGunsBuilt < 4 || (netGunsBuilt < 8 && vaporatorsBuilt >= 4)) && fulfillmentCenterBuilt && designSchoolBuilt && teamSoup >= RobotType.NET_GUN.cost){
+				// first build four netguns
+				// then build eight netguns after four vaporators, fulfillment center, and design school are built
 				MapLocation buildFromLocation = new MapLocation(HQLocation.x + dnetGunBuildLocations[netGunsBuilt][0],HQLocation.y + dnetGunBuildLocations[netGunsBuilt][1]);
 				MapLocation buildAtLocation = new MapLocation(HQLocation.x + dnetGunLocations[netGunsBuilt][0],HQLocation.y + dnetGunLocations[netGunsBuilt][1]);
-				if(rc.getLocation().equals(buildFromLocation)){
-					if(rc.canBuildRobot(RobotType.NET_GUN,rc.getLocation().directionTo(buildAtLocation))){
-						rc.buildRobot(RobotType.NET_GUN,rc.getLocation().directionTo(buildAtLocation));
+				if(here.equals(buildFromLocation)){
+					if(rc.canBuildRobot(RobotType.NET_GUN,here.directionTo(buildAtLocation))){
+						rc.buildRobot(RobotType.NET_GUN,here.directionTo(buildAtLocation));
 						netGunsBuilt++;
 					}
 				} else {
 					Nav.bugNavigate(buildFromLocation);
 				}
 			} else if(netGunsBuilt >= 4 && vaporatorsBuilt < 4){
+				// build vaporators after four netguns have been built
 				MapLocation buildFromLocation = new MapLocation(HQLocation.x + dvaporatorBuildLocations[vaporatorsBuilt][0],HQLocation.y + dvaporatorBuildLocations[vaporatorsBuilt][1]);
 				MapLocation buildAtLocation = new MapLocation(HQLocation.x + dvaporatorLocations[vaporatorsBuilt][0],HQLocation.y + dvaporatorLocations[vaporatorsBuilt][1]);
-				if(rc.getLocation().equals(buildFromLocation)){
-					if(rc.canBuildRobot(RobotType.VAPORATOR,rc.getLocation().directionTo(buildAtLocation))){
-						rc.buildRobot(RobotType.VAPORATOR,rc.getLocation().directionTo(buildAtLocation));
+				Debug.tlog("build from location " + buildFromLocation);
+				if(here.equals(buildFromLocation)){
+					if(rc.canBuildRobot(RobotType.VAPORATOR,here.directionTo(buildAtLocation))){
+						rc.buildRobot(RobotType.VAPORATOR,here.directionTo(buildAtLocation));
 						vaporatorsBuilt++;
 					}
 				} else {
-					Nav.bugNavigate(buildFromLocation);
+					if (rc.isReady()) {
+						Direction dir = Nav.bugNavigate(buildFromLocation);
+						if (dir != null) {
+							Debug.tlog("Moving to buildFromLocation at " + buildFromLocation + ", moved " + dir);
+						} else {
+							Debug.tlog("Moving to buildFromLocation at " + buildFromLocation + ", but no move found");
+						}
+					} else {
+						Debug.tlog("Moving to buildFromLocation at " + buildFromLocation + ", but not ready");
+					}
 				}
 			}
 			return;
@@ -541,12 +554,14 @@ public class BotMiner extends Globals {
 			}
 			MapLocation loc = here.translate(dir[0], dir[1]);
 			if (rc.canSenseLocation(loc) && rc.senseSoup(loc) > 0) {
-				totalX += loc.x;
-				totalY += loc.y;
-				visibleSoup += rc.senseSoup(loc);
+				if (!rc.senseFlooding(loc)) {
+					totalX += loc.x;
+					totalY += loc.y;
+					visibleSoup += rc.senseSoup(loc);
 
-				soups[size] = loc;
-				size++;
+					soups[size] = loc;
+					size++;
+				}
 			}
 		}
 
