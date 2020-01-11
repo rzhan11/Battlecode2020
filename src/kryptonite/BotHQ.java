@@ -9,8 +9,6 @@ public class BotHQ extends Globals {
 
 	// has miner been built to check horizontal, vertical, rotational symmetries
 	private static boolean[] builtSymmetryMiner = new boolean[3];
-	// MapLocations of enemy HQ if map has horizontal, vertical, or rotationally symmetry
-	private static MapLocation[] symmetryHQLocations = new MapLocation[3];
 	private static int symmetryMinerCount = 0;
 
 
@@ -21,10 +19,6 @@ public class BotHQ extends Globals {
 			try {
 				Globals.update();
 				if (firstTurn) {
-					// calculates possible enemy HQ locations
-					symmetryHQLocations[0] = new MapLocation(mapWidth - 1 - here.x, here.y);
-					symmetryHQLocations[1] = new MapLocation(here.x, mapHeight - 1 - here.y);
-					symmetryHQLocations[2] = new MapLocation(mapWidth - 1 - here.x, mapHeight - 1 - here.y);
 					Debug.tlog("Possible enemy HQ locations");
 					Debug.ttlog("" + symmetryHQLocations[0]);
 					Debug.ttlog("" + symmetryHQLocations[1]);
@@ -40,7 +34,7 @@ public class BotHQ extends Globals {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			Globals.endTurn();
+			Globals.endTurn(false);
 		}
 	}
 

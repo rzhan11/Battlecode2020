@@ -5,7 +5,7 @@ import battlecode.common.*;
 public class BotFulfillmentCenter extends Globals {
 
 	public static int dronesMade = 0;
-	public static int maxDronesMade = 32;
+	public static int maxDronesMade = 12;
 
 	public static void loop() throws GameActionException {
 		while (true) {
@@ -18,7 +18,7 @@ public class BotFulfillmentCenter extends Globals {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			Globals.endTurn();
+			Globals.endTurn(false);
 		}
 	}
 

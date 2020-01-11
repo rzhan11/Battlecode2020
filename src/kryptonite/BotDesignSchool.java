@@ -17,7 +17,7 @@ public class BotDesignSchool extends Globals {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			Globals.endTurn();
+			Globals.endTurn(false);
 		}
 	}
 

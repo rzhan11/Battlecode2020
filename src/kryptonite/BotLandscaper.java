@@ -38,7 +38,7 @@ public class BotLandscaper extends Globals {
 					}
 					digLocationsLength = index;
 
-					Globals.endTurn();
+					Globals.endTurn(true);
 					Globals.update();
 
 					// finds tiles that are on the 5x5 plot
@@ -59,7 +59,7 @@ public class BotLandscaper extends Globals {
 					Debug.ttlog("SMALL WALL LENGTH: " + smallWallLength);
 					Debug.ttlog("SMALL WALL DEPTH: " + smallWallDepth);
 
-					Globals.endTurn();
+					Globals.endTurn(true);
 					Globals.update();
 
 					smallWallCompletedLength = 0;
@@ -116,7 +116,7 @@ public class BotLandscaper extends Globals {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			Globals.endTurn();
+			Globals.endTurn(false);
 		}
 	}
     // @todo: Enable Landscaper Defenses for Buildings that Come to HQ
