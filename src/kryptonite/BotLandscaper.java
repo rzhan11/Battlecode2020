@@ -16,12 +16,12 @@ public class BotLandscaper extends Globals {
 			try {
 				Globals.update();
 				if (firstTurn) {
-					if(roundNum < 100) {
-						role = WALL_ROLE;
-					}
-					else {
-						//role = DEFENSE_ROLE;
-						role = WALL_ROLE;
+					role = WALL_ROLE;
+					for (RobotInfo ri : visibleEnemies) {
+						if (ri.type.isBuilding()) {
+							role = DEFENSE_ROLE;
+							break;
+						}
 					}
 					// finds spots that can be used for digging
 					digLocations = new MapLocation[12];
