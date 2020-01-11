@@ -46,7 +46,6 @@ public class BotMiner extends Globals {
 
 	//builder miner
 
-	public static int builderMinerID = -1;
 	private static boolean designSchoolBuilt = false;
 	private static boolean fulfillmentCenterBuilt = false;
 
@@ -112,7 +111,6 @@ public class BotMiner extends Globals {
 
 		//builder miner code
 		if (builderMinerID == rc.getID()) {
-			Debug.tlog("I am the builder miner");
 			if (teamSoup >= RobotType.DESIGN_SCHOOL.cost && !designSchoolBuilt) {
 				// potential bug - what if we are already on the designSchoolLocation?
 				if(here.isAdjacentTo(designSchoolLocation)){

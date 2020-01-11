@@ -290,10 +290,12 @@ public class BotDeliveryDrone extends Globals {
 			}
 
 		} else { // STATE == not holding a unit
+
 			// find closest ally robot that is pick-up-able and is stuck in a digLocation
 			int closestAllyDist = P_INF;
 			RobotInfo closestAllyInfo = null;
 			for (RobotInfo ri: visibleAllies) {
+				if (isBuilderMiner(ri.ID)) continue;
 				if (canPickUpType(ri.type) && inArray(innerDigLocations, ri.location, innerDigLocationsLength)) {
 					int dist = here.distanceSquaredTo(ri.location);
 					if (dist < closestAllyDist) {
@@ -334,6 +336,7 @@ public class BotDeliveryDrone extends Globals {
 
 			// check if adjacent robots are on transport tiles/wall
 			for (RobotInfo ri: adjacentAllies) {
+				if (isBuilderMiner(ri.ID)) continue;
 				boolean result = tryPickUpTransport(ri);
 				if (result) {
 					return;
@@ -344,6 +347,7 @@ public class BotDeliveryDrone extends Globals {
 
 			// try to move towards the closest visible robot that is on transport tiles/wall
 			for (RobotInfo ri: visibleAllies) {
+				if (isBuilderMiner(ri.ID)) continue;
 				if (canPickUpType(ri.type)) {
 					boolean shouldTransport = false;
 

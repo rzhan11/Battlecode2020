@@ -115,9 +115,7 @@ public class Communication extends Globals {
 						break;
 
 					case BUILDER_MINER_BUILT_SIGNAL:
-						if(myType == RobotType.MINER) {
-							readTransactionBuilderMinerBuilt(message,round);
-						}
+						readTransactionBuilderMinerBuilt(message,round);
 						break;
 
 					case SMALL_WALL_BUILD_SIGNAL:

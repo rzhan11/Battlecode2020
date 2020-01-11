@@ -50,7 +50,6 @@ public class Globals {
 	public static int myElevation;
 	public static int waterLevel;
 
-
 	public static int myPollution;
 	public static int actualSensorRadiusSquared;
 	public static boolean extremePollution; // when
@@ -64,6 +63,8 @@ public class Globals {
 	public static RobotInfo[] adjacentCows = null;
 
 	public static int oldTransactionsIndex = 1;
+
+	public static int builderMinerID = -1;
 
 	public static void init(RobotController theRC) throws GameActionException {
 		rc = theRC;
@@ -157,6 +158,9 @@ public class Globals {
 		Debug.tlog("Location: " + here);
 		Debug.tlog("actualSensorRadiusSquared: " + actualSensorRadiusSquared);
 		Debug.tlog("Cooldown: " + rc.getCooldownTurns());
+		if (myID == builderMinerID) {
+			Debug.tlog("I am the builder miner");
+		}
 	}
 
 	/*
@@ -216,6 +220,13 @@ public class Globals {
 	public static boolean inArray(Object[] arr, Object item, int length) {
 		for(int i = 0; i < length; i++) if(arr[i].equals(item)) return true;
 		return false;
+	}
+
+	/*
+	Returns true if this robot ID is the builder miner
+	*/
+	public static boolean isBuilderMiner (int id) {
+		return id == builderMinerID;
 	}
 
 }
