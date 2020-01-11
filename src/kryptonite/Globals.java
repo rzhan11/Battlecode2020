@@ -138,6 +138,11 @@ public class Globals {
 				}
 				Communication.readTransactions(oldTransactionsIndex);
 				oldTransactionsIndex++;
+				if (HQLocation == null && isLowBytecodeLimit(myType)) {
+					Debug.tlog("Did not find HQLocation, low bytecode limit");
+					Globals.endTurn(true);
+					Globals.update();
+				}
 			}
 		}
 
@@ -232,6 +237,23 @@ public class Globals {
 	*/
 	public static boolean isBuilderMiner (int id) {
 		return id == builderMinerID;
+	}
+
+	/*
+	Returns true if this RobotType has a low limit <= 7000
+	*/
+	public static boolean isLowBytecodeLimit (RobotType rt) {
+		switch (rt) {
+			case DESIGN_SCHOOL:
+			case FULFILLMENT_CENTER:
+			case NET_GUN:
+			case REFINERY:
+			case VAPORATOR:
+				return true;
+			default:
+				return false;
+
+		}
 	}
 
 }
