@@ -71,12 +71,7 @@ public class BotMiner extends Globals {
 					// store HQ as a refinery
 					addToRefineries(HQLocation);
 
-					//If this is the first robot made, designate that robot as the one to build the design school
-					//obsolete with builderminer
-					if(spawnDirection.equals(directions[0])){
-						designSchoolMaker = true;
-						designSchoolLocation = new MapLocation(HQLocation.x-1,HQLocation.y);
-					}
+					// hardcoded locations of design school and fulfillment center
 					designSchoolLocation = new MapLocation(HQLocation.x-1,HQLocation.y);
 					fulfillmentCenterLocation = new MapLocation(HQLocation.x+1,HQLocation.y);
 				}
