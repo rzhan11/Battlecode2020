@@ -23,7 +23,7 @@ public class BotFulfillmentCenter extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
-		//if sees 4 vaporators, build up to 32 drones
+		//if sees 4 vaporators, build up to 20 drones
 		if(maxDronesMade == 12) {
 			RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
 			int numVaporators = 0;

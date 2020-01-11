@@ -63,6 +63,10 @@ public class Globals {
 	public static RobotInfo[] adjacentEnemies = null;
 	public static RobotInfo[] adjacentCows = null;
 
+	// checks if drones picked up and dropped this unit
+	public static boolean droppedLastTurn = false;
+	public static int lastActiveTurn = 0;
+
 	public static int oldTransactionsIndex = 1;
 
 	public static int builderMinerID = -1;
@@ -91,6 +95,8 @@ public class Globals {
 		here = rc.getLocation();
 		roundNum = rc.getRoundNum();
 		spawnRound = roundNum;
+
+		lastActiveTurn = spawnRound - 1;
 	}
 
 	public static void update() throws GameActionException {
@@ -124,6 +130,16 @@ public class Globals {
 		adjacentAllies = rc.senseNearbyRobots(2, us);
 		adjacentEnemies = rc.senseNearbyRobots(2, them);
 		adjacentCows = rc.senseNearbyRobots(2, cowTeam);
+
+		if (roundNum == lastActiveTurn + 1) {
+			droppedLastTurn = false;
+		} else {
+			droppedLastTurn = true;
+			Debug.tlog("Was dropped last turn");
+			Nav.bugTracing = false;
+			Nav.bugLastWall = null;
+			Nav.bugClosestDistanceToTarget = P_INF;
+		}
 
 		Communication.readTransactions(roundNum - 1);
 
@@ -179,6 +195,7 @@ public class Globals {
 	public static void endTurn (boolean earlyEnd) throws GameActionException {
 		try {
 			firstTurn &= earlyEnd; // if early end, do not count as full turn
+			lastActiveTurn = roundNum;
 
 			Communication.readOldTransactions();
 			// check if we went over the bytecode limit

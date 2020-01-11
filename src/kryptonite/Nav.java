@@ -101,14 +101,14 @@ public class Nav extends Globals {
 	*/
 
 
-	private static MapLocation bugTarget = null;
+	public static MapLocation bugTarget = null;
 
-	private static boolean bugTracing = false;
-	private static MapLocation bugLastWall = null;
-	private static int bugClosestDistanceToTarget = P_INF;
-	private static int bugTurnsWithoutWall = 0;
-	private static boolean bugRotateLeft = true; // whether we are rotating left or right
-	private static boolean[][] bugVisitedLocations;
+	public static boolean bugTracing = false;
+	public static MapLocation bugLastWall = null;
+	public static int bugClosestDistanceToTarget = P_INF;
+	public static int bugTurnsWithoutWall = 0;
+	public static boolean bugRotateLeft = true; // whether we are rotating left or right
+	public static boolean[][] bugVisitedLocations;
 
 	public static Direction bugNavigate (MapLocation target) throws GameActionException {
 		if (!canMove()) {
@@ -125,14 +125,17 @@ public class Nav extends Globals {
 		if (here.equals(bugTarget)) {
 			return null;
 		}
-		Debug.tlog("bugClosestDistanceToTarget " + bugClosestDistanceToTarget);
-		Debug.tlog("bugTurnsWithoutWall " + bugTurnsWithoutWall);
-		Debug.tlog("bugTracing " + bugTracing);
-		Debug.tlog("bugRotateLeft " + bugRotateLeft);
 
-		bugClosestDistanceToTarget = Math.min(bugClosestDistanceToTarget, here.distanceSquaredTo(bugTarget));
+		// bugClosestDistanceToTarget = Math.min(bugClosestDistanceToTarget, here.distanceSquaredTo(bugTarget));
 
 		Direction destDir = here.directionTo(bugTarget);
+
+		// Debug.tlog("BUG_NAVIGATE");
+		// Debug.ttlog("bugTarget: " + bugTarget);
+		// Debug.ttlog("bugClosestDistanceToTarget: " + bugClosestDistanceToTarget);
+		// Debug.ttlog("destDir: " + destDir);
+		// Debug.ttlog("bugTracing: " + bugTracing);
+
 		if (!bugTracing) { // try to go directly towards the target
 			Direction tryMoveResult = tryMoveInDirection(destDir);
 			if (tryMoveResult != null) {
@@ -172,14 +175,16 @@ public class Nav extends Globals {
 		bugVisitedLocations = new boolean[MAX_MAP_SIZE][MAX_MAP_SIZE];
 
 		bugTurnsWithoutWall = 0;
+		bugClosestDistanceToTarget = P_INF;
 
 		Direction destDir = here.directionTo(bugTarget);
 
 		Direction leftDir = destDir;
-		MapLocation leftDest = rc.adjacentLocation(leftDir);
+		MapLocation leftDest;
 		int leftDist = Integer.MAX_VALUE;
 		for (int i = 0; i < 8; ++i) {
 			leftDir = leftDir.rotateLeft();
+			leftDest = rc.adjacentLocation(leftDir);
 			if (checkDirectionMoveable(leftDir)) {
 				leftDist = leftDest.distanceSquaredTo(bugTarget);
 				break;
@@ -187,17 +192,17 @@ public class Nav extends Globals {
 		}
 
 		Direction rightDir = destDir;
-		MapLocation rightDest = rc.adjacentLocation(rightDir);
+		MapLocation rightDest;
 		int rightDist = Integer.MAX_VALUE;
 		for (int i = 0; i < 8; ++i) {
 			rightDir = rightDir.rotateRight();
+			rightDest = rc.adjacentLocation(rightDir);
 			if (checkDirectionMoveable(rightDir)) {
 				rightDist = rightDest.distanceSquaredTo(bugTarget);
 				break;
 			}
 		}
 
-		Debug.tlog("start " + leftDist + "<" + rightDist);
 
 		if (leftDist < rightDist) { // prefer rotate right if equal
 			bugRotateLeft = true;
@@ -206,6 +211,9 @@ public class Nav extends Globals {
 			bugRotateLeft = false;
 			bugLastWall = rc.adjacentLocation(rightDir.rotateLeft());
 		}
+		// Debug.tlog("START_TRACING");
+		// Debug.ttlog("bugRotateLeft: " + bugRotateLeft);
+		// Debug.ttlog("bugLastWall: " + bugLastWall);
 	}
 
 	/*
@@ -213,15 +221,17 @@ public class Nav extends Globals {
 	Returns null if we did not move
 	*/
 	public static Direction bugTraceMove(boolean recursed) throws GameActionException {
-		Debug.tlog("brl " + bugRotateLeft + " " + bugLastWall);
 
 		Direction curDir = here.directionTo(bugLastWall);
-		bugVisitedLocations[here.x % MAX_MAP_SIZE][here.y % MAX_MAP_SIZE] = true;
+		bugVisitedLocations[here.x][here.y] = true;
 		if (rc.canMove(curDir)) {
 			bugTurnsWithoutWall += 1;
 		} else {
 			bugTurnsWithoutWall = 0;
 		}
+		// Debug.tlog("TRACING");
+		// Debug.ttlog("bugRotateLeft: " + bugRotateLeft);
+		// Debug.ttlog("bugLastWall: " + bugLastWall);
 
 		for (int i = 0; i < 8; ++i) {
 			if (bugRotateLeft) {
@@ -229,15 +239,17 @@ public class Nav extends Globals {
 			} else {
 				curDir = curDir.rotateRight();
 			}
-			MapLocation dirLoc = rc.adjacentLocation(curDir);
-			if (!inMap(dirLoc) && !recursed) {
+			MapLocation curDest = rc.adjacentLocation(curDir);
+			if (!inMap(curDest) && !recursed) {
+				// Debug.ttlog("Hit the edge of map, reverse and recurse");
 				// if we hit the edge of the map, reverse direction and recurse
 				bugRotateLeft = !bugRotateLeft;
 				return bugTraceMove(true);
 			}
 			if (checkDirectionMoveable(curDir)) {
 				Actions.doMove(curDir);
-				if (bugVisitedLocations[here.x % MAX_MAP_SIZE][here.y % MAX_MAP_SIZE]) {
+				if (bugVisitedLocations[curDest.x][curDest.y]) {
+					// Debug.tlog("Resetting bugTracing");
 					bugTracing = false;
 				}
 				return curDir;
