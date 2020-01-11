@@ -8,6 +8,7 @@ python3 runAll.sh
 
 ## checkKeywords.py
 Checks the log.txt file for keywords listed in keywords.txt
+For each map, only returns the first instance that a unit triggered a keyword
 
 python3 checkKeywords.py
 
