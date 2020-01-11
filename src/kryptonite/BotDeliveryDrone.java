@@ -98,8 +98,8 @@ public class BotDeliveryDrone extends Globals {
 	public static boolean canPickUpType (RobotType rt) {
 		return rt == RobotType.MINER || rt == RobotType.LANDSCAPER || rt == RobotType.COW;
 	}
-
-    // TODO: Identify if we are one a low elevation, pick up robots here, and move to clean space
+	
+    // @todo: Identify if we are one a low elevation, pick up robots here, and move to clean space
 	public static void turn() throws GameActionException {
 		if (rc.isCurrentlyHoldingUnit()) {
 			// drop unit onto a 5x5 plot tile that is not occupied/flooded

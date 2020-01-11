@@ -46,7 +46,6 @@ public class BotHQ extends Globals {
 
 	public static void turn() throws GameActionException {
 
-
 		// try to shoot the closest visible enemy units
 		if (rc.isReady()) {
 			int closestDist = P_INF;
@@ -101,7 +100,7 @@ public class BotHQ extends Globals {
 			// }
 		}
 
-		// TODO: Create Attack Miners
+		// @todo: Create Attack Miners
 	}
 
 	/*
