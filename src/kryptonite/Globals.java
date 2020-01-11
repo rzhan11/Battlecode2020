@@ -34,6 +34,8 @@ public class Globals {
 	public static Direction[] diagonalDirections = {Direction.NORTHEAST, Direction.SOUTHEAST, Direction.SOUTHWEST, Direction.NORTHWEST}; // four diagonals
 
 	public static MapLocation HQLocation = null;
+	// MapLocations of enemy HQ if map has horizontal, vertical, or rotationally symmetry
+	public static MapLocation[] symmetryHQLocations = new MapLocation[3];
 
 	/*
 	Values that might change each turn
@@ -56,6 +58,10 @@ public class Globals {
 	public static RobotInfo[] visibleAllies = null;
 	public static RobotInfo[] visibleEnemies = null;
 	public static RobotInfo[] visibleCows = null;
+
+	public static RobotInfo[] adjacentAllies = null;
+	public static RobotInfo[] adjacentEnemies = null;
+	public static RobotInfo[] adjacentCows = null;
 
 	public static int oldTransactionsIndex = 1;
 
@@ -110,8 +116,12 @@ public class Globals {
 		printMyInfo();
 
 		visibleAllies = rc.senseNearbyRobots(-1, us); // -1 uses all robots within sense radius
-		visibleEnemies = rc.senseNearbyRobots(-1, them); // -1 uses all robots within sense radius
-		visibleCows = rc.senseNearbyRobots(-1, cowTeam); // -1 uses all robots within sense radius
+		visibleEnemies = rc.senseNearbyRobots(-1, them);
+		visibleCows = rc.senseNearbyRobots(-1, cowTeam);
+
+		adjacentAllies = rc.senseNearbyRobots(2, us);
+		adjacentEnemies = rc.senseNearbyRobots(2, them);
+		adjacentCows = rc.senseNearbyRobots(2, cowTeam);
 
 		Communication.readTransactions(roundNum - 1);
 
@@ -126,6 +136,11 @@ public class Globals {
 				oldTransactionsIndex++;
 			}
 		}
+
+		// calculates possible enemy HQ locations
+		symmetryHQLocations[0] = new MapLocation(mapWidth - 1 - here.x, here.y);
+		symmetryHQLocations[1] = new MapLocation(here.x, mapHeight - 1 - here.y);
+		symmetryHQLocations[2] = new MapLocation(mapWidth - 1 - here.x, mapHeight - 1 - here.y);
 	}
 
 	/*
@@ -144,7 +159,7 @@ public class Globals {
 		Debug.tlog("Cooldown: " + rc.getCooldownTurns());
 	}
 
-	public static void endTurn() throws GameActionException {
+	public static void endTurn (boolean earlyEnd) throws GameActionException {
 		try {
 			firstTurn = false;
 
@@ -158,10 +173,18 @@ public class Globals {
 				int turns = endTurn - roundNum;
 				Debug.ttlogi("Overused bytecode: " + (bytecodeOver + (turns - 1) * myType.bytecodeLimit));
 				Debug.ttlogi("Skipped turns: " + turns);
+
+				// catch up on missed Transactions
+				for (int i = roundNum; i < endTurn; i++) {
+					Communication.readTransactions(i);
+				}
 			}
 			if(!noTurnLog) {
 				Debug.tlog("Remaining bytecode: " + Clock.getBytecodesLeft());
 				Debug.tlog("---------------");
+				if (earlyEnd) {
+					Debug.tlog("-----EARLY-----");
+				}
 				Debug.tlog("---END TURN----");
 				Debug.tlog("---------------");
 				Debug.log();
@@ -170,49 +193,6 @@ public class Globals {
 			e.printStackTrace();
 		}
 		Clock.yield();
-	}
-
-	public static int[][] calculateSenseDirections(int sensorRadiusSquared) {
-		int maxRadius = 6; // 6 for HQ sensor radius of 48
-
-		int[] maxdy = new int[maxRadius + 1];
-		int size = 1;
-		int dy = maxRadius;
-		for (int dx = 0; dx <= maxRadius; dx++) {
-			while (dy > 0) {
-				if (sensorRadiusSquared >= dx * dx + dy * dy) {
-					maxdy[dx] = dy;
-					size += 4 * dy;
-					break;
-				} else {
-					dy--;
-				}
-			}
-		}
-
-		int[][] temp = new int[size][2];
-		temp[0][0] = temp[0][1] = 0;
-
-		int index = 1;
-		for (int dx = 0; dx <= maxRadius; dx++) {
-			for (dy = 1; dy <= maxdy[dx]; dy++) {
-				if (sensorRadiusSquared >= dx * dx + dy * dy) {
-					temp[index][0] = dx;
-					temp[index][1] = dy;
-					index++;
-					temp[index][0] = dy;
-					temp[index][1] = -dx;
-					index++;
-					temp[index][0] = -dx;
-					temp[index][1] = -dy;
-					index++;
-					temp[index][0] = -dy;
-					temp[index][1] = dx;
-					index++;
-				}
-			}
-		}
-		return temp;
 	}
 
 	/*

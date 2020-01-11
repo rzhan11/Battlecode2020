@@ -80,7 +80,7 @@ public class Communication extends Globals {
 	Reads in transactions that were submitted last round
 	*/
 	public static void readTransactions (int round) throws GameActionException {
-		if (round < 1 || round >= roundNum) {
+		if (round < 1 || round >= rc.getRoundNum()) {
 			Debug.tlog("Tried to read Transactions of round " + round + " but not possible");
 			return;
 		}
