@@ -42,8 +42,8 @@ public class BotLandscaper extends Globals {
 					Globals.update();
 
 					// finds tiles that are on the 5x5 plot
-					smallWall = new MapLocation[36];
-					smallWallCompleted = new MapLocation[36];
+					smallWall = new MapLocation[49];
+					smallWallCompleted = new MapLocation[49];
 					index = 0;
 					templ = HQLocation.translate(3, 3);
 					for(int i = 0; i < 7; i++) for(int j = 0; j < 7; j++) {
@@ -120,6 +120,7 @@ public class BotLandscaper extends Globals {
 		}
 	}
     // @todo: Enable Landscaper Defenses for Buildings that Come to HQ
+	// @todo: Optimize Bytecode of 5x5 Construction
 	public static void turn() throws GameActionException {
 		if(!rc.isReady()) return;
 		if(role == WALL_ROLE) {
