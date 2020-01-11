@@ -40,7 +40,7 @@ public class Globals {
 	*/
 
 	public static boolean firstTurn = true;
-
+	public static boolean smallWallComplete = false;
 	public static int roundNum;
 	public static int teamSoup;
 
