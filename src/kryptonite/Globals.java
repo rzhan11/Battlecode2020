@@ -90,8 +90,8 @@ public class Globals {
 		roundNum = rc.getRoundNum();
 		teamSoup = rc.getTeamSoup();
 
-		Debug.log();
 		if (firstTurn) {
+			Debug.log();
 			Debug.tlog("---------------");
 			Debug.tlog("--FIRST TURN---");
 			Debug.tlog("---------------");
@@ -135,6 +135,7 @@ public class Globals {
 
 	public static void printMyInfo () {
 		if(noTurnLog) return;
+		Debug.log();
 		Debug.tlog("Robot: " + myType);
 		Debug.tlog("roundNum: " + roundNum);
 		Debug.tlog("ID: " + myID);
@@ -151,6 +152,7 @@ public class Globals {
 			// check if we went over the bytecode limit
 			int endTurn = rc.getRoundNum();
 			if (roundNum != endTurn) {
+				printMyInfo();
 				Debug.tlogi("BYTECODE LIMIT EXCEEDED");
 				int bytecodeOver = Clock.getBytecodeNum();
 				int turns = endTurn - roundNum;
