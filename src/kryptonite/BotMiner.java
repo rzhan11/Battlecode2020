@@ -26,7 +26,6 @@ public class BotMiner extends Globals {
 	private static int soupCarrying;
 	private static int visibleSoup;
 	private static MapLocation centerOfVisibleSoup = null;
-	// private static boolean returningToHQ = false;
 
 	public static MapLocation[] soupClusters = new MapLocation[BIG_ARRAY_SIZE];
 	public static boolean[] emptySoupClusters = new boolean[BIG_ARRAY_SIZE];
@@ -41,10 +40,6 @@ public class BotMiner extends Globals {
 
 	public static MapLocation buildRefineryLocation = null;
 	public static int buildRefineryVisibleSoup;
-
-	//obsolete with builder miner
-	private static boolean designSchoolMaker = false;
-	private static boolean designSchoolMade = false;
 
 	private static MapLocation designSchoolLocation;
 	private static MapLocation fulfillmentCenterLocation;
@@ -79,12 +74,7 @@ public class BotMiner extends Globals {
 					// store HQ as a refinery
 					addToRefineries(HQLocation);
 
-					//If this is the first robot made, designate that robot as the one to build the design school
-					//obsolete with builderminer
-					if(spawnDirection.equals(directions[0])){
-						designSchoolMaker = true;
-						designSchoolLocation = new MapLocation(HQLocation.x-1,HQLocation.y);
-					}
+					// hardcoded locations of design school and fulfillment center
 					designSchoolLocation = new MapLocation(HQLocation.x-1,HQLocation.y);
 					fulfillmentCenterLocation = new MapLocation(HQLocation.x+1,HQLocation.y);
 
@@ -169,27 +159,6 @@ public class BotMiner extends Globals {
 		locateSoup();
 		// updates known refineries based on what we can sense this turn
 		locateRefineries();
-
-		/*
-		Builds design school if certain conditions are met
-		Obsolete with builderminer
-		*/
-		// if(teamSoup >= RobotType.DESIGN_SCHOOL.cost && designSchoolMaker && !designSchoolMade) {
-		// 	// potential bug - what if we are already on the designSchoolLocation?
-		// 	if(here.isAdjacentTo(designSchoolLocation)){
-		// 		//build design school
-		// 		if(rc.isReady() && rc.canBuildRobot(RobotType.DESIGN_SCHOOL,here.directionTo(designSchoolLocation))){
-		// 			rc.buildRobot(RobotType.DESIGN_SCHOOL,here.directionTo(designSchoolLocation));
-		// 			teamSoup = rc.getTeamSoup();
-		// 			designSchoolMade = true;
-		// 		}
-		//
-		// 	} else {
-		// 		Nav.bugNavigate(designSchoolLocation);
-		// 		Debug.tlog("Going to Design School Location");
-		// 	}
-		// 	return;
-		// }
 
 		soupCarrying = rc.getSoupCarrying();
 
@@ -549,7 +518,7 @@ public class BotMiner extends Globals {
 		int totalX = 0;
 		int totalY = 0;
 		visibleSoup = 0;
-		
+
 		for (int[] dir: senseDirections) {
 			if (actualSensorRadiusSquared < dir[2]) {
 				break;

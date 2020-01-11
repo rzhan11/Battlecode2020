@@ -46,6 +46,27 @@ public class BotHQ extends Globals {
 
 	public static void turn() throws GameActionException {
 
+		// try to shoot the closest visible enemy units
+		if (rc.isReady()) {
+			int closestDist = P_INF;
+			int id = -1;
+			//MapLocation here = rc.getLocation();
+
+			for (RobotInfo ri: visibleEnemies) {
+				if (ri.type == RobotType.DELIVERY_DRONE) {
+					int dist = here.distanceSquaredTo(ri.location);
+					if(dist < closestDist){
+						closestDist = dist;
+						id = ri.ID;
+					}
+				}
+			}
+
+			if(id != -1){
+				rc.shootUnit(id);
+			}
+		}
+
 		//if explorer miners have been build and have enough money, build a BuilderMiner
 		if(true) {
 			if (explorerMinerCount >= 8 && !madeBuilderMiner && teamSoup >= (RobotType.MINER.cost + 1) && rc.isReady()) {
@@ -78,8 +99,6 @@ public class BotHQ extends Globals {
 			//	buildMiner();
 			// }
 		}
-
-		// @todo: Shoot Enemy Bots
 
 		// @todo: Create Attack Miners
 	}

@@ -4,13 +4,16 @@ import battlecode.common.*;
 
 public class Nav extends Globals {
 
+	// if true, ignore flooding
+	public static boolean isDrone = false;
+
 	/*
 	Returns true if we can move in a direction to a tile that is not occupied and not flooded
 	Returns false otherwise
 	*/
 	public static boolean checkDirectionMoveable (Direction dir) throws GameActionException {
 		MapLocation loc = rc.adjacentLocation(dir);
-		return inMap(loc) && rc.canMove(dir) && !rc.senseFlooding(loc);
+		return inMap(loc) && rc.canMove(dir) && (isDrone || !rc.senseFlooding(loc));
 	}
 
 	/*
@@ -24,31 +27,7 @@ public class Nav extends Globals {
 
 	/*
 	Tries to move in the target direction, or rotateLeft/rotateRight of it
-	Ignores flooded tiles
-	Returns the Direction that we moved in
-	Returns null if did not move
-	*/
-	public static Direction tryMoveInDirectionDrone (Direction dir) throws GameActionException {
-		if (rc.canMove(dir)) {
-			Actions.doMove(dir);
-			return dir;
-		}
-		Direction leftDir = dir.rotateLeft();
-		if (rc.canMove(leftDir)) {
-			Actions.doMove(leftDir);
-			return leftDir;
-		}
-		Direction rightDir = dir.rotateRight();
-		if (rc.canMove(rightDir)) {
-			Actions.doMove(rightDir);
-			return rightDir;
-		}
-		return null;
-	}
-
-	/*
-	Tries to move in the target direction, or rotateLeft/rotateRight of it
-	Does not move into flooded tiles
+	If we are not a drone, it does not move into flooded tiles
 	Returns the Direction that we moved in
 	Returns null if did not move
 	*/

@@ -4,9 +4,10 @@ import battlecode.common.*;
 
 public class BotLandscaper extends Globals {
 
-	private static MapLocation[] digSpots, smallWall, largeWall, smallWallCompleted;
-	private static int digSpotsLength, smallWallLength, largeWallLength, smallWallDepth,
-            smallWallCompletedLength, currentRing = -1, currentStep;
+	private static MapLocation[] digLocations, smallWall, largeWall, smallWallCompleted;
+	private static int digLocationsLength, smallWallLength, largeWallLength, smallWallDepth,
+            smallWallCompletedLength, currentRing = -1, currentStep, role;
+	private static final int WALL_ROLE = 1, DEFENSE_ROLE = 2;
 	private static boolean moveClockwise = true;
 
 	// @todo: Create Capabilities for Non-Wall Landscapers
@@ -15,20 +16,26 @@ public class BotLandscaper extends Globals {
 			try {
 				Globals.update();
 				if (firstTurn) {
+					if(roundNum < 100) {
+						role = WALL_ROLE;
+					}
+					else {
+						role = DEFENSE_ROLE;
+					}
 					// finds spots that can be used for digging
-					digSpots = new MapLocation[12];
+					digLocations = new MapLocation[12];
 					MapLocation templ = HQLocation.translate(3,3);
 					int index = 0;
 					for(int i = 0; i < 4; i++) for(int j = 0; j < 4; j++) {
 						MapLocation newl = templ.translate(-2*i, -2*j);
 						if(inMap(newl) && !HQLocation.equals(newl)) {
 							if (maxXYDistance(HQLocation, newl) > 2) { // excludes holes inside the 5x5 plot
-								digSpots[index] = newl;
+								digLocations[index] = newl;
 								index++;
 							}
 						}
 					}
-					digSpotsLength = index;
+					digLocationsLength = index;
 
 					Globals.endTurn();
 					Globals.update();
@@ -40,7 +47,7 @@ public class BotLandscaper extends Globals {
 					templ = HQLocation.translate(2, 2);
 					for(int i = 0; i < 5; i++) for(int j = 0; j < 5; j++) {
 						MapLocation newl = templ.translate(-i, -j);
-						if (inMap(newl) && !HQLocation.equals(newl) && !inArray(digSpots, newl, digSpotsLength)) {
+						if (inMap(newl) && !HQLocation.equals(newl) && !inArray(digLocations, newl, digLocationsLength)) {
                             smallWall[index] = newl;
                             index++;
 						}
@@ -66,7 +73,7 @@ public class BotLandscaper extends Globals {
 					templ = HQLocation.translate(cornerDist, cornerDist);
 					for(int i = 0; i < largeWallRingSize - 1; i++) {
 						MapLocation newl = templ.translate(0, -i);
-						if(inMap(newl) && !inArray(digSpots, newl, digSpotsLength)) {
+						if(inMap(newl) && !inArray(digLocations, newl, digLocationsLength)) {
 							largeWall[index] = newl;
 							index++;
 						}
@@ -75,7 +82,7 @@ public class BotLandscaper extends Globals {
 					templ = HQLocation.translate(cornerDist, -cornerDist);
 					for(int i = 0; i < largeWallRingSize - 1; i++) {
 						MapLocation newl = templ.translate(-i, 0);
-						if(inMap(newl) && !inArray(digSpots, newl, digSpotsLength)) {
+						if(inMap(newl) && !inArray(digLocations, newl, digLocationsLength)) {
 							largeWall[index] = newl;
 							index++;
 						}
@@ -84,7 +91,7 @@ public class BotLandscaper extends Globals {
 					templ = HQLocation.translate(-cornerDist, -cornerDist);
 					for(int i = 0; i < largeWallRingSize - 1; i++) {
 						MapLocation newl = templ.translate(0, i);
-						if(inMap(newl) && !inArray(digSpots, newl, digSpotsLength)) {
+						if(inMap(newl) && !inArray(digLocations, newl, digLocationsLength)) {
 							largeWall[index] = newl;
 							index++;
 						}
@@ -93,7 +100,7 @@ public class BotLandscaper extends Globals {
 					templ = HQLocation.translate(-cornerDist, cornerDist);
 					for(int i = 0; i < largeWallRingSize - 1; i++) {
 						MapLocation newl = templ.translate(i, 0);
-						if(inMap(newl) && !inArray(digSpots, newl, digSpotsLength)) {
+						if(inMap(newl) && !inArray(digLocations, newl, digLocationsLength)) {
 							largeWall[index] = newl;
 							index++;
 						}
@@ -114,211 +121,232 @@ public class BotLandscaper extends Globals {
     // @todo: Enable Landscaper Defenses for Buildings that Come to HQ
 	public static void turn() throws GameActionException {
 		if(!rc.isReady()) return;
-		// If in a Dig Spot Place, move to the Outward Radius
-		if(inArray(digSpots, here, digSpotsLength)) {
-			Direction move = HQLocation.directionTo(here);
-            Debug.ttlog("GOING TO OUTER RING");
-			landscaperMove(move);
-		}
+		if(role == WALL_ROLE) {
+			// If in a Dig Spot Place, move to the Outward Radius
+			if (inArray(digLocations, here, digLocationsLength)) {
+				Direction move = HQLocation.directionTo(here);
+				Debug.ttlog("GOING TO OUTER RING");
+				landscaperMove(move);
+			}
 
-		// From Richard - added a check for if we are in the inner 3x3 ring
-		if(inArray(digSpots, here, digSpotsLength) || maxXYDistance(HQLocation, here) <= 1) {
-			Debug.ttlog("Trying to move out of 3x3 ring");
-			for (Direction dir: directions) {
-				MapLocation loc = rc.adjacentLocation(dir);
-				// if the target location is in the 5x5 ring and is not occupied/flooded
-				if (maxXYDistance(HQLocation, loc) >= 2 && rc.senseRobotAtLocation(loc) == null) {
-					landscaperMove(dir);
+			// From Richard - added a check for if we are in the inner 3x3 ring
+			if (inArray(digLocations, here, digLocationsLength) || maxXYDistance(HQLocation, here) <= 1) {
+				Debug.ttlog("Trying to move out of 3x3 ring");
+				for (Direction dir : directions) {
+					MapLocation loc = rc.adjacentLocation(dir);
+					// if the target location is in the 5x5 ring and is not occupied/flooded
+					if (maxXYDistance(HQLocation, loc) >= 2 && rc.senseRobotAtLocation(loc) == null) {
+						landscaperMove(dir);
+					}
 				}
 			}
-		}
 
-		// If the First Wall isn't Complete and you can do stuff in your current position, do it
-		if(!wallComplete()) {
-			// Update smallWallCompleted Array
-			for(Direction d: Direction.allDirections()) {
-				MapLocation tempLoc = here.add(d);
-				if(inArray(smallWall, tempLoc, smallWallLength) && !inArray(smallWallCompleted, tempLoc, smallWallCompletedLength)) {
-					if (rc.canSenseLocation(tempLoc)) {
-						RobotInfo ri = rc.senseRobotAtLocation(tempLoc);
-						if (rc.senseElevation(tempLoc) == smallWallDepth || (ri != null && ri.type.isBuilding())) {
-							smallWallCompleted[smallWallCompletedLength] = tempLoc;
-							smallWallCompletedLength++;
+			// If the First Wall isn't Complete and you can do stuff in your current position, do it
+			if (!wallComplete()) {
+				// Update smallWallCompleted Array
+				for (Direction d : Direction.allDirections()) {
+					MapLocation tempLoc = here.add(d);
+					if (inArray(smallWall, tempLoc, smallWallLength) && !inArray(smallWallCompleted, tempLoc, smallWallCompletedLength)) {
+						if (rc.canSenseLocation(tempLoc)) {
+							RobotInfo ri = rc.senseRobotAtLocation(tempLoc);
+							if (rc.senseElevation(tempLoc) == smallWallDepth || (ri != null && ri.type.isBuilding())) {
+								smallWallCompleted[smallWallCompletedLength] = tempLoc;
+								smallWallCompletedLength++;
+							}
 						}
 					}
 				}
-			}
-			// Find an action to do
-			boolean actionComplete = false;
-			for(Direction d: allDirections) {
-				MapLocation tempLoc = here.add(d);
-				if(inArray(smallWall, tempLoc, smallWallLength) && !inArray(smallWallCompleted, tempLoc, smallWallCompletedLength)) {
-					if(rc.senseElevation(tempLoc) < smallWallDepth) {
-						actionComplete = true;
-						if(rc.getDirtCarrying() == 0) {
-							landscaperDig();
+				// Find an action to do
+				boolean actionComplete = false;
+				for (Direction d : allDirections) {
+					MapLocation tempLoc = here.add(d);
+					if (inArray(smallWall, tempLoc, smallWallLength) && !inArray(smallWallCompleted, tempLoc, smallWallCompletedLength)) {
+						if (rc.senseElevation(tempLoc) < smallWallDepth) {
+							actionComplete = true;
+							if (rc.getDirtCarrying() == 0) {
+								landscaperDig();
+							} else {
+								if (rc.canDepositDirt(d)) rc.depositDirt(d);
+							}
+						} else if (rc.senseElevation(tempLoc) > smallWallDepth) {
+							actionComplete = true;
+							if (rc.canDigDirt(d)) rc.digDirt(d);
 						}
-						else {
-							if(rc.canDepositDirt(d)) rc.depositDirt(d);
-						}
-					}
-					else if (rc.senseElevation(tempLoc) > smallWallDepth) {
-						actionComplete = true;
-						if(rc.canDigDirt(d)) rc.digDirt(d);
 					}
 				}
-			}
-			// The Wall here is Done, Rotate Clockwise
-			if(!actionComplete) {
-				if(moveClockwise) {
-					Direction d = getClockwiseDir();
-					MapLocation moveLoc = here.add(d);
-					if (inArray(digSpots, moveLoc, digSpotsLength)) {
-						// Go to Outer Ring
-						Debug.ttlog("GOING TO OUTER RING");
-						Direction move = HQLocation.directionTo(here);
-						landscaperMove(move);
+				// The Wall here is Done, Rotate Clockwise
+				if (!actionComplete) {
+					if (moveClockwise) {
+						Direction d = getClockwiseDir();
+						MapLocation moveLoc = here.add(d);
+						if (inArray(digLocations, moveLoc, digLocationsLength)) {
+							// Go to Outer Ring
+							Debug.ttlog("GOING TO OUTER RING");
+							Direction move = HQLocation.directionTo(here);
+							landscaperMove(move);
+						} else {
+							Debug.ttlog("ROTATING CLOCKWISE");
+							if (rc.canMove(d)) {
+								Actions.doMove(d);
+							} else if (rc.senseRobotAtLocation(moveLoc) != null) {
+								moveClockwise = false;
+								Debug.ttlog("COLLIDING, SWAPPING DIRECTION");
+							}
+						}
 					} else {
-						Debug.ttlog("ROTATING CLOCKWISE");
-						if (rc.canMove(d)) {
-							Actions.doMove(d);
-						}
-						else if(rc.senseRobotAtLocation(moveLoc) != null) {
-							moveClockwise = false;
-							Debug.ttlog("COLLIDING, SWAPPING DIRECTION");
+						Direction d = getCounterClockwiseDir();
+						MapLocation moveLoc = here.add(d);
+						if (inArray(digLocations, moveLoc, digLocationsLength)) {
+							// Go to Outer Ring
+							Debug.ttlog("GOING TO OUTER RING");
+							Direction move = HQLocation.directionTo(here);
+							landscaperMove(move);
+						} else {
+							Debug.ttlog("ROTATING COUNTERCLOCKWISE");
+							if (rc.canMove(d)) {
+								Actions.doMove(d);
+							} else if (rc.senseRobotAtLocation(moveLoc) != null) {
+								moveClockwise = true;
+								Debug.ttlog("COLLIDING, SWAPPING DIRECTION");
+							}
 						}
 					}
+				}
+			}
+			// Inner Wall Complete, Just Start Building Outer Wall
+			else {
+				// If this is the first time here, you are still in the 5x5
+				if (currentRing == -1) {
+					Debug.ttlog("5x5 RING COMPLETE");
+					currentRing = 0;
+				}
+
+				// If you are in the 5x5, get to the 6x6. Acceptable distances from the HQ are 9 and 13 (10, 18 are holes)
+				if (currentRing == 0) {
+					for (Direction d : Direction.allDirections()) {
+						MapLocation newloc = here.add(d);
+						int dis = HQLocation.distanceSquaredTo(newloc);
+						if (dis == 9 || dis == 13) {
+							if (rc.canMove(d)) {
+								currentRing = 1;
+								Debug.ttlog("MOVING TO 6x6 RING");
+								Actions.doMove(d);
+							}
+						}
+					}
+				}
+				// If you are in the 6x6, get to the 7x7. All distances are acceptable
+				if (currentRing == 1) {
+					for (Direction d : Direction.allDirections()) {
+						MapLocation newloc = here.add(d);
+						int dis = HQLocation.distanceSquaredTo(newloc);
+						if (dis >= 16 && dis != 18) {
+							if (rc.canMove(d)) {
+								currentRing = 2;
+								Debug.ttlog("MOVING TO 7x7 RING");
+								currentStep = 0;
+								Actions.doMove(d);
+							}
+						}
+					}
+				}
+				if (currentRing == 2) {
+					if (currentStep == 0) {
+						Debug.ttlog("DIGGING");
+						if (rc.getDirtCarrying() <= 2) {
+							landscaperDig();
+						} else {
+							currentStep = 1;
+						}
+					}
+					if (currentStep == 1) {
+						Debug.ttlog("DEPOSITING");
+						if (rc.getDirtCarrying() != 0) {
+							int minDirt = 1000;
+							Direction minDir = null;
+							for (Direction d : Direction.allDirections()) {
+								MapLocation newloc = here.add(d);
+								if (inArray(largeWall, newloc, largeWallLength)) {
+									if (minDirt > rc.senseElevation(newloc)) {
+										minDir = d;
+										minDirt = rc.senseElevation(newloc);
+									}
+								}
+							}
+							if (rc.canDepositDirt(minDir)) rc.depositDirt(minDir);
+						} else {
+							currentStep = 2;
+						}
+					}
+					if (currentStep == 2) {
+						Debug.ttlog("MOVING");
+						if (moveClockwise) {
+							Direction d = getClockwiseDir();
+							Debug.ttlog("MOVING IN " + d);
+							if (rc.canMove(d)) {
+								currentStep = 0;
+								Actions.doMove(d);
+							} else if (rc.senseElevation(here.add(d)) + 3 < rc.senseElevation(here)) {
+								currentStep = 0;
+							} else if (rc.senseRobotAtLocation(here.add(d)) != null) {
+								Debug.ttlog("Colliding with: " + rc.senseRobotAtLocation(here.add(d)));
+								moveClockwise = false;
+							}
+						} else {
+							Direction d = getCounterClockwiseDir();
+							Debug.ttlog("MOVING IN " + d);
+							if (rc.canMove(d)) {
+								currentStep = 0;
+								Actions.doMove(d);
+							} else if (rc.senseElevation(here.add(d)) + 3 < rc.senseElevation(here)) {
+								currentStep = 0;
+							} else if (rc.senseRobotAtLocation(here.add(d)) != null) {
+								Debug.ttlog("Colliding with: " + rc.senseRobotAtLocation(here.add(d)));
+								moveClockwise = true;
+							}
+						}
+					}
+				}
+			}
+		}
+		else if(role == DEFENSE_ROLE) {
+			if(currentStep == 0) {
+				if(maxXYDistance(here, HQLocation) != 2) {
+					for(Direction d: Direction.allDirections()) {
+						if(maxXYDistance(here.add(d), HQLocation) == 2) {
+							if(rc.canMove(d)) {
+								rc.move(d);
+								return;
+							}
+						}
+					}
+				}
+				if(rc.getDirtCarrying() <= 5) {
+					currentStep = 1;
+				}
+			}
+			else if(currentStep == 1) {
+				if(rc.getDirtCarrying() == 0) {
+					currentStep = 0;
 				}
 				else {
-					Direction d = getCounterClockwiseDir();
-					MapLocation moveLoc = here.add(d);
-					if (inArray(digSpots, moveLoc, digSpotsLength)) {
-						// Go to Outer Ring
-						Debug.ttlog("GOING TO OUTER RING");
-						Direction move = HQLocation.directionTo(here);
-						landscaperMove(move);
-					} else {
-						Debug.ttlog("ROTATING COUNTERCLOCKWISE");
-						if (rc.canMove(d)) {
-							Actions.doMove(d);
-						}
-						else if(rc.senseRobotAtLocation(moveLoc) != null) {
-							moveClockwise = true;
-							Debug.ttlog("COLLIDING, SWAPPING DIRECTION");
+					for (RobotInfo ri : visibleEnemies) {
+						if (ri.type.isBuilding()) {
+							if (ri.location.isAdjacentTo(here)) {
+								Direction drop = here.directionTo(ri.location);
+								if (rc.canDepositDirt(drop)) {
+									rc.depositDirt(drop);
+									return;
+								}
+							} else {
+								Nav.bugNavigate(ri.location);
+							}
 						}
 					}
 				}
 			}
 		}
-		// Inner Wall Complete, Just Start Building Outer Wall
-		else {
-            // If this is the first time here, you are still in the 5x5
-            if(currentRing == -1) {
-                Debug.ttlog("5x5 RING COMPLETE");
-                currentRing = 0;
-            }
-
-            // If you are in the 5x5, get to the 6x6. Acceptable distances from the HQ are 9 and 13 (10, 18 are holes)
-            if(currentRing == 0) {
-                for(Direction d: Direction.allDirections()) {
-                    MapLocation newloc = here.add(d);
-                    int dis = HQLocation.distanceSquaredTo(newloc);
-                    if(dis == 9 || dis == 13) {
-                        if(rc.canMove(d)) {
-                            currentRing = 1;
-                            Debug.ttlog("MOVING TO 6x6 RING");
-                            Actions.doMove(d);
-                        }
-                    }
-                }
-            }
-            // If you are in the 6x6, get to the 7x7. All distances are acceptable
-            if(currentRing == 1) {
-                for(Direction d: Direction.allDirections()) {
-                    MapLocation newloc = here.add(d);
-                    int dis = HQLocation.distanceSquaredTo(newloc);
-                    if(dis >= 16 && dis != 18) {
-                        if(rc.canMove(d)) {
-                            currentRing = 2;
-                            Debug.ttlog("MOVING TO 7x7 RING");
-                            currentStep = 0;
-                            Actions.doMove(d);
-                        }
-                    }
-                }
-            }
-            if(currentRing == 2) {
-                if(currentStep == 0) {
-                    Debug.ttlog("DIGGING");
-                    if(rc.getDirtCarrying() <= 2) {
-                        landscaperDig();
-                    }
-                    else {
-                        currentStep = 1;
-                    }
-                }
-                if(currentStep == 1) {
-                    Debug.ttlog("DEPOSITING");
-                    if(rc.getDirtCarrying() != 0) {
-                        int minDirt = 1000;
-                        Direction minDir = null;
-                        for(Direction d: Direction.allDirections()) {
-                            MapLocation newloc = here.add(d);
-                            if(inArray(largeWall, newloc, largeWallLength)) {
-                                if(minDirt > rc.senseElevation(newloc)) {
-                                    minDir = d;
-                                    minDirt = rc.senseElevation(newloc);
-                                }
-                            }
-                        }
-                        if(rc.canDepositDirt(minDir)) rc.depositDirt(minDir);
-                    }
-                    else {
-                        currentStep = 2;
-                    }
-                }
-                if(currentStep == 2) {
-                    Debug.ttlog("MOVING");
-                    if(moveClockwise) {
-						Direction d = getClockwiseDir();
-						Debug.ttlog("MOVING IN " + d);
-						if (rc.canMove(d)) {
-							currentStep = 0;
-							Actions.doMove(d);
-						}
-						else if (rc.senseElevation(here.add(d)) + 3 < rc.senseElevation(here)) {
-							currentStep = 0;
-						}
-						else if(rc.senseRobotAtLocation(here.add(d)) != null) {
-							Debug.ttlog("Colliding with: " + rc.senseRobotAtLocation(here.add(d)));
-							moveClockwise = false;
-						}
-					}
-                    else {
-						Direction d = getCounterClockwiseDir();
-						Debug.ttlog("MOVING IN " + d);
-						if (rc.canMove(d)) {
-							currentStep = 0;
-							Actions.doMove(d);
-						}
-						else if (rc.senseElevation(here.add(d)) + 3 < rc.senseElevation(here)) {
-							currentStep = 0;
-						}
-						else if(rc.senseRobotAtLocation(here.add(d)) != null) {
-							Debug.ttlog("Colliding with: " + rc.senseRobotAtLocation(here.add(d)));
-							moveClockwise = true;
-						}
-					}
-                }
-            }
-		}
 	}
-
-	private static boolean inArray(Object[] arr, Object item, int length) {
-		for(int i = 0; i < length; i++) if(arr[i].equals(item)) return true;
-		return false;
-	}
-
 	private static Direction getClockwiseDir() {
 		int delx = HQLocation.x - here.x;
 		int dely = HQLocation.y - here.y;
@@ -382,7 +410,7 @@ public class BotLandscaper extends Globals {
 
 	private static void landscaperDig() throws GameActionException {
 		for(Direction d: Direction.allDirections()) {
-			if(inArray(digSpots, here.add(d), digSpotsLength)) if(rc.canDigDirt(d)) rc.digDirt(d);
+			if(inArray(digLocations, here.add(d), digLocationsLength)) if(rc.canDigDirt(d)) rc.digDirt(d);
 		}
 	}
 }
