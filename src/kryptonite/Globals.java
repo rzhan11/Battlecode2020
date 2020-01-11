@@ -42,6 +42,7 @@ public class Globals {
 	*/
 
 	public static boolean firstTurn = true;
+
 	public static boolean smallWallComplete = false;
 	public static int roundNum;
 	public static int teamSoup;
@@ -131,17 +132,21 @@ public class Globals {
 		} else {
 			while (HQLocation == null) {
 				if (oldTransactionsIndex == spawnRound - 1) {
-					Debug.tlogi("ERROR: Failed sanity check - Cannot find HQLocation");
+					Debug.tlogi("WARNING: Cannot find HQLocation");
+					Globals.endTurn(true);
+					Globals.update();
 				}
 				Communication.readTransactions(oldTransactionsIndex);
 				oldTransactionsIndex++;
 			}
 		}
 
-		// calculates possible enemy HQ locations
-		symmetryHQLocations[0] = new MapLocation(mapWidth - 1 - here.x, here.y);
-		symmetryHQLocations[1] = new MapLocation(here.x, mapHeight - 1 - here.y);
-		symmetryHQLocations[2] = new MapLocation(mapWidth - 1 - here.x, mapHeight - 1 - here.y);
+		if (firstTurn) {
+			// calculates possible enemy HQ locations
+			symmetryHQLocations[0] = new MapLocation(mapWidth - 1 - HQLocation.x, HQLocation.y);
+			symmetryHQLocations[1] = new MapLocation(HQLocation.x, mapHeight - 1 - HQLocation.y);
+			symmetryHQLocations[2] = new MapLocation(mapWidth - 1 - HQLocation.x, mapHeight - 1 - HQLocation.y);
+		}
 	}
 
 	/*
@@ -168,7 +173,7 @@ public class Globals {
 	*/
 	public static void endTurn (boolean earlyEnd) throws GameActionException {
 		try {
-			firstTurn = false;
+			firstTurn = earlyEnd; // if early end, do not count as full turn
 
 			Communication.readOldTransactions();
 			// check if we went over the bytecode limit
