@@ -20,7 +20,8 @@ public class BotLandscaper extends Globals {
 						role = WALL_ROLE;
 					}
 					else {
-						role = DEFENSE_ROLE;
+						//role = DEFENSE_ROLE;
+						role = WALL_ROLE;
 					}
 					// finds spots that can be used for digging
 					digLocations = new MapLocation[12];
@@ -41,11 +42,11 @@ public class BotLandscaper extends Globals {
 					Globals.update();
 
 					// finds tiles that are on the 5x5 plot
-					smallWall = new MapLocation[24];
-					smallWallCompleted = new MapLocation[24];
+					smallWall = new MapLocation[36];
+					smallWallCompleted = new MapLocation[36];
 					index = 0;
-					templ = HQLocation.translate(2, 2);
-					for(int i = 0; i < 5; i++) for(int j = 0; j < 5; j++) {
+					templ = HQLocation.translate(3, 3);
+					for(int i = 0; i < 7; i++) for(int j = 0; j < 7; j++) {
 						MapLocation newl = templ.translate(-i, -j);
 						if (inMap(newl) && !HQLocation.equals(newl) && !inArray(digLocations, newl, digLocationsLength)) {
                             smallWall[index] = newl;
