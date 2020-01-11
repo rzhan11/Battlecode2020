@@ -26,6 +26,29 @@ public class Nav extends Globals {
 	}
 
 	/*
+	Assumes that we can sense both tiles
+	Returns true if the two tiles' elevation are within +/-3 of each other
+	Returns false otherwise
+	*/
+	public static boolean checkElevation (MapLocation loc1, MapLocation loc2) throws GameActionException {
+		return Math.abs(rc.senseElevation(loc1) - rc.senseElevation(loc2)) <= GameConstants.MAX_DIRT_DIFFERENCE;
+	}
+
+	/*
+	Returns if we can move (without getting killed by flood) in any of the eight directions
+	Ignores if we are ready
+	Drones ignore flooding
+	*/
+	public static boolean canMove () throws GameActionException {
+		for (Direction dir: directions) {
+			if (checkDirectionMoveable(dir)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/*
 	Tries to move in the target direction, or rotateLeft/rotateRight of it
 	If we are not a drone, it does not move into flooded tiles
 	Returns the Direction that we moved in
@@ -74,6 +97,10 @@ public class Nav extends Globals {
 	private static boolean[][] bugVisitedLocations;
 
 	public static Direction bugNavigate (MapLocation target) throws GameActionException {
+		if (!canMove()) {
+			return null;
+		}
+
 		if (!target.equals(bugTarget)) {
 			bugTarget = target;
 			bugTracing = false;
@@ -114,8 +141,14 @@ public class Nav extends Globals {
 	Runs if we just encountered an obstacle
 	*/
 	public static void bugStartTracing() throws GameActionException {
+		// Ends turn early to avoid exceeding bytecode limit due to large array creation
+
+		Globals.endTurn(true);
+		Globals.update();
+
 		bugTracing = true;
 		bugVisitedLocations = new boolean[MAX_MAP_SIZE][MAX_MAP_SIZE];
+
 
 		bugClosestDistanceOnWall = here.distanceSquaredTo(bugTarget);
 		bugTurnsWithoutWall = 0;
