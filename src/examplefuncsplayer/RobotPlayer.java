@@ -25,6 +25,17 @@ public strictfp class RobotPlayer {
      **/
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
+        /*
+        while (true) {
+            while(rc.canSubmitTransaction(new int[7], 11)) {
+                rc.submitTransaction(new int[7], 11);
+            }
+            Clock.yield();
+            if (false) {
+                break;
+            }
+        }
+        */
 
         // This is the RobotController object. You use it to perform actions from this robot,
         // and to get information on its current status.
