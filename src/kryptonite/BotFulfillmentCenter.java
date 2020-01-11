@@ -33,7 +33,7 @@ public class BotFulfillmentCenter extends Globals {
 				}
 			}
 			if(numVaporators == 4){
-				maxDronesMade = 32;
+				maxDronesMade = 20;
 			}
 
 		}
