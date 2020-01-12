@@ -77,28 +77,16 @@ public class BotMiner extends Globals {
 					// store HQ as a refinery
 					addToRefineries(HQLocation);
 
-					// hardcoded locations of design school and fulfillment center
-					designSchoolLocation = new MapLocation(HQLocation.x-1,HQLocation.y);
-					fulfillmentCenterLocation = new MapLocation(HQLocation.x+1,HQLocation.y);
-
-					dnetGunBuildLocations = new int[][]{{-2,2},{-2,-2},{2,-2},{2,2},{-2,2},{-2,-2},{2,-2},{2,2}};
-					dnetGunLocations = new int[][]{{-2,3},{-2,-3},{2,-3},{2,3},{-3,2},{-3,-2},{3,-2},{3,2}};
-
-					dvaporatorBuildLocations = new int[][]{{0,-1},{0,-1},{0,1},{0,1}};
-					dvaporatorLocations = new int[][]{{-1,-1},{1,-1},{-1,1},{1,1}};
-
 				}
 
 				/*
 				Skip the normal turn() actions if it is the firstTurn
 				This prevents the miner from exceeding the bytecode limit on the first turn
 				*/
-				if (!firstTurn) {
-					if (isSymmetryMiner) {
-						symmtryMinerTurn();
-					} else {
-						turn();
-					}
+				if (builderMinerID == rc.getID()) {
+					BotBuilderMiner.turn();
+				} else {
+					turn();
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
