@@ -180,6 +180,8 @@ public class BotHQ extends Globals {
 			MapLocation loc = rc.adjacentLocation(dir);
 	        if (!exploredDirections[i] && rc.canBuildRobot(RobotType.MINER, dir)) {
 	            rc.buildRobot(RobotType.MINER, dir);
+				teamSoup = rc.getTeamSoup();
+				
 				exploredDirections[i] = true;
 				explorerMinerCount++;
 				return true;
