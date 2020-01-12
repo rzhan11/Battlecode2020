@@ -6,7 +6,7 @@ public class BotLandscaper extends Globals {
 
 	private static MapLocation[] digLocations, smallWall, largeWall, smallWallCompleted;
 	private static int digLocationsLength, smallWallLength, largeWallLength, smallWallDepth,
-            smallWallCompletedLength, currentStep, role;
+			smallWallCompletedLength, currentStep, role;
 	private static final int WALL_ROLE = 1, DEFENSE_ROLE = 2;
 	private static boolean moveClockwise = true;
 
@@ -49,8 +49,8 @@ public class BotLandscaper extends Globals {
 					for(int i = 0; i < 7; i++) for(int j = 0; j < 7; j++) {
 						MapLocation newl = templ.translate(-i, -j);
 						if (inMap(newl) && !HQLocation.equals(newl) && !inArray(digLocations, newl, digLocationsLength)) {
-                            smallWall[index] = newl;
-                            index++;
+							smallWall[index] = newl;
+							index++;
 						}
 					}
 
@@ -119,7 +119,7 @@ public class BotLandscaper extends Globals {
 			Globals.endTurn(false);
 		}
 	}
-    // @todo: Enable Landscaper Defenses for Buildings that Come to HQ
+	// @todo: Enable Landscaper Defenses for Buildings that Come to HQ
 	// @todo: Optimize Bytecode of 5x5 Construction
 	public static void turn() throws GameActionException {
 		if(!rc.isReady()) return;
@@ -432,7 +432,7 @@ public class BotLandscaper extends Globals {
 		if(rc.canMove(d)) Actions.doMove(d);
 		else if(rc.senseElevation(here.add(d)) > 3 + rc.senseElevation(here))
 			if(rc.canDigDirt(d)) rc.digDirt(d);
-		else
+			else
 			if(rc.getDirtCarrying() >= 0)
 				if(rc.canDepositDirt(d)) rc.depositDirt(d);
 	}
