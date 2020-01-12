@@ -71,12 +71,15 @@ public class BotMiner extends Globals {
 
 					myExploreDirection = spawnDirection;
 					myExploreLocation = findExploreLocation(myExploreDirection);
-					Debug.log("myExploreLocation: " + myExploreLocation);
+					Debug.tlog("myExploreLocation: " + myExploreLocation);
 
 
 					// store HQ as a refinery
+					Debug.tlog("Saving HQ as a refinery");
 					addToRefineries(HQLocation);
 
+					Globals.endTurn(true);
+					Globals.update();
 				}
 
 				/*
