@@ -275,6 +275,8 @@ public class BotLandscaper extends Globals {
                                 Direction minDir = null;
                                 for (Direction d : Direction.allDirections()) {
                                     MapLocation newloc = here.add(d);
+                                    RobotInfo ri = rc.senseRobotAtLocation(newloc);
+                                    if(ri != null && ri.type.isBuilding() && ri.team == rc.getTeam()) continue;
                                     if(maxXYDistance(HQLocation, newloc) == 3 && rc.senseElevation(newloc) < smallWallDepth) {
                                     	minDir = d;
                                     	minDirt = -1;
