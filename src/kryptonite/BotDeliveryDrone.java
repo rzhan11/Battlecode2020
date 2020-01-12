@@ -358,6 +358,7 @@ public class BotDeliveryDrone extends Globals {
 		} else { // STATE == not holding a unit
 
 			// find closest ally robot that is pick-up-able and is stuck in a digLocation
+			/*
 			int closestAllyDist = P_INF;
 			RobotInfo closestAllyInfo = null;
 			for (RobotInfo ri: visibleAllies) {
@@ -399,6 +400,7 @@ public class BotDeliveryDrone extends Globals {
 
 				return;
 			}
+			*/
 
 			// check if adjacent robots are on transport tiles/wall
 			for (RobotInfo ri: adjacentAllies) {
@@ -420,7 +422,7 @@ public class BotDeliveryDrone extends Globals {
 					int curRing = maxXYDistance(HQLocation, ri.location);
 					Direction dirFromHQ = HQLocation.directionTo(ri.location);
 
-					if (curRing == wallRingDistance - 1 && ri.type == RobotType.MINER) {
+					if (curRing == wallRingDistance - 1) {
 						// inner transport tile
 						MapLocation wallLoc = ri.location.add(dirFromHQ);
 						if (!rc.canSenseLocation(wallLoc) || !Nav.checkElevation(ri.location, wallLoc)) {
@@ -557,21 +559,27 @@ public class BotDeliveryDrone extends Globals {
 			Direction dirFromHQ = HQLocation.directionTo(ri.location);
 
 			// if miner is on inner transport tile and is blocked by high elevation wall, move him outwards
-			// ignore landscapers for now
-			if (curRing == wallRingDistance - 1 && ri.type == RobotType.MINER) {
+			// if landscaper is on inner transport tile and is blocked by high elevation wall, move onto wall
+			if (curRing == wallRingDistance - 1) {
 				MapLocation wallLoc = ri.location.add(dirFromHQ);
-				// if we cannot sense the wallLoc, assume it is high and pick up the miner
+				// if we cannot sense the wallLoc, assume it is high and pick up the robot
 				if (!rc.canSenseLocation(wallLoc) || !Nav.checkElevation(ri.location, wallLoc)) {
 					Debug.tlog("Picking up robot on inner transport tile at " + ri.location);
 					if (rc.isReady()) {
 						Actions.doPickUpUnit(ri.ID);
-						movingRobotOutwards = true;
-						movingOutwardsLocation = here.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
-						if (!inMap(movingOutwardsLocation)) {
-							Debug.ttlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
-							movingOutwardsLocation = symmetryHQLocations[0];
+						if (ri.type == RobotType.LANDSCAPER) {
+							// move landscapers to wall
+							movingRobotToWall = true;
+							Debug.ttlog("Moving landscaper from inner to wall");
+						} else {
+							movingRobotOutwards = true;
+							Debug.ttlog("Moving robot outwards");
+							movingOutwardsLocation = here.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
+							if (!inMap(movingOutwardsLocation)) {
+								Debug.ttlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
+								movingOutwardsLocation = symmetryHQLocations[0];
+							}
 						}
-						Debug.ttlog("Moving robot outwards");
 					} else {
 						Debug.ttlog("But not ready");
 					}
@@ -582,18 +590,17 @@ public class BotDeliveryDrone extends Globals {
 			// if miner is on wall that has high elevation, move him outwards
 			if (curRing == wallRingDistance && ri.type == RobotType.MINER) {
 				MapLocation outerLoc = ri.location.add(dirFromHQ);
-				// if we cannot sense the outerLoc, assume it is high and pick up the miner
-				if (!rc.canSenseLocation(outerLoc) || !Nav.checkElevation(ri.location, outerLoc)) {
+				if (!rc.canSenseLocation(outerLoc) || rc.senseElevation(ri.location)) {
 					Debug.tlog("Picking up miner on wall at " + ri.location);
 					if (rc.isReady()) {
 						Actions.doPickUpUnit(ri.ID);
 						movingRobotOutwards = true;
+						Debug.ttlog("Moving robot outwards");
 						movingOutwardsLocation = here.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
 						if (!inMap(movingOutwardsLocation)) {
 							Debug.ttlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
 							movingOutwardsLocation = symmetryHQLocations[0];
 						}
-						Debug.ttlog("Moving robot outwards");
 					} else {
 						Debug.ttlog("But not ready");
 					}
@@ -601,8 +608,8 @@ public class BotDeliveryDrone extends Globals {
 				}
 			}
 
-			// if miner is on inner transport tile and is blocked by high elevation wall, move him outwards
-			// if landscaper is on inner transport tile and is blocked by high elevation wall, move onto wall
+			// if miner is on outer transport tile and is blocked by high elevation wall, move him inwards
+			// if landscaper is on outer transport tile and is blocked by high elevation wall, move onto wall
 			if (curRing == wallRingDistance + 1) {
 				MapLocation wallLoc = ri.location.subtract(dirFromHQ);
 				// if we cannot sense the wallLoc, assume it is high and pick up the miner
@@ -613,7 +620,7 @@ public class BotDeliveryDrone extends Globals {
 						if (ri.type == RobotType.LANDSCAPER) {
 							// move landscapers to wall
 							movingRobotToWall = true;
-							Debug.ttlog("Moving landscaper to wall from inner");
+							Debug.ttlog("Moving landscaper from outer to wall");
 						} else {
 							// move miners inside
 							movingRobotInwards = true;
