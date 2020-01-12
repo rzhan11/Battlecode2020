@@ -9,9 +9,6 @@ public class BotBuilderMiner extends BotMiner {
 	private static boolean designSchoolBuilt = false;
 	private static boolean fulfillmentCenterBuilt = false;
 
-	public static MapLocation buildRefineryLocation = null;
-	public static int buildRefineryVisibleSoup;
-
 	private static MapLocation designSchoolLocation;
 	private static MapLocation fulfillmentCenterLocation;
 

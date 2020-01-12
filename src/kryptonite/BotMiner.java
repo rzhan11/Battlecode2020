@@ -41,23 +41,6 @@ public class BotMiner extends Globals {
 	public static MapLocation buildRefineryLocation = null;
 	public static int buildRefineryVisibleSoup;
 
-	private static MapLocation designSchoolLocation;
-	private static MapLocation fulfillmentCenterLocation;
-
-	//builder miner
-
-	private static boolean designSchoolBuilt = false;
-	private static boolean fulfillmentCenterBuilt = false;
-
-	private static int netGunsBuilt = 0;
-	private static int[][] dnetGunLocations;					//where netguns are to be built relative to hq
-	private static int[][] dnetGunBuildLocations;			//where builderminer is when it builds netguns relative to hq
-
-	private static int vaporatorsBuilt = 0;
-	private static int[][] dvaporatorLocations;					//where vaporators are to be built relative to hq
-	private static int[][] dvaporatorBuildLocations;			//where builderminer is when it builds vaporator relative to hq
-
-
 	public static void loop() throws GameActionException {
 
 		while (true) {
