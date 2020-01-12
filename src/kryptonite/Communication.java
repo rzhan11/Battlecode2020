@@ -4,6 +4,7 @@ import battlecode.common.*;
 
 public class Communication extends Globals {
 
+	final public static int MAX_UNSENT_TRANSACTIONS_LENGTH = 100;
 	final public static int READ_OLD_TRANSACTIONS_COST = 2000; // how many bytecodes readOldTransactions() will leave available
 
 	// each of these signals should be different
@@ -23,6 +24,11 @@ public class Communication extends Globals {
 										 0B10111011110111110111111011110101,
 										 0B01110111101111101111110111101011,
 										 0B11101111011111011111101111010110};
+
+	public static int[][] unsentMessages = new int[MAX_UNSENT_TRANSACTIONS_LENGTH][7];
+	public static int[] unsentCosts = new int[MAX_UNSENT_TRANSACTIONS_LENGTH];
+	public static int unsentTransactionsIndex = 0;
+	public static int unsentTransactionsLength = 0;
 
 	/*
 		Communication is made up of 7 integers (32-bit)
@@ -126,6 +132,36 @@ public class Communication extends Globals {
 	}
 
 	/*
+	If a message was not sent due to cost, save it and try to send later
+	*/
+	public static void saveUnsentTransaction (int[] message, int cost) {
+		if (unsentTransactionsLength == MAX_UNSENT_TRANSACTIONS_LENGTH) {
+			Debug.tlogi("ERROR: unsentTransactionsLength reached MAX_UNSENT_TRANSACTIONS_LENGTH limit");
+			return;
+		}
+		unsentMessages[unsentTransactionsLength] = message;
+		unsentCosts[unsentTransactionsLength] = cost;
+		unsentTransactionsLength++;
+	}
+
+	public static void submitUnsentTransactions () throws GameActionException {
+		while (unsentTransactionsIndex < unsentTransactionsLength) {
+			int[] message = unsentMessages[unsentTransactionsIndex];
+			int cost = unsentCosts[unsentTransactionsIndex];
+			if (cost <= teamSoup) {
+				rc.submitTransaction(message, cost);
+				teamSoup = rc.getTeamSoup();
+				unsentTransactionsIndex++;
+
+				xorMessage(message);
+				Debug.tlog("Submitted unsent transaction with signal of " + message[1]);
+			} else {
+				break;
+			}
+		}
+	}
+
+	/*
 	message[2] = x coordinate of our HQ
 	message[3] = y coordinate of our HQ
 
@@ -143,7 +179,8 @@ public class Communication extends Globals {
 			rc.submitTransaction(message, 10);
 			teamSoup = rc.getTeamSoup();
 		} else {
-			Debug.tlog("WARNING: Could not afford transaction");
+			Debug.tlog("Could not afford transaction");
+			saveUnsentTransaction(message, 10);
 		}
 	}
 
@@ -171,7 +208,8 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, 10);
 			teamSoup = rc.getTeamSoup();
 		} else {
-			Debug.tlog("WARNING: Could not afford transaction");
+			Debug.tlog("Could not afford transaction");
+			saveUnsentTransaction(message, 10);
 		}
 	}
 
@@ -200,7 +238,8 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, 1);
 			teamSoup = rc.getTeamSoup();
 		} else {
-			Debug.tlog("WARNING: Could not afford transaction");
+			Debug.tlog("Could not afford transaction");
+			saveUnsentTransaction(message, 1);
 		}
 	}
 
@@ -232,7 +271,8 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, 1);
 			teamSoup = rc.getTeamSoup();
 		} else {
-			Debug.tlog("WARNING: Could not afford transaction");
+			Debug.tlog("Could not afford transaction");
+			saveUnsentTransaction(message, 1);
 		}
 	}
 
@@ -265,7 +305,8 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, 1);
 			teamSoup = rc.getTeamSoup();
 		} else {
-			Debug.tlog("WARNING: Could not afford transaction");
+			Debug.tlog("Could not afford transaction");
+			saveUnsentTransaction(message, 1);
 		}
 	}
 
@@ -296,7 +337,8 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, 1);
 			teamSoup = rc.getTeamSoup();
 		} else {
-			Debug.tlog("WARNING: Could not afford transaction");
+			Debug.tlog("Could not afford transaction");
+			saveUnsentTransaction(message, 1);
 		}
 	}
 

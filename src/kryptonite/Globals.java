@@ -143,6 +143,7 @@ public class Globals {
 
 		Communication.readTransactions(roundNum - 1);
 
+		// tries to find our HQLocation by reading messages
 		if (myType == RobotType.HQ) {
 			HQLocation = here;
 		} else {
@@ -162,12 +163,15 @@ public class Globals {
 			}
 		}
 
+		// calculates possible enemy HQ locations
 		if (firstTurn) {
-			// calculates possible enemy HQ locations
 			symmetryHQLocations[0] = new MapLocation(mapWidth - 1 - HQLocation.x, HQLocation.y);
 			symmetryHQLocations[1] = new MapLocation(HQLocation.x, mapHeight - 1 - HQLocation.y);
 			symmetryHQLocations[2] = new MapLocation(mapWidth - 1 - HQLocation.x, mapHeight - 1 - HQLocation.y);
 		}
+
+		// tries to submit unsent messages from previous turns
+		Communication.submitUnsentTransactions();
 	}
 
 	/*
