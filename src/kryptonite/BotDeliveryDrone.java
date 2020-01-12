@@ -29,7 +29,13 @@ public class BotDeliveryDrone extends Globals {
 	public static RobotInfo[] allyMoveableRobots;
 	public static int allyMoveableRobotsLength;
 
+	// flooding memory
+	// public static MapLocation[][] floodingMemoryZone;
+	public static MapLocation floodingMemory;
+
 	// what type of robot transport are we doing
+	public static boolean movingRobotToWater; // used to kill enemies
+
 	public static boolean movingRobotToPlot;
 	public static boolean movingRobotToWall;
 	public static boolean movingRobotInwards;
@@ -43,6 +49,11 @@ public class BotDeliveryDrone extends Globals {
 				if (firstTurn) {
 
 					Nav.isDrone = true;
+
+					// floodingMemory = new boolean[MAX_MAP_SIZE][MAX_MAP_SIZE];
+					//
+					// Globals.endTurn(true);
+					// Globals.update();
 
 					smallWallDepth = rc.senseElevation(HQLocation) + 3;
 
@@ -84,7 +95,6 @@ public class BotDeliveryDrone extends Globals {
 						}
 					}
 					outerDigLocationsLength = index;
-
 
 					Globals.endTurn(true);
 					Globals.update();
@@ -151,6 +161,12 @@ public class BotDeliveryDrone extends Globals {
 
 	public static void turn() throws GameActionException {
 
+		/*
+		update drone specific parameters
+		*/
+
+		locateFlooding();
+
 		insideWall = wallRingDistance > maxXYDistance(HQLocation, here);
 		onWall = wallRingDistance == maxXYDistance(HQLocation, here);
 		outsideWall = wallRingDistance < maxXYDistance(HQLocation, here);
@@ -164,6 +180,12 @@ public class BotDeliveryDrone extends Globals {
 			}
 		}
 		allyMoveableRobotsLength = index;
+
+		// chase enemies and drop them into water
+		boolean sawEnemy = checkForEnemies();
+		if (sawEnemy) {
+			return;
+		}
 
 		if (rc.isCurrentlyHoldingUnit()) {
 
@@ -568,15 +590,59 @@ public class BotDeliveryDrone extends Globals {
 		return false;
 	}
 
-	public static void richardMethod() throws GameActionException {
+	public static boolean checkForEnemies() throws GameActionException {
 		if (rc.isCurrentlyHoldingUnit()) {
-			for (Direction dir: directions) {
-				MapLocation loc = rc.adjacentLocation(dir);
-				if (inMap(loc) && rc.senseFlooding(loc) && rc.canDropUnit(dir)) {
-					Actions.doDropUnit(dir);
-					Debug.tlog("Dropped unit into water at " + loc);
-					return;
+			if (!movingRobotToWater) {
+				return false;
+			} else {
+				Debug.tlog("a");
+				// check for adjacent empty water
+				for (Direction dir: directions) {
+					MapLocation loc = rc.adjacentLocation(dir);
+					if (inMap(loc) && rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
+						Debug.tlog("Dropped unit into water at " + loc);
+						if (rc.isReady()) {
+							Actions.doDropUnit(dir);
+							movingRobotToWater = false;
+							Debug.ttlog("Success");
+						} else {
+							Debug.ttlog("But not ready");
+						}
+						return true;
+					}
 				}
+
+				// go towards water
+				if (floodingMemory != null) {
+					Debug.tlog("Moving to drop into water " + floodingMemory);
+					if (rc.isReady()) {
+						Direction move = Nav.bugNavigate(floodingMemory);
+						if (move != null) {
+							Debug.ttlog("Moved " + move);
+						} else {
+							Debug.ttlog("But no move found");
+						}
+					} else {
+						Debug.ttlog("But not ready");
+					}
+					return true;
+				}
+
+				// move away from hq
+				Debug.tlog("Moving away from HQ to look for water");
+				if (rc.isReady()) {
+					Direction dirFromHQ = HQLocation.directionTo(here);
+					Direction move = Nav.tryMoveInGeneralDirection(dirFromHQ);
+					if (move != null) {
+						Debug.ttlog("Moved " + move);
+					} else {
+						Debug.ttlog("But no move found");
+					}
+				} else {
+					Debug.ttlog("But not ready");
+				}
+				return true;
+
 			}
 		} else {
 			// checks for adjacent enemies that can be picked up
@@ -586,8 +652,9 @@ public class BotDeliveryDrone extends Globals {
 					RobotInfo ri = rc.senseRobotAtLocation(loc);
 					if (ri != null && ri.team == them && rc.canPickUpUnit(ri.ID)) {
 						Actions.doPickUpUnit(ri.ID);
+						movingRobotToWater = true;
 						Debug.tlog("Picked up unit at " + loc);
-						return;
+						return true;
 					}
 				}
 			}
@@ -609,18 +676,36 @@ public class BotDeliveryDrone extends Globals {
 			// if there is a nearby enemy that can be picked up, try to chase it
 			if (closestEnemyIndex != -1) {
 				MapLocation loc = visibleEnemies[closestEnemyIndex].location;
-				Direction move = Nav.tryMoveInGeneralDirection(here.directionTo(loc));
-				Debug.tlog("Chasing enemy at " + loc + ", moved " + move);
+				Debug.tlog("Moving to enemy at " + loc);
+				if (rc.isReady()) {
+					Direction move = Nav.bugNavigate(loc);
+					if (move != null) {
+						Debug.ttlog("Moved " + move);
+					} else {
+						Debug.ttlog("But no move found");
+					}
+				} else {
+					Debug.ttlog("But not ready");
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static void locateFlooding () throws GameActionException {
+
+		for (int[] dir: senseDirections) {
+			if (actualSensorRadiusSquared < dir[2]) {
+				break;
+			}
+			MapLocation loc = here.translate(dir[0], dir[1]);
+			if (rc.canSenseLocation(loc) && rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
+				// floodingMemory[loc.x][loc.y] = rc.senseFlooding(loc);
+				floodingMemory = loc;
+				break;
 			}
 		}
 
-		// moves away from HQLocation
-		int curHQDist = here.distanceSquaredTo(HQLocation);
-		for (Direction dir: directions) {
-			MapLocation loc = rc.adjacentLocation(dir);
-			if (rc.canMove(dir) && HQLocation.distanceSquaredTo(loc) > curHQDist) {
-				Actions.doMove(dir);
-			}
-		}
 	}
 }
