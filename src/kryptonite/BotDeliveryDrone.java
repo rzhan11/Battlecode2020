@@ -3,27 +3,9 @@ package kryptonite;
 import battlecode.common.*;
 
 public class BotDeliveryDrone extends Globals {
-
-	// 5x5 plot information
-	public static int smallWallDepth;
-
-	// wall information
-	public static int wallRingDistance = 4;
 	public static boolean insideWall;
 	public static boolean onWall;
 	public static boolean outsideWall;
-
-	// information about digLocations
-	public static MapLocation[] innerDigLocations;
-	public static boolean[] innerDigLocationsOccupiedMemory; // the last time this digLocation was visible, was it occupied?
-	public static int innerDigLocationsLength;
-
-	public static MapLocation[] outerDigLocations;
-	public static boolean[] outerDigLocationsOccupiedMemory; // the last time this digLocation was visible, was it occupied?
-	public static int outerDigLocationsLength;
-
-	public static MapLocation[] largeWall;
-	public static int largeWallLength;
 
 	// nearby pick-up-able robots
 	public static RobotInfo[] allyMoveableRobots;
@@ -56,97 +38,7 @@ public class BotDeliveryDrone extends Globals {
 					// Globals.endTurn(true);
 					// Globals.update();
 
-					smallWallDepth = rc.senseElevation(HQLocation) + 3;
-
-					// determine innerDigLocations
-					int innnerRingDistance = 3;
-					innerDigLocations = new MapLocation[12];
-					innerDigLocationsOccupiedMemory = new boolean[innerDigLocations.length];
-					MapLocation templ = HQLocation.translate(innnerRingDistance, innnerRingDistance);
-					int index = 0;
-					for(int i = 0; i < innnerRingDistance + 1; i++) for(int j = 0; j < innnerRingDistance + 1; j++) {
-						MapLocation newl = templ.translate(-2 * i, -2 * j);
-						if(inMap(newl) && !HQLocation.equals(newl)) {
-							if (maxXYDistance(HQLocation, newl) >= innnerRingDistance) { // excludes holes inside the 5x5 plot
-								innerDigLocations[index] = newl;
-								index++;
-							}
-						}
-					}
-					innerDigLocationsLength = index;
-
-					Globals.endTurn(true);
-					Globals.update();
-
-					// determine outerDigLocations
-					/* @todo - remind Richard if he still wants this
-					*/
-					int outerRingDistance = 5;
-					outerDigLocations = new MapLocation[20];
-					outerDigLocationsOccupiedMemory = new boolean[outerDigLocations.length];
-					templ = HQLocation.translate(outerRingDistance, outerRingDistance);
-					index = 0;
-					for(int i = 0; i < outerRingDistance + 1; i++) for(int j = 0; j < outerRingDistance + 1; j++) {
-						MapLocation newl = templ.translate(-2 * i, -2 * j);
-						if(inMap(newl) && !HQLocation.equals(newl)) {
-							if (maxXYDistance(HQLocation, newl) >= outerRingDistance) { // excludes holes inside the 9x9 plot
-								outerDigLocations[index] = newl;
-								index++;
-							}
-						}
-					}
-					outerDigLocationsLength = index;
-
-					Globals.endTurn(true);
-					Globals.update();
-
-					int largeWallRingSize = 9; // must be odd
-					int cornerDist = largeWallRingSize / 2;
-
-					largeWall = new MapLocation[36];
-					index = 0;
-
-					// move down along right wall
-					templ = HQLocation.translate(cornerDist, cornerDist);
-					for(int i = 0; i < largeWallRingSize - 1; i++) {
-						MapLocation newl = templ.translate(0, -i);
-						if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
-							largeWall[index] = newl;
-							index++;
-						}
-					}
-					// move left along bottom wall
-					templ = HQLocation.translate(cornerDist, -cornerDist);
-					for(int i = 0; i < largeWallRingSize - 1; i++) {
-						MapLocation newl = templ.translate(-i, 0);
-						if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
-							largeWall[index] = newl;
-							index++;
-						}
-					}
-					// move up along left wall
-					templ = HQLocation.translate(-cornerDist, -cornerDist);
-					for(int i = 0; i < largeWallRingSize - 1; i++) {
-						MapLocation newl = templ.translate(0, i);
-						if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
-							largeWall[index] = newl;
-							index++;
-						}
-					}
-					// move right along top wall
-					templ = HQLocation.translate(-cornerDist, cornerDist);
-					for(int i = 0; i < largeWallRingSize - 1; i++) {
-						MapLocation newl = templ.translate(i, 0);
-						if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
-							largeWall[index] = newl;
-							index++;
-						}
-					}
-					largeWallLength = index;
-					Debug.ttlog("LARGE WALL LENGTH: " + largeWallLength);
-
-					Globals.endTurn(true);
-					Globals.update();
+					loadWallInformation();
 				}
 			    turn();
 			} catch (Exception e) {

@@ -164,7 +164,7 @@ public class Communication extends Globals {
 	/*
 	message[2] = x coordinate of our HQ
 	message[3] = y coordinate of our HQ
-
+	message[4] = elevation of our HQ
 	*/
 	public static void writeTransactionHQFirstTurn (MapLocation myHQLocation) throws GameActionException {
 		Debug.tlog("Writing transaction for 'HQ First Turn' at " + myHQLocation);
@@ -173,6 +173,7 @@ public class Communication extends Globals {
 		message[1] = HQ_FIRST_TURN_SIGNAL;
 		message[2] = myHQLocation.x;
 		message[3] = myHQLocation.y;
+		message[4] = myElevation;
 
 		xorMessage(message);
 		if (teamSoup >= 10) {
@@ -187,8 +188,10 @@ public class Communication extends Globals {
 	public static void readTransactionHQFirstTurn (int[] message, int round) {
 		Debug.tlog("Reading 'HQ First Turn' transaction");
 		HQLocation = new MapLocation(message[2], message[3]);
+		HQElevation = message[4];
 		Debug.ttlog("Submitter ID: " + decryptID(message[0]));
 		Debug.ttlog("Location: " + HQLocation);
+		Debug.ttlog("Elevation: " + HQElevation);
 		Debug.ttlog("Posted round: " + round);
 	}
 
