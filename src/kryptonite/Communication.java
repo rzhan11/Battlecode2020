@@ -283,7 +283,6 @@ message[3] = y coordinate of our HQ
 
 		xorMessage(message);
 		if (teamSoup >= 1) {
-			rc.submitTransaction(message, 1);
 			rc.submitTransaction(message, REFINERY_BUILT_COST);
 			teamSoup = rc.getTeamSoup();
 		} else {
@@ -406,7 +405,7 @@ message[3] = y coordinate of our HQ
 			teamSoup = rc.getTeamSoup();
 		} else {
 			Debug.tlog("Could not afford transaction");
-			saveUnsentTransaction(message, 2;
+			saveUnsentTransaction(message, 2);
 		}
 
 	}
