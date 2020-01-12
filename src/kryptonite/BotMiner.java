@@ -165,15 +165,16 @@ public class BotMiner extends Globals {
 						vaporatorsBuilt++;
 					}
 				} else {
+					Debug.tlog("Moving to buildFromLocation at " + buildFromLocation);
 					if (rc.isReady()) {
-						Direction dir = Nav.bugNavigate(buildFromLocation);
-						if (dir != null) {
-							Debug.tlog("Moving to buildFromLocation at " + buildFromLocation + ", moved " + dir);
+						Direction move = Nav.bugNavigate(buildFromLocation);
+						if (move != null) {
+							Debug.ttlog("Moved " + move);
 						} else {
-							Debug.tlog("Moving to buildFromLocation at " + buildFromLocation + ", but no move found");
+							Debug.ttlog("But no move found");
 						}
 					} else {
-						Debug.tlog("Moving to buildFromLocation at " + buildFromLocation + ", but not ready");
+						Debug.ttlog("But not ready");
 					}
 				}
 			}
@@ -300,10 +301,11 @@ public class BotMiner extends Globals {
 				}
 
 				// all conditions for building refinery have been met
+				Debug.tlog("Building refinery at " + buildRefineryLocation);
 				if (rc.isReady()) {
 					rc.buildRobot(RobotType.REFINERY, dir);
 					teamSoup = rc.getTeamSoup();
-					Debug.tlog("Building refinery at " + buildRefineryLocation);
+					Debug.ttlog("Success");
 					Communication.writeTransactionRefineryBuilt(buildRefineryLocation);
 					addToRefineries(buildRefineryLocation);
 
@@ -311,19 +313,20 @@ public class BotMiner extends Globals {
 					buildRefineryVisibleSoup = -1;
 					return;
 				} else {
-					Debug.tlog("Would build refinery at " + buildRefineryLocation + ", but not ready");
+					Debug.ttlog("But not ready");
 					return;
 				}
 			} else {
 				if (rc.isReady()) {
-					Direction dir = Nav.bugNavigate(buildRefineryLocation);
-					if (dir != null) {
-						Debug.tlog("Moving to buildRefineryLocation at " + buildRefineryLocation + ", moved " + dir);
+					Direction move = Nav.bugNavigate(buildRefineryLocation);
+					Debug.tlog("Moving to buildRefineryLocation at " + buildRefineryLocation);
+					if (move != null) {
+						Debug.ttlog("Moved " + move);
 					} else {
-						Debug.tlog("Moving to buildRefineryLocation at " + buildRefineryLocation + ", but no move found");
+						Debug.ttlog("But no move found");
 					}
 				} else {
-					Debug.tlog("Moving to buildRefineryLocation at " + buildRefineryLocation + ", but not ready");
+					Debug.ttlog("But not ready");
 				}
 			}
 
@@ -341,26 +344,27 @@ public class BotMiner extends Globals {
 				loc = refineries[refineriesIndex];
 			}
 			if (here.isAdjacentTo(loc)) {
+				Debug.tlog("Depositing " + soupCarrying + " soup at refinery at " + loc);
 				if (rc.isReady()) {
 					rc.depositSoup(here.directionTo(loc), soupCarrying);
 					refineriesIndex = -1;
-
-					Debug.tlog("Deposited " + soupCarrying + " soup at refinery at " + loc);
+					Debug.ttlog("Success");
 				} else {
-					Debug.tlog("Would deposit soup at refinery at " + loc + ", but not ready");
+					Debug.ttlog("But not ready");
 				}
 				return;
 			}
 
+			Debug.tlog("Moving to refinery at " + refineries[refineriesIndex]);
 			if (rc.isReady()) {
-				Direction dir = Nav.bugNavigate(refineries[refineriesIndex]);
-				if (dir != null) {
-					Debug.tlog("Moving to refinery at " + refineries[refineriesIndex] + ", moved " + dir);
+				Direction move = Nav.bugNavigate(refineries[refineriesIndex]);
+				if (move != null) {
+					Debug.ttlog("Moved " + move);
 				} else {
-					Debug.tlog("Moving to refinery at " + refineries[refineriesIndex] + ", but no move found");
+					Debug.ttlog("But no move found");
 				}
 			} else {
-				Debug.tlog("Moving to refinery at " + refineries[refineriesIndex] + ", but not ready");
+				Debug.ttlog("But not ready");
 			}
 			return;
 		}
@@ -406,15 +410,16 @@ public class BotMiner extends Globals {
 		*/
 
 		if (soupDeposit != null) {
+			Debug.tlog("Moving to soupDeposit at " + soupDeposit);
 			if (rc.isReady()) {
-				Direction dir = Nav.bugNavigate(soupDeposit);
-				if (dir != null) {
-					Debug.tlog("Moving to soupDeposit at " + soupDeposit + ", moved " + dir);
+				Direction move = Nav.bugNavigate(soupDeposit);
+				if (move != null) {
+					Debug.ttlog("Moved " + move);
 				} else {
-					Debug.tlog("Moving to soupDeposit at " + soupDeposit + ", but no move found");
+					Debug.ttlog("But no move found");
 				}
 			} else {
-				Debug.tlog("Moving to soupDeposit at " + soupDeposit + ", but not ready");
+				Debug.ttlog("But not ready");
 			}
 			return;
 		} else {
@@ -427,15 +432,16 @@ public class BotMiner extends Globals {
 					soupClusterIndex = -1;
 					// do not return, instead try to explore
 				} else {
+					Debug.tlog("Moving to soupCluster at " + soupClusters[soupClusterIndex]);
 					if (rc.isReady()) {
-						Direction dir = Nav.bugNavigate(loc);
-						if (dir != null) {
-							Debug.tlog("Moving to soupCluster at " + soupClusters[soupClusterIndex] + ", moved " + dir);
+						Direction move = Nav.bugNavigate(loc);
+						if (move != null) {
+							Debug.ttlog("Moved " + move);
 						} else {
-							Debug.tlog("Moving to soupCluster at " + soupClusters[soupClusterIndex] + ", but no move found");
+							Debug.ttlog("But no move found");
 						}
 					} else {
-						Debug.tlog("Moving to soupCluster at " + soupClusters[soupClusterIndex] + ", but not ready");
+						Debug.ttlog("But not ready");
 					}
 					return;
 				}
@@ -447,16 +453,17 @@ public class BotMiner extends Globals {
 				myExploreLocation = findExploreLocation(myExploreDirection);
 				Debug.tlog("Finished exploring " + myExploreDirection);
 			}
-			if (rc.isReady()) {
 
-				Direction dir = Nav.bugNavigate(myExploreLocation);
-				if (dir != null) {
-					Debug.tlog("Exploring " + myExploreLocation + ", moved " + dir);
+			Debug.tlog("Exploring " + myExploreLocation);
+			if (rc.isReady()) {
+				Direction move = Nav.bugNavigate(myExploreLocation);
+				if (move != null) {
+					Debug.ttlog("Moved " + move);
 				} else {
-					Debug.tlog("Exploring " + myExploreLocation + ", but no move found");
+					Debug.ttlog("But no move found");
 				}
 			} else {
-				Debug.tlog("Exploring " + myExploreLocation + ", but not ready");
+				Debug.tlog("But not ready");
 			}
 		}
 	}
