@@ -33,12 +33,12 @@ while index < len(lines):
             if isHeader(lines[index]):
                 tempEnd = lines[index].index("]") + 1
                 header = lines[index][:tempEnd]
-            if "-Robot: " in lines[index]:
-                myType = lines[index][8:]
-            if "-roundNum: " in lines[index]:
-                roundNum = lines[index][11:]
-            if "-Location: " in lines[index]:
-                location = lines[index][11:]
+            if "Robot: " in lines[index]:
+                myType = lines[index][7:]
+            if "roundNum: " in lines[index]:
+                roundNum = lines[index][10:]
+            if "Location: " in lines[index]:
+                location = lines[index][10:]
             for k in keywords:
                 if k in lines[index]:
                     temp = (k, myType)
