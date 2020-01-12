@@ -431,7 +431,7 @@ public class BotDeliveryDrone extends Globals {
 					} else if (curRing == wallRingDistance && ri.type == RobotType.MINER) {
 						// wall tile
 						MapLocation outerLoc = ri.location.add(dirFromHQ);
-						if (!rc.canSenseLocation(outerLoc) || !Nav.checkElevation(ri.location, outerLoc)) {
+						if (!rc.canSenseLocation(outerLoc) || rc.senseElevation(ri.location) > smallWallDepth + 3) {
 							shouldTransport = true;
 						}
 					} else if (curRing == wallRingDistance + 1) {
@@ -590,7 +590,7 @@ public class BotDeliveryDrone extends Globals {
 			// if miner is on wall that has high elevation, move him outwards
 			if (curRing == wallRingDistance && ri.type == RobotType.MINER) {
 				MapLocation outerLoc = ri.location.add(dirFromHQ);
-				if (!rc.canSenseLocation(outerLoc) || rc.senseElevation(ri.location)) {
+				if (!rc.canSenseLocation(outerLoc) || rc.senseElevation(ri.location) > smallWallDepth + 3) {
 					Debug.tlog("Picking up miner on wall at " + ri.location);
 					if (rc.isReady()) {
 						Actions.doPickUpUnit(ri.ID);
