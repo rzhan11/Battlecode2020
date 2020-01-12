@@ -11,10 +11,6 @@ public class BotHQ extends Globals {
 	private static boolean[] builtSymmetryMiner = new boolean[3];
 	private static int symmetryMinerCount = 0;
 
-	private static MapLocation[] digLocations, smallWall;
-	private static int digLocationsLength, smallWallLength, smallWallDepth;
-
-
 	private static boolean madeBuilderMiner = false;
 
 	public static void loop() throws GameActionException {

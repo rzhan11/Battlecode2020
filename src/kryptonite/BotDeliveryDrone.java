@@ -60,9 +60,9 @@ public class BotDeliveryDrone extends Globals {
 
 		locateFlooding();
 
-		insideWall = wallRingDistance > maxXYDistance(HQLocation, here);
-		onWall = wallRingDistance == maxXYDistance(HQLocation, here);
-		outsideWall = wallRingDistance < maxXYDistance(HQLocation, here);
+		insideWall = largeWallRingRadius > maxXYDistance(HQLocation, here);
+		onWall = largeWallRingRadius == maxXYDistance(HQLocation, here);
+		outsideWall = largeWallRingRadius < maxXYDistance(HQLocation, here);
 
 		allyMoveableRobots = new RobotInfo[69]; // for sensorRadiusSquared = 24
 		int index = 0;
@@ -125,7 +125,7 @@ public class BotDeliveryDrone extends Globals {
 				// check adjacent tiles for a tile outside the wall that is not occupied/flooded
 				for (Direction dir : directions) {
 					MapLocation loc = rc.adjacentLocation(dir);
-					if (inMap(loc) && maxXYDistance(HQLocation, loc) > (wallRingDistance + 1) && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
+					if (inMap(loc) && maxXYDistance(HQLocation, loc) > (largeWallRingRadius + 1) && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
 						Debug.tlog("Dropped robot outside the wall at " +  loc);
 						if (rc.isReady()) {
 							Debug.ttlog("Dropped " +  dir);
@@ -165,7 +165,7 @@ public class BotDeliveryDrone extends Globals {
 				// drop robot onto a wall tile that isn't occupied/flooded
 				for (Direction dir : directions) {
 					MapLocation loc = rc.adjacentLocation(dir);
-					if (inMap(loc) && maxXYDistance(HQLocation, loc) == wallRingDistance && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
+					if (inMap(loc) && maxXYDistance(HQLocation, loc) == largeWallRingRadius && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
 						Debug.tlog("Dropped robot on the wall at " +  loc);
 						if (rc.isReady()) {
 							Debug.ttlog("Dropped " +  dir);
@@ -193,7 +193,7 @@ public class BotDeliveryDrone extends Globals {
 							break;
 						}
 						MapLocation loc = here.translate(dir[0], dir[1]);
-						if (maxXYDistance(HQLocation, loc) == wallRingDistance) {
+						if (maxXYDistance(HQLocation, loc) == largeWallRingRadius) {
 							if (rc.canSenseLocation(loc) && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
 								movingToWallLocation = loc;
 								Debug.tlog("Setting movingToWallLocation to " + movingToWallLocation);
@@ -326,19 +326,19 @@ public class BotDeliveryDrone extends Globals {
 					int curRing = maxXYDistance(HQLocation, ri.location);
 					Direction dirFromHQ = HQLocation.directionTo(ri.location);
 
-					if (curRing == wallRingDistance - 1) {
+					if (curRing == largeWallRingRadius - 1) {
 						// inner transport tile
 						MapLocation wallLoc = ri.location.add(dirFromHQ);
 						if (!rc.canSenseLocation(wallLoc) || !Nav.checkElevation(ri.location, wallLoc)) {
 							shouldTransport = true;
 						}
-					} else if (curRing == wallRingDistance && ri.type == RobotType.MINER) {
+					} else if (curRing == largeWallRingRadius && ri.type == RobotType.MINER) {
 						// wall tile
 						MapLocation outerLoc = ri.location.add(dirFromHQ);
 						if (!rc.canSenseLocation(outerLoc) || rc.senseElevation(ri.location) > smallWallDepth + 3) {
 							shouldTransport = true;
 						}
-					} else if (curRing == wallRingDistance + 1) {
+					} else if (curRing == largeWallRingRadius + 1) {
 						// outer transport tile
 						MapLocation wallLoc = ri.location.subtract(dirFromHQ);
 						if (!rc.canSenseLocation(wallLoc) || !Nav.checkElevation(ri.location, wallLoc)) {
@@ -464,7 +464,7 @@ public class BotDeliveryDrone extends Globals {
 
 			// if miner is on inner transport tile and is blocked by high elevation wall, move him outwards
 			// if landscaper is on inner transport tile and is blocked by high elevation wall, move onto wall
-			if (curRing == wallRingDistance - 1) {
+			if (curRing == largeWallRingRadius - 1) {
 				MapLocation wallLoc = ri.location.add(dirFromHQ);
 				// if we cannot sense the wallLoc, assume it is high and pick up the robot
 				if (!rc.canSenseLocation(wallLoc) || !Nav.checkElevation(ri.location, wallLoc)) {
@@ -492,7 +492,7 @@ public class BotDeliveryDrone extends Globals {
 			}
 
 			// if miner is on wall that has high elevation, move him outwards
-			if (curRing == wallRingDistance && ri.type == RobotType.MINER) {
+			if (curRing == largeWallRingRadius && ri.type == RobotType.MINER) {
 				MapLocation outerLoc = ri.location.add(dirFromHQ);
 				if (!rc.canSenseLocation(outerLoc) || rc.senseElevation(ri.location) > smallWallDepth + 3) {
 					Debug.tlog("Picking up miner on wall at " + ri.location);
@@ -514,7 +514,7 @@ public class BotDeliveryDrone extends Globals {
 
 			// if miner is on outer transport tile and is blocked by high elevation wall, move him inwards
 			// if landscaper is on outer transport tile and is blocked by high elevation wall, move onto wall
-			if (curRing == wallRingDistance + 1) {
+			if (curRing == largeWallRingRadius + 1) {
 				MapLocation wallLoc = ri.location.subtract(dirFromHQ);
 				// if we cannot sense the wallLoc, assume it is high and pick up the miner
 				if (!rc.canSenseLocation(wallLoc) || !Nav.checkElevation(ri.location, wallLoc)) {
@@ -646,7 +646,20 @@ public class BotDeliveryDrone extends Globals {
 		return false;
 	}
 
+	/*
+	If we do not already know a visible flooded tile
+		Checks visible tiles for flooding
+		Saves the flooded tile to memory
+	 */
 	public static void locateFlooding () throws GameActionException {
+//		if (floodingMemory != null && rc.canSenseLocation(floodingMemory)) {
+//			if () {
+//				Debug.tlog("Resetting floodingMemory at " + floodingMemory + " since it is dry");
+//				return;
+//			} else {
+//				Debug.tlog("Resetting floodingMemory at " + floodingMemory + " since it is dry");
+//			}
+//		}
 
 		for (int[] dir: senseDirections) {
 			if (actualSensorRadiusSquared < dir[2]) {
@@ -656,7 +669,7 @@ public class BotDeliveryDrone extends Globals {
 			if (rc.canSenseLocation(loc) && rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
 				// floodingMemory[loc.x][loc.y] = rc.senseFlooding(loc);
 				floodingMemory = loc;
-				break;
+				return;
 			}
 		}
 
