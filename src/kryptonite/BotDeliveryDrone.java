@@ -38,6 +38,7 @@ public class BotDeliveryDrone extends Globals {
 
 	public static boolean movingRobotToPlot;
 	public static boolean movingRobotToWall;
+	public static MapLocation movingToWallLocation = null;
 	public static boolean movingRobotInwards;
 	public static boolean movingRobotOutwards;
 	public static MapLocation movingOutwardsLocation = null;
@@ -182,8 +183,12 @@ public class BotDeliveryDrone extends Globals {
 		allyMoveableRobotsLength = index;
 
 		// chase enemies and drop them into water
-		boolean sawEnemy = checkForEnemies();
+		boolean sawEnemy = tryKillRobots(visibleEnemies, them);
 		if (sawEnemy) {
+			return;
+		}
+		boolean sawCow = tryKillRobots(visibleCows, cowTeam);
+		if (sawCow) {
 			return;
 		}
 
@@ -280,7 +285,40 @@ public class BotDeliveryDrone extends Globals {
 						return;
 					}
 				}
-				Debug.tlog("Cannot drop held unit to safe wall tile");
+
+				if (movingToWallLocation == null) {
+					for (int[] dir: senseDirections) {
+						if (actualSensorRadiusSquared < dir[2]) {
+							break;
+						}
+						MapLocation loc = here.translate(dir[0], dir[1]);
+						if (maxXYDistance(HQLocation, loc) == wallRingDistance) {
+							if (rc.canSenseLocation(loc) && rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
+								movingToWallLocation = loc;
+								break;
+							}
+						}
+					}
+				}
+
+				if (movingToWallLocation == null) {
+					// if no visible open/nonflooded wall locations, try to move to the reflected position across the HQLocation
+					int dx = HQLocation.x - here.x;
+					int dy = HQLocation.y - here.y;
+					movingToWallLocation = new MapLocation(HQLocation.x + dx, HQLocation.y + dy);
+				}
+
+				Debug.tlog("Moving to movingToWallLocation at " + movingToWallLocation);
+				if (rc.isReady()) {
+					Direction move = Nav.bugNavigate(movingToWallLocation);
+					if (move != null) {
+						Debug.ttlog("Moved " + move);
+					} else {
+						Debug.ttlog("But no move found");
+					}
+				} else {
+					Debug.ttlog("But not ready");
+				}
 
 				return;
 			}
@@ -564,6 +602,7 @@ public class BotDeliveryDrone extends Globals {
 			}
 
 			// if miner is on inner transport tile and is blocked by high elevation wall, move him outwards
+			// if landscaper is on inner transport tile and is blocked by high elevation wall, move onto wall
 			if (curRing == wallRingDistance + 1) {
 				MapLocation wallLoc = ri.location.subtract(dirFromHQ);
 				// if we cannot sense the wallLoc, assume it is high and pick up the miner
@@ -590,12 +629,15 @@ public class BotDeliveryDrone extends Globals {
 		return false;
 	}
 
-	public static boolean checkForEnemies() throws GameActionException {
+	/*
+	targetRobots should contain the robots that the drone is checking for
+	In most cases, it will be either visibleEnemies or visibleCows
+	*/
+	public static boolean tryKillRobots (RobotInfo[] targetRobots, Team killTeam) throws GameActionException {
 		if (rc.isCurrentlyHoldingUnit()) {
 			if (!movingRobotToWater) {
 				return false;
 			} else {
-				Debug.tlog("a");
 				// check for adjacent empty water
 				for (Direction dir: directions) {
 					MapLocation loc = rc.adjacentLocation(dir);
@@ -650,7 +692,7 @@ public class BotDeliveryDrone extends Globals {
 				MapLocation loc = rc.adjacentLocation(dir);
 				if (inMap(loc)) {
 					RobotInfo ri = rc.senseRobotAtLocation(loc);
-					if (ri != null && ri.team == them && rc.canPickUpUnit(ri.ID)) {
+					if (ri != null && ri.team == killTeam && rc.canPickUpUnit(ri.ID)) {
 						Actions.doPickUpUnit(ri.ID);
 						movingRobotToWater = true;
 						Debug.tlog("Picked up unit at " + loc);
@@ -663,7 +705,7 @@ public class BotDeliveryDrone extends Globals {
 			int closestEnemyDist = P_INF;
 			int closestEnemyIndex = -1;
 			int index = 0;
-			for (RobotInfo ri: visibleEnemies) {
+			for (RobotInfo ri: targetRobots) {
 				if (canPickUpType(ri.type)) {
 					int dist = here.distanceSquaredTo(ri.location);
 					if (dist < closestEnemyDist) {
@@ -675,7 +717,7 @@ public class BotDeliveryDrone extends Globals {
 
 			// if there is a nearby enemy that can be picked up, try to chase it
 			if (closestEnemyIndex != -1) {
-				MapLocation loc = visibleEnemies[closestEnemyIndex].location;
+				MapLocation loc = targetRobots[closestEnemyIndex].location;
 				Debug.tlog("Moving to enemy at " + loc);
 				if (rc.isReady()) {
 					Direction move = Nav.bugNavigate(loc);
