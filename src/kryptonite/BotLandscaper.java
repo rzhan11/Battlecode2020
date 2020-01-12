@@ -24,10 +24,10 @@ public class BotLandscaper extends Globals {
 						}
 					}
 					// finds spots that can be used for digging
-					digLocations = new MapLocation[12];
-					MapLocation templ = HQLocation.translate(3,3);
+					digLocations = new MapLocation[50];
+					MapLocation templ = HQLocation.translate(5,5);
 					int index = 0;
-					for(int i = 0; i < 4; i++) for(int j = 0; j < 4; j++) {
+					for(int i = 0; i < 6; i++) for(int j = 0; j < 6; j++) {
 						MapLocation newl = templ.translate(-2*i, -2*j);
 						if(inMap(newl) && !HQLocation.equals(newl)) {
 							if (maxXYDistance(HQLocation, newl) > 2) { // excludes holes inside the 5x5 plot
@@ -166,7 +166,7 @@ public class BotLandscaper extends Globals {
 						if (rc.senseElevation(tempLoc) < smallWallDepth) {
 							actionComplete = true;
 							if (rc.getDirtCarrying() == 0) {
-								landscaperDig();
+								landscaperDig(1);
 							} else {
 								if (rc.canDepositDirt(d)) rc.depositDirt(d);
 							}
@@ -255,30 +255,51 @@ public class BotLandscaper extends Globals {
 				if (currentRing == 2) {
 					if (currentStep == 0) {
 						Debug.ttlog("DIGGING");
-						if (rc.getDirtCarrying() <= 2) {
-							landscaperDig();
+						if (rc.getDirtCarrying() < 5) {
+							landscaperDig(2);
 						} else {
 							currentStep = 1;
 						}
 					}
 					if (currentStep == 1) {
 						Debug.ttlog("DEPOSITING");
+						boolean isFlooded = false;
+						Direction inFlood = null;
+						for(Direction d : Direction.allDirections()) {
+						    if(rc.senseFlooding(here.add(d)) && maxXYDistance(HQLocation, here.add(d)) == 3) {
+                                inFlood = d;
+                                isFlooded = true;
+                                break;
+                            }
+                        }
 						if (rc.getDirtCarrying() != 0) {
-							int minDirt = 1000;
-							Direction minDir = null;
-							for (Direction d : Direction.allDirections()) {
-								MapLocation newloc = here.add(d);
-								if (inArray(largeWall, newloc, largeWallLength)) {
-									if (minDirt > rc.senseElevation(newloc)) {
-										minDir = d;
-										minDirt = rc.senseElevation(newloc);
+							if(isFlooded) {
+							    if(rc.canDepositDirt(inFlood)) rc.depositDirt(inFlood);
+                            }
+							else {
+                                int minDirt = 1000;
+                                Direction minDir = null;
+                                for (Direction d : Direction.allDirections()) {
+                                    MapLocation newloc = here.add(d);
+                                    if(maxXYDistance(HQLocation, newloc) == 3 && rc.senseElevation(newloc) < smallWallDepth) {
+                                    	minDir = d;
+                                    	minDirt = -1;
+                                    	break;
 									}
-								}
-							}
-							if (rc.canDepositDirt(minDir)) rc.depositDirt(minDir);
-						} else {
-							currentStep = 2;
-						}
+                                    else if (maxXYDistance(HQLocation, newloc) == 4) {
+                                        if (minDirt > rc.senseElevation(newloc)) {
+                                            minDir = d;
+                                            minDirt = rc.senseElevation(newloc);
+                                        }
+                                    }
+                                }
+                                if (rc.canDepositDirt(minDir)) rc.depositDirt(minDir);
+                            }
+						} else if(isFlooded) {
+                            currentStep = 1;
+                        } else {
+                            currentStep = 2;
+                        }
 					}
 					if (currentStep == 2) {
 						Debug.ttlog("MOVING");
@@ -406,9 +427,16 @@ public class BotLandscaper extends Globals {
 				if(rc.canDepositDirt(d)) rc.depositDirt(d);
 	}
 
-	private static void landscaperDig() throws GameActionException {
-		for(Direction d: Direction.allDirections()) {
-			if(inArray(digLocations, here.add(d), digLocationsLength)) if(rc.canDigDirt(d)) rc.digDirt(d);
+	private static void landscaperDig(int where) throws GameActionException {
+		if(where == 1) {
+			for (Direction d : Direction.allDirections()) {
+				if (inArray(digLocations, here.add(d), digLocationsLength)) if (rc.canDigDirt(d)) rc.digDirt(d);
+			}
+		}
+		else if(where == 2) {
+			for (Direction d : Direction.allDirections()) {
+				if (maxXYDistance(HQLocation, here.add(d)) == 5 && inArray(digLocations, here.add(d), digLocationsLength)) if (rc.canDigDirt(d)) rc.digDirt(d);
+			}
 		}
 	}
 }
