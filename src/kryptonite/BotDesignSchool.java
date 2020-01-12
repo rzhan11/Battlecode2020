@@ -25,7 +25,10 @@ public class BotDesignSchool extends Globals {
 	public static void turn() throws GameActionException {
 		if (landscapersMade < landscaperCheckpoints[0]) {
 			for (Direction d : Direction.allDirections()) {
-				if (teamSoup >= RobotType.LANDSCAPER.cost && rc.canBuildRobot(RobotType.LANDSCAPER, d) && landscapersMade < landscaperCheckpoints[0]) {
+				MapLocation loc = rc.adjacentLocation(d);
+				if (teamSoup >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost + Communication.REFINERY_BUILT_COST
+						&& Nav.checkElevation(loc) && !rc.senseFlooding(loc)
+						&& landscapersMade < landscaperCheckpoints[0]) {
 					Debug.tlog("Building landscapers at " + rc.adjacentLocation(d));
 					if (rc.isReady()) {
 						rc.buildRobot(RobotType.LANDSCAPER, d);

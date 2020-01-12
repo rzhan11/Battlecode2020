@@ -58,7 +58,8 @@ public class BotBuilderMiner extends BotMiner {
 			if (here.isAdjacentTo(fulfillmentCenterLocation)) {
 				// build fulfillment center
 				Direction dir = here.directionTo(fulfillmentCenterLocation);
-				if (rc.canBuildRobot(RobotType.FULFILLMENT_CENTER, dir)) {
+				MapLocation loc = rc.adjacentLocation(dir);
+				if (!rc.senseFlooding(loc) && Nav.checkElevation(loc)) {
 					Debug.tlog("Building fulfillment center at " + rc.adjacentLocation(dir));
 					if (rc.isReady()) {
 						rc.buildRobot(RobotType.FULFILLMENT_CENTER, dir);

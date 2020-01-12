@@ -26,8 +26,9 @@ public class BotFulfillmentCenter extends Globals {
 		// initial drones made
 		if (dronesMade < droneCheckpoints[0]) {
 			for (Direction d : Direction.allDirections()) {
+				MapLocation loc = rc.adjacentLocation(d);
 				if (teamSoup >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost + Communication.REFINERY_BUILT_COST &&
-						rc.canBuildRobot(RobotType.DELIVERY_DRONE, d) && dronesMade < droneCheckpoints[0]) {
+						!rc.senseFlooding(loc) && Nav.checkElevation(loc) && dronesMade < droneCheckpoints[0]) {
 					Debug.tlog("Building delivery drone at " + rc.adjacentLocation(d));
 					if (rc.isReady()) {
 						rc.buildRobot(RobotType.DELIVERY_DRONE, d);
