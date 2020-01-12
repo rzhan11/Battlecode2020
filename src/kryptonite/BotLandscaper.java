@@ -253,6 +253,15 @@ public class BotLandscaper extends Globals {
 					}
 				}
 				if (currentRing == 2) {
+					boolean isFlooded = false;
+					Direction inFlood = null;
+					for(Direction d : Direction.allDirections()) {
+						if(rc.senseFlooding(here.add(d)) && maxXYDistance(HQLocation, here.add(d)) <= 4) {
+							inFlood = d;
+							isFlooded = true;
+							break;
+						}
+					}
 					if (currentStep == 0) {
 						Debug.ttlog("DIGGING");
 						if (rc.getDirtCarrying() < 5) {
@@ -263,17 +272,9 @@ public class BotLandscaper extends Globals {
 					}
 					if (currentStep == 1) {
 						Debug.ttlog("DEPOSITING");
-						boolean isFlooded = false;
-						Direction inFlood = null;
-						for(Direction d : Direction.allDirections()) {
-						    if(rc.senseFlooding(here.add(d)) && maxXYDistance(HQLocation, here.add(d)) == 3) {
-                                inFlood = d;
-                                isFlooded = true;
-                                break;
-                            }
-                        }
 						if (rc.getDirtCarrying() != 0) {
 							if(isFlooded) {
+								Debug.ttlog("DEPOSITING IN WATER IN DIRECTION: " + inFlood);
 							    if(rc.canDepositDirt(inFlood)) rc.depositDirt(inFlood);
                             }
 							else {
@@ -293,16 +294,23 @@ public class BotLandscaper extends Globals {
                                         }
                                     }
                                 }
-                                if (rc.canDepositDirt(minDir)) rc.depositDirt(minDir);
+								Debug.ttlog("DEPOSITING DIRT IN DIRECTION: " + minDir);
+								if (rc.canDepositDirt(minDir)) {
+                                	rc.depositDirt(minDir);
+                                }
                             }
 						} else if(isFlooded) {
-                            currentStep = 1;
+                            currentStep = 0;
                         } else {
                             currentStep = 2;
                         }
 					}
 					if (currentStep == 2) {
 						Debug.ttlog("MOVING");
+						if(isFlooded) {
+							Debug.ttlog("FLOODED, WILL DEPOSIT MORE");
+							currentStep = 0;
+						}
 						if (moveClockwise) {
 							Direction d = getClockwiseDir();
 							Debug.ttlog("MOVING IN " + d);
