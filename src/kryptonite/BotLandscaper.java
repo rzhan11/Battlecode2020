@@ -6,7 +6,7 @@ public class BotLandscaper extends Globals {
 
 	private static MapLocation[] digLocations, smallWall, largeWall, smallWallCompleted;
 	private static int digLocationsLength, smallWallLength, largeWallLength, smallWallDepth,
-            smallWallCompletedLength, currentRing = -1, currentStep, role;
+            smallWallCompletedLength, currentStep, role;
 	private static final int WALL_ROLE = 1, DEFENSE_ROLE = 2;
 	private static boolean moveClockwise = true;
 
@@ -217,20 +217,13 @@ public class BotLandscaper extends Globals {
 			}
 			// Inner Wall Complete, Just Start Building Outer Wall
 			else {
-				// If this is the first time here, you are still in the 5x5
-				if (currentRing == -1) {
-					Debug.ttlog("5x5 RING COMPLETE");
-					currentRing = 0;
-				}
-
-				// If you are in the 5x5, get to the 6x6. Acceptable distances from the HQ are 9 and 13 (10, 18 are holes)
-				if (currentRing == 0) {
+				// If you are in the 5x5, get to the 7x7. Acceptable distances from the HQ are 9 and 13 (10, 18 are holes)
+				if (maxXYDistance(HQLocation, here) == 2) {
 					for (Direction d : Direction.allDirections()) {
 						MapLocation newloc = here.add(d);
 						int dis = HQLocation.distanceSquaredTo(newloc);
 						if (dis == 9 || dis == 13) {
 							if (rc.canMove(d)) {
-								currentRing = 1;
 								Debug.ttlog("MOVING TO 6x6 RING");
 								Actions.doMove(d);
 							}
@@ -238,13 +231,12 @@ public class BotLandscaper extends Globals {
 					}
 				}
 				// If you are in the 6x6, get to the 7x7. All distances are acceptable
-				if (currentRing == 1) {
+				if (maxXYDistance(HQLocation, here) == 3) {
 					for (Direction d : Direction.allDirections()) {
 						MapLocation newloc = here.add(d);
 						int dis = HQLocation.distanceSquaredTo(newloc);
 						if (dis >= 16 && dis != 18) {
 							if (rc.canMove(d)) {
-								currentRing = 2;
 								Debug.ttlog("MOVING TO 7x7 RING");
 								currentStep = 0;
 								Actions.doMove(d);
@@ -252,7 +244,8 @@ public class BotLandscaper extends Globals {
 						}
 					}
 				}
-				if (currentRing == 2) {
+				if (maxXYDistance(HQLocation, here) == 4) {
+					Debug.ttlog("ON THE WALL");
 					boolean isFlooded = false;
 					Direction inFlood = null;
 					for(Direction d : Direction.allDirections()) {
@@ -311,13 +304,19 @@ public class BotLandscaper extends Globals {
 							Debug.ttlog("FLOODED, WILL DEPOSIT MORE");
 							currentStep = 0;
 						}
-						if (moveClockwise) {
+						Direction d_clock = getClockwiseDir();
+						Direction d_counterclock = getCounterClockwiseDir();
+						if(rc.senseRobotAtLocation(here.add(d_clock)) != null && rc.senseRobotAtLocation(here.add(d_counterclock)) != null) {
+							currentStep = 0;
+						}
+						else if (moveClockwise) {
 							Direction d = getClockwiseDir();
-							Debug.ttlog("MOVING IN " + d);
+							Debug.ttlog("MOVING CLOCKWISE IN " + d);
 							if (rc.canMove(d)) {
 								currentStep = 0;
 								Actions.doMove(d);
-							} else if (rc.senseElevation(here.add(d)) + 3 < rc.senseElevation(here)) {
+							} else if (Math.abs(rc.senseElevation(here.add(d)) - rc.senseElevation(here)) > 3) {
+								Debug.ttlog("TOO STEEP: MINING MORE");
 								currentStep = 0;
 							} else if (rc.senseRobotAtLocation(here.add(d)) != null) {
 								Debug.ttlog("Colliding with: " + rc.senseRobotAtLocation(here.add(d)));
@@ -325,11 +324,12 @@ public class BotLandscaper extends Globals {
 							}
 						} else {
 							Direction d = getCounterClockwiseDir();
-							Debug.ttlog("MOVING IN " + d);
+							Debug.ttlog("MOVING COUNTERCLOCKWISE IN " + d);
 							if (rc.canMove(d)) {
 								currentStep = 0;
 								Actions.doMove(d);
-							} else if (rc.senseElevation(here.add(d)) + 3 < rc.senseElevation(here)) {
+							} else if (Math.abs(rc.senseElevation(here.add(d)) - rc.senseElevation(here)) > 3) {
+								Debug.ttlog("TOO STEEP: MINING MORE");
 								currentStep = 0;
 							} else if (rc.senseRobotAtLocation(here.add(d)) != null) {
 								Debug.ttlog("Colliding with: " + rc.senseRobotAtLocation(here.add(d)));

@@ -25,7 +25,7 @@ public class BotDesignSchool extends Globals {
 	public static void turn() throws GameActionException {
 		if (rc.isReady()) {
 			for (Direction d : Direction.allDirections()) {
-				int actualMax = maxLandscapersMade * (1 + roundNum / 500);
+				int actualMax = Math.min(maxLandscapersMade * (1 + roundNum / 500), 36);
 				if (teamSoup >= RobotType.LANDSCAPER.cost && rc.canBuildRobot(RobotType.LANDSCAPER, d) && landscapersMade < actualMax) {
 					rc.buildRobot(RobotType.LANDSCAPER, d);
 					teamSoup = rc.getTeamSoup();
