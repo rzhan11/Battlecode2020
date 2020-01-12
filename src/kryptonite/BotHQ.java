@@ -29,36 +29,7 @@ public class BotHQ extends Globals {
 
 					Communication.writeTransactionHQFirstTurn(here);
 
-					digLocations = new MapLocation[12];
-					MapLocation templ = HQLocation.translate(3,3);
-					int index = 0;
-					for(int i = 0; i < 4; i++) for(int j = 0; j < 4; j++) {
-						MapLocation newl = templ.translate(-2*i, -2*j);
-						if(inMap(newl) && !HQLocation.equals(newl)) {
-							if (maxXYDistance(HQLocation, newl) > 2) { // excludes holes inside the 5x5 plot
-								digLocations[index] = newl;
-								index++;
-							}
-						}
-					}
-					digLocationsLength = index;
-
-					Globals.endTurn(true);
-					Globals.update();
-
-					// finds tiles that are on the 5x5 plot
-					smallWall = new MapLocation[49];
-					index = 0;
-					templ = HQLocation.translate(3, 3);
-					for(int i = 0; i < 7; i++) for(int j = 0; j < 7; j++) {
-						MapLocation newl = templ.translate(-i, -j);
-						if (inMap(newl) && !HQLocation.equals(newl) && !inArray(digLocations, newl, digLocationsLength)) {
-							smallWall[index] = newl;
-							index++;
-						}
-					}
-					smallWallLength = index;
-					smallWallDepth = rc.senseElevation(HQLocation) + 3;
+					loadWallInformation();
 
 					// finds visible soup locations
 					locateNearbySoup();

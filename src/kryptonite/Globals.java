@@ -34,6 +34,7 @@ public class Globals {
 	public static Direction[] diagonalDirections = {Direction.NORTHEAST, Direction.SOUTHEAST, Direction.SOUTHWEST, Direction.NORTHWEST}; // four diagonals
 
 	public static MapLocation HQLocation = null;
+	public static int HQElevation;
 	// MapLocations of enemy HQ if map has horizontal, vertical, or rotationally symmetry
 	public static MapLocation[] symmetryHQLocations = new MapLocation[3];
 
@@ -143,9 +144,11 @@ public class Globals {
 
 		Communication.readTransactions(roundNum - 1);
 
-		// tries to find our HQLocation by reading messages
+		// tries to find our HQLocation and HQElevation by reading messages
+		// will skip turn if not found
 		if (myType == RobotType.HQ) {
 			HQLocation = here;
+			HQElevation = myElevation;
 		} else {
 			while (HQLocation == null) {
 				if (oldTransactionsIndex == spawnRound - 1) {
@@ -275,6 +278,141 @@ public class Globals {
 				return false;
 
 		}
+	}
+
+
+	public static int wallRingDistance = 4;
+
+	// information about digLocations
+	public static MapLocation[] innerDigLocations;
+	public static boolean[] innerDigLocationsOccupiedMemory; // the last time this digLocation was visible, was it occupied?
+	public static int innerDigLocationsLength;
+
+	public static MapLocation[] outerDigLocations;
+	public static boolean[] outerDigLocationsOccupiedMemory; // the last time this digLocation was visible, was it occupied?
+	public static int outerDigLocationsLength;
+
+	public static int smallWallDepth; // HQElevation + 3, set in the readTransactionHQFirstTurn
+	private static MapLocation[] smallWall;
+	private static int smallWallLength;
+
+	public static MapLocation[] largeWall;
+	public static int largeWallLength;
+
+	/*
+	Loads wall information into variables
+	Takes 4 turns
+	*/
+
+	public static void loadWallInformation () throws GameActionException {
+
+
+		// determine innerDigLocations
+		int innnerRingDistance = 3;
+		innerDigLocations = new MapLocation[12];
+		innerDigLocationsOccupiedMemory = new boolean[innerDigLocations.length];
+		MapLocation templ = HQLocation.translate(innnerRingDistance, innnerRingDistance);
+		int index = 0;
+		for(int i = 0; i < innnerRingDistance + 1; i++) for(int j = 0; j < innnerRingDistance + 1; j++) {
+			MapLocation newl = templ.translate(-2 * i, -2 * j);
+			if(inMap(newl) && !HQLocation.equals(newl)) {
+				if (maxXYDistance(HQLocation, newl) >= innnerRingDistance) { // excludes holes inside the 5x5 plot
+					innerDigLocations[index] = newl;
+					index++;
+				}
+			}
+		}
+		innerDigLocationsLength = index;
+
+		Globals.endTurn(true);
+		Globals.update();
+
+		// finds tiles that are on the 5x5 plot
+		smallWall = new MapLocation[49];
+		index = 0;
+		templ = HQLocation.translate(3, 3);
+		for(int i = 0; i < 7; i++) for(int j = 0; j < 7; j++) {
+			MapLocation newl = templ.translate(-i, -j);
+			if (inMap(newl) && !HQLocation.equals(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
+				smallWall[index] = newl;
+				index++;
+			}
+		}
+		smallWallLength = index;
+		smallWallDepth = HQElevation + 3;
+
+		Globals.endTurn(true);
+		Globals.update();
+
+		// determine outerDigLocations
+		/* @todo - remind Richard if he still wants this
+		*/
+		int outerRingDistance = 5;
+		outerDigLocations = new MapLocation[20];
+		outerDigLocationsOccupiedMemory = new boolean[outerDigLocations.length];
+		templ = HQLocation.translate(outerRingDistance, outerRingDistance);
+		index = 0;
+		for(int i = 0; i < outerRingDistance + 1; i++) for(int j = 0; j < outerRingDistance + 1; j++) {
+			MapLocation newl = templ.translate(-2 * i, -2 * j);
+			if(inMap(newl) && !HQLocation.equals(newl)) {
+				if (maxXYDistance(HQLocation, newl) >= outerRingDistance) { // excludes holes inside the 9x9 plot
+					outerDigLocations[index] = newl;
+					index++;
+				}
+			}
+		}
+		outerDigLocationsLength = index;
+
+		Globals.endTurn(true);
+		Globals.update();
+
+		int largeWallRingSize = 9; // must be odd
+		int cornerDist = largeWallRingSize / 2;
+
+		largeWall = new MapLocation[36];
+		index = 0;
+
+		// move down along right wall
+		templ = HQLocation.translate(cornerDist, cornerDist);
+		for(int i = 0; i < largeWallRingSize - 1; i++) {
+			MapLocation newl = templ.translate(0, -i);
+			if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
+				largeWall[index] = newl;
+				index++;
+			}
+		}
+		// move left along bottom wall
+		templ = HQLocation.translate(cornerDist, -cornerDist);
+		for(int i = 0; i < largeWallRingSize - 1; i++) {
+			MapLocation newl = templ.translate(-i, 0);
+			if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
+				largeWall[index] = newl;
+				index++;
+			}
+		}
+		// move up along left wall
+		templ = HQLocation.translate(-cornerDist, -cornerDist);
+		for(int i = 0; i < largeWallRingSize - 1; i++) {
+			MapLocation newl = templ.translate(0, i);
+			if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
+				largeWall[index] = newl;
+				index++;
+			}
+		}
+		// move right along top wall
+		templ = HQLocation.translate(-cornerDist, cornerDist);
+		for(int i = 0; i < largeWallRingSize - 1; i++) {
+			MapLocation newl = templ.translate(i, 0);
+			if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
+				largeWall[index] = newl;
+				index++;
+			}
+		}
+		largeWallLength = index;
+		Debug.ttlog("LARGE WALL LENGTH: " + largeWallLength);
+
+		Globals.endTurn(true);
+		Globals.update();
 	}
 
 }
