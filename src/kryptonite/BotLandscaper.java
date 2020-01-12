@@ -23,6 +23,7 @@ public class BotLandscaper extends Globals {
 							break;
 						}
 					}
+					if(rc.getRoundNum() >= 500) smallWallComplete = true;
 					// finds spots that can be used for digging
 					digLocations = new MapLocation[50];
 					MapLocation templ = HQLocation.translate(5,5);
@@ -144,7 +145,7 @@ public class BotLandscaper extends Globals {
 			}
 
 			// If the First Wall isn't Complete and you can do stuff in your current position, do it
-			if (!smallWallComplete) {
+			if (!smallWallComplete && rc.getRoundNum() < 500) {
 				// Update smallWallCompleted Array
 				for (Direction d : Direction.allDirections()) {
 					MapLocation tempLoc = here.add(d);
@@ -179,7 +180,7 @@ public class BotLandscaper extends Globals {
 				// The Wall here is Done, Rotate Clockwise
 				if (!actionComplete) {
 					if (moveClockwise) {
-						Direction d = getClockwiseDir();
+						Direction d = getClockwiseDir(here);
 						MapLocation moveLoc = here.add(d);
 						if (inArray(digLocations, moveLoc, digLocationsLength)) {
 							// Go to Outer Ring
@@ -196,7 +197,7 @@ public class BotLandscaper extends Globals {
 							}
 						}
 					} else {
-						Direction d = getCounterClockwiseDir();
+						Direction d = getCounterClockwiseDir(here);
 						MapLocation moveLoc = here.add(d);
 						if (inArray(digLocations, moveLoc, digLocationsLength)) {
 							// Go to Outer Ring
@@ -222,7 +223,7 @@ public class BotLandscaper extends Globals {
 					for (Direction d : Direction.allDirections()) {
 						MapLocation newloc = here.add(d);
 						int dis = HQLocation.distanceSquaredTo(newloc);
-						if (dis == 9 || dis == 13) {
+						if (maxXYDistance(HQLocation, newloc) == 3) {
 							if (rc.canMove(d)) {
 								Debug.ttlog("MOVING TO 6x6 RING");
 								Actions.doMove(d);
@@ -234,8 +235,7 @@ public class BotLandscaper extends Globals {
 				if (maxXYDistance(HQLocation, here) == 3) {
 					for (Direction d : Direction.allDirections()) {
 						MapLocation newloc = here.add(d);
-						int dis = HQLocation.distanceSquaredTo(newloc);
-						if (dis >= 16 && dis != 18) {
+						if (maxXYDistance(HQLocation, newloc) == 4) {
 							if (rc.canMove(d)) {
 								Debug.ttlog("MOVING TO 7x7 RING");
 								currentStep = 0;
@@ -306,13 +306,17 @@ public class BotLandscaper extends Globals {
 							Debug.ttlog("FLOODED, WILL DEPOSIT MORE");
 							currentStep = 0;
 						}
-						Direction d_clock = getClockwiseDir();
-						Direction d_counterclock = getCounterClockwiseDir();
-						if(rc.senseRobotAtLocation(here.add(d_clock)) != null && rc.senseRobotAtLocation(here.add(d_counterclock)) != null) {
+						Direction d_clock = getClockwiseDir(here);
+						Direction d_clock_clock = getClockwiseDir(here.add(d_clock));
+						Direction d_counterclock = getCounterClockwiseDir(here);
+						Direction d_counterclock_counterclock = getCounterClockwiseDir(here.add(d_counterclock));
+						if((rc.senseRobotAtLocation(here.add(d_clock)) != null || rc.senseRobotAtLocation(here.add(d_clock_clock)) != null)
+						&& (rc.senseRobotAtLocation(here.add(d_clock)) != null || rc.senseRobotAtLocation(here.add(d_counterclock_counterclock)) != null)) {
+						//if(rc.senseRobotAtLocation(here.add(d_clock)) != null && rc.senseRobotAtLocation(here.add(d_counterclock)) != null) {
 							currentStep = 0;
 						}
 						else if (moveClockwise) {
-							Direction d = getClockwiseDir();
+							Direction d = getClockwiseDir(here);
 							Debug.ttlog("MOVING CLOCKWISE IN " + d);
 							if (rc.canMove(d)) {
 								currentStep = 0;
@@ -325,7 +329,7 @@ public class BotLandscaper extends Globals {
 								moveClockwise = false;
 							}
 						} else {
-							Direction d = getCounterClockwiseDir();
+							Direction d = getCounterClockwiseDir(here);
 							Debug.ttlog("MOVING COUNTERCLOCKWISE IN " + d);
 							if (rc.canMove(d)) {
 								currentStep = 0;
@@ -380,9 +384,9 @@ public class BotLandscaper extends Globals {
 			}
 		}
 	}
-	private static Direction getClockwiseDir() {
-		int delx = HQLocation.x - here.x;
-		int dely = HQLocation.y - here.y;
+	private static Direction getClockwiseDir(MapLocation ml) {
+		int delx = HQLocation.x - ml.x;
+		int dely = HQLocation.y - ml.y;
 		int absx = Math.abs(delx);
 		int absy = Math.abs(dely);
 		boolean xPos = absx == delx;
@@ -404,9 +408,9 @@ public class BotLandscaper extends Globals {
 		}
 	}
 
-	private static Direction getCounterClockwiseDir() {
-		int delx = HQLocation.x - here.x;
-		int dely = HQLocation.y - here.y;
+	private static Direction getCounterClockwiseDir(MapLocation ml) {
+		int delx = HQLocation.x - ml.x;
+		int dely = HQLocation.y - ml.y;
 		int absx = Math.abs(delx);
 		int absy = Math.abs(dely);
 		boolean xPos = absx == delx;
