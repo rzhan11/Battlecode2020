@@ -280,7 +280,7 @@ public class Globals {
 		}
 	}
 
-	public static void moveLog(MapLocation loc) throws GameActionException{
+	public static void moveLog(MapLocation loc) throws GameActionException {
 		if (rc.isReady()) {
 			Direction move = Nav.bugNavigate(loc);
 			if (move != null) {
@@ -291,6 +291,7 @@ public class Globals {
 		} else {
 			Debug.ttlog("But not ready");
 		}
+	}
 
 	public static int wallRingDistance = 4;
 
