@@ -26,7 +26,7 @@ public class BotFulfillmentCenter extends Globals {
 	public static void turn() throws GameActionException {
 		// initial drones made
 		if (dronesMade < droneCheckpoints[0]) {
-			for (Direction d : Direction.allDirections()) {
+			for (Direction d : directions) {
 				MapLocation loc = rc.adjacentLocation(d);
 				if (teamSoup >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost + Communication.REFINERY_BUILT_COST &&
 						!rc.senseFlooding(loc) && Nav.checkElevation(loc) && dronesMade < droneCheckpoints[0] && rc.senseRobotAtLocation(loc) == null) {
@@ -48,8 +48,7 @@ public class BotFulfillmentCenter extends Globals {
 
 		// after all the vaporators have been built continue
 		} else if (vaporatorCheckpoint && dronesMade < droneCheckpoints[1]) {
-			Debug.tlog("HERHEHEHREHEHRERE");
-			for (Direction d : Direction.allDirections()) {
+			for (Direction d : directions) {
 				MapLocation loc = rc.adjacentLocation(d);
 				if (teamSoup >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost + Communication.REFINERY_BUILT_COST &&
 						!rc.senseFlooding(loc) && Nav.checkElevation(loc) && dronesMade < droneCheckpoints[1] && rc.senseRobotAtLocation(loc) == null) {

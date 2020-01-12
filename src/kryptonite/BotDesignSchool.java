@@ -26,7 +26,7 @@ public class BotDesignSchool extends Globals {
 	public static void turn() throws GameActionException {
 		//initial 8 landscapers
 		if (landscapersMade < landscaperCheckpoints[0]) {
-			for (Direction d : Direction.allDirections()) {
+			for (Direction d : directions) {
 				MapLocation loc = rc.adjacentLocation(d);
 				if (teamSoup >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost + Communication.REFINERY_BUILT_COST
 						&& Nav.checkElevation(loc) && !rc.senseFlooding(loc)
@@ -50,7 +50,7 @@ public class BotDesignSchool extends Globals {
 
 		// next 24 landscapers built after the 8 net guns 12 drones and 4 vaporators built
 		} else if (netgunCheckpoint) {
-			for (Direction d : Direction.allDirections()) {
+			for (Direction d : directions) {
 				MapLocation loc = rc.adjacentLocation(d);
 				Debug.tlog(landscapersMade + "");
 				if (teamSoup >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost + Communication.REFINERY_BUILT_COST

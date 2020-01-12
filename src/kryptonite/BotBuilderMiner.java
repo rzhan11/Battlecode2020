@@ -167,7 +167,7 @@ public class BotBuilderMiner extends BotMiner {
 		}
 
 		else if (landscaperCheckpoint == 2){
-			Debug.tlog("Message Recieved HERHERHEHRE");
+			Debug.tlog("Message Received");
 		}
 
 		return;
