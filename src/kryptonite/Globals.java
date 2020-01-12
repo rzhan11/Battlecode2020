@@ -277,4 +277,17 @@ public class Globals {
 		}
 	}
 
+	public static void moveLog(MapLocation loc) throws GameActionException{
+		if (rc.isReady()) {
+			Direction move = Nav.bugNavigate(loc);
+			if (move != null) {
+				Debug.ttlog("Moved " + move);
+			} else {
+				Debug.ttlog("But no move found");
+			}
+		} else {
+			Debug.ttlog("But not ready");
+		}
+	}
+
 }
