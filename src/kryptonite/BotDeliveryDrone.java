@@ -286,6 +286,15 @@ public class BotDeliveryDrone extends Globals {
 					}
 				}
 
+				// reset movingToWallLocation if flooded/occupied
+				if (movingToWallLocation != null && rc.canSenseLocation(movingToWallLocation)) {
+				 	if (rc.senseFlooding(movingToWallLocation) || rc.senseRobotAtLocation(movingToWallLocation) != null) {
+						movingToWallLocation = null;
+						Debug.tlog("movingToWallLocation is flooded/occupied, resetting it");
+					}
+				}
+
+				// looks for an wall location that is not flooded or occupied
 				if (movingToWallLocation == null) {
 					for (int[] dir: senseDirections) {
 						if (actualSensorRadiusSquared < dir[2]) {
@@ -293,21 +302,24 @@ public class BotDeliveryDrone extends Globals {
 						}
 						MapLocation loc = here.translate(dir[0], dir[1]);
 						if (maxXYDistance(HQLocation, loc) == wallRingDistance) {
-							if (rc.canSenseLocation(loc) && rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
+							if (rc.canSenseLocation(loc) && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
 								movingToWallLocation = loc;
+								Debug.tlog("Setting movingToWallLocation to " + movingToWallLocation);
 								break;
 							}
 						}
 					}
 				}
 
-				if (movingToWallLocation == null) {
+				if (movingToWallLocation == null || here.equals(movingToWallLocation)) {
 					// if no visible open/nonflooded wall locations, try to move to the reflected position across the HQLocation
 					int dx = HQLocation.x - here.x;
 					int dy = HQLocation.y - here.y;
 					movingToWallLocation = new MapLocation(HQLocation.x + dx, HQLocation.y + dy);
+					Debug.tlog("Reflecting movingToWallLocation across HQ to " + movingToWallLocation);
 				}
 
+				// moves towards movingToWallLocation
 				Debug.tlog("Moving to movingToWallLocation at " + movingToWallLocation);
 				if (rc.isReady()) {
 					Direction move = Nav.bugNavigate(movingToWallLocation);
