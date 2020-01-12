@@ -3,27 +3,9 @@ package kryptonite;
 import battlecode.common.*;
 
 public class BotDeliveryDrone extends Globals {
-
-	// 5x5 plot information
-	public static int smallWallDepth;
-
-	// wall information
-	public static int wallRingDistance = 4;
 	public static boolean insideWall;
 	public static boolean onWall;
 	public static boolean outsideWall;
-
-	// information about digLocations
-	public static MapLocation[] innerDigLocations;
-	public static boolean[] innerDigLocationsOccupiedMemory; // the last time this digLocation was visible, was it occupied?
-	public static int innerDigLocationsLength;
-
-	public static MapLocation[] outerDigLocations;
-	public static boolean[] outerDigLocationsOccupiedMemory; // the last time this digLocation was visible, was it occupied?
-	public static int outerDigLocationsLength;
-
-	public static MapLocation[] largeWall;
-	public static int largeWallLength;
 
 	// nearby pick-up-able robots
 	public static RobotInfo[] allyMoveableRobots;
@@ -56,97 +38,7 @@ public class BotDeliveryDrone extends Globals {
 					// Globals.endTurn(true);
 					// Globals.update();
 
-					smallWallDepth = rc.senseElevation(HQLocation) + 3;
-
-					// determine innerDigLocations
-					int innnerRingDistance = 3;
-					innerDigLocations = new MapLocation[12];
-					innerDigLocationsOccupiedMemory = new boolean[innerDigLocations.length];
-					MapLocation templ = HQLocation.translate(innnerRingDistance, innnerRingDistance);
-					int index = 0;
-					for(int i = 0; i < innnerRingDistance + 1; i++) for(int j = 0; j < innnerRingDistance + 1; j++) {
-						MapLocation newl = templ.translate(-2 * i, -2 * j);
-						if(inMap(newl) && !HQLocation.equals(newl)) {
-							if (maxXYDistance(HQLocation, newl) >= innnerRingDistance) { // excludes holes inside the 5x5 plot
-								innerDigLocations[index] = newl;
-								index++;
-							}
-						}
-					}
-					innerDigLocationsLength = index;
-
-					Globals.endTurn(true);
-					Globals.update();
-
-					// determine outerDigLocations
-					/* @todo - remind Richard if he still wants this
-					*/
-					int outerRingDistance = 5;
-					outerDigLocations = new MapLocation[20];
-					outerDigLocationsOccupiedMemory = new boolean[outerDigLocations.length];
-					templ = HQLocation.translate(outerRingDistance, outerRingDistance);
-					index = 0;
-					for(int i = 0; i < outerRingDistance + 1; i++) for(int j = 0; j < outerRingDistance + 1; j++) {
-						MapLocation newl = templ.translate(-2 * i, -2 * j);
-						if(inMap(newl) && !HQLocation.equals(newl)) {
-							if (maxXYDistance(HQLocation, newl) >= outerRingDistance) { // excludes holes inside the 9x9 plot
-								outerDigLocations[index] = newl;
-								index++;
-							}
-						}
-					}
-					outerDigLocationsLength = index;
-
-					Globals.endTurn(true);
-					Globals.update();
-
-					int largeWallRingSize = 9; // must be odd
-					int cornerDist = largeWallRingSize / 2;
-
-					largeWall = new MapLocation[36];
-					index = 0;
-
-					// move down along right wall
-					templ = HQLocation.translate(cornerDist, cornerDist);
-					for(int i = 0; i < largeWallRingSize - 1; i++) {
-						MapLocation newl = templ.translate(0, -i);
-						if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
-							largeWall[index] = newl;
-							index++;
-						}
-					}
-					// move left along bottom wall
-					templ = HQLocation.translate(cornerDist, -cornerDist);
-					for(int i = 0; i < largeWallRingSize - 1; i++) {
-						MapLocation newl = templ.translate(-i, 0);
-						if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
-							largeWall[index] = newl;
-							index++;
-						}
-					}
-					// move up along left wall
-					templ = HQLocation.translate(-cornerDist, -cornerDist);
-					for(int i = 0; i < largeWallRingSize - 1; i++) {
-						MapLocation newl = templ.translate(0, i);
-						if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
-							largeWall[index] = newl;
-							index++;
-						}
-					}
-					// move right along top wall
-					templ = HQLocation.translate(-cornerDist, cornerDist);
-					for(int i = 0; i < largeWallRingSize - 1; i++) {
-						MapLocation newl = templ.translate(i, 0);
-						if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
-							largeWall[index] = newl;
-							index++;
-						}
-					}
-					largeWallLength = index;
-					Debug.ttlog("LARGE WALL LENGTH: " + largeWallLength);
-
-					Globals.endTurn(true);
-					Globals.update();
+					loadWallInformation();
 				}
 			    turn();
 			} catch (Exception e) {
@@ -286,6 +178,15 @@ public class BotDeliveryDrone extends Globals {
 					}
 				}
 
+				// reset movingToWallLocation if flooded/occupied
+				if (movingToWallLocation != null && rc.canSenseLocation(movingToWallLocation)) {
+				 	if (rc.senseFlooding(movingToWallLocation) || rc.senseRobotAtLocation(movingToWallLocation) != null) {
+						movingToWallLocation = null;
+						Debug.tlog("movingToWallLocation is flooded/occupied, resetting it");
+					}
+				}
+
+				// looks for an wall location that is not flooded or occupied
 				if (movingToWallLocation == null) {
 					for (int[] dir: senseDirections) {
 						if (actualSensorRadiusSquared < dir[2]) {
@@ -293,21 +194,24 @@ public class BotDeliveryDrone extends Globals {
 						}
 						MapLocation loc = here.translate(dir[0], dir[1]);
 						if (maxXYDistance(HQLocation, loc) == wallRingDistance) {
-							if (rc.canSenseLocation(loc) && rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
+							if (rc.canSenseLocation(loc) && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
 								movingToWallLocation = loc;
+								Debug.tlog("Setting movingToWallLocation to " + movingToWallLocation);
 								break;
 							}
 						}
 					}
 				}
 
-				if (movingToWallLocation == null) {
+				if (movingToWallLocation == null || here.equals(movingToWallLocation)) {
 					// if no visible open/nonflooded wall locations, try to move to the reflected position across the HQLocation
 					int dx = HQLocation.x - here.x;
 					int dy = HQLocation.y - here.y;
 					movingToWallLocation = new MapLocation(HQLocation.x + dx, HQLocation.y + dy);
+					Debug.tlog("Reflecting movingToWallLocation across HQ to " + movingToWallLocation);
 				}
 
+				// moves towards movingToWallLocation
 				Debug.tlog("Moving to movingToWallLocation at " + movingToWallLocation);
 				if (rc.isReady()) {
 					Direction move = Nav.bugNavigate(movingToWallLocation);
@@ -358,6 +262,7 @@ public class BotDeliveryDrone extends Globals {
 		} else { // STATE == not holding a unit
 
 			// find closest ally robot that is pick-up-able and is stuck in a digLocation
+			/*
 			int closestAllyDist = P_INF;
 			RobotInfo closestAllyInfo = null;
 			for (RobotInfo ri: visibleAllies) {
@@ -399,6 +304,7 @@ public class BotDeliveryDrone extends Globals {
 
 				return;
 			}
+			*/
 
 			// check if adjacent robots are on transport tiles/wall
 			for (RobotInfo ri: adjacentAllies) {
@@ -420,7 +326,7 @@ public class BotDeliveryDrone extends Globals {
 					int curRing = maxXYDistance(HQLocation, ri.location);
 					Direction dirFromHQ = HQLocation.directionTo(ri.location);
 
-					if (curRing == wallRingDistance - 1 && ri.type == RobotType.MINER) {
+					if (curRing == wallRingDistance - 1) {
 						// inner transport tile
 						MapLocation wallLoc = ri.location.add(dirFromHQ);
 						if (!rc.canSenseLocation(wallLoc) || !Nav.checkElevation(ri.location, wallLoc)) {
@@ -429,7 +335,7 @@ public class BotDeliveryDrone extends Globals {
 					} else if (curRing == wallRingDistance && ri.type == RobotType.MINER) {
 						// wall tile
 						MapLocation outerLoc = ri.location.add(dirFromHQ);
-						if (!rc.canSenseLocation(outerLoc) || !Nav.checkElevation(ri.location, outerLoc)) {
+						if (!rc.canSenseLocation(outerLoc) || rc.senseElevation(ri.location) > smallWallDepth + 3) {
 							shouldTransport = true;
 						}
 					} else if (curRing == wallRingDistance + 1) {
@@ -557,21 +463,27 @@ public class BotDeliveryDrone extends Globals {
 			Direction dirFromHQ = HQLocation.directionTo(ri.location);
 
 			// if miner is on inner transport tile and is blocked by high elevation wall, move him outwards
-			// ignore landscapers for now
-			if (curRing == wallRingDistance - 1 && ri.type == RobotType.MINER) {
+			// if landscaper is on inner transport tile and is blocked by high elevation wall, move onto wall
+			if (curRing == wallRingDistance - 1) {
 				MapLocation wallLoc = ri.location.add(dirFromHQ);
-				// if we cannot sense the wallLoc, assume it is high and pick up the miner
+				// if we cannot sense the wallLoc, assume it is high and pick up the robot
 				if (!rc.canSenseLocation(wallLoc) || !Nav.checkElevation(ri.location, wallLoc)) {
 					Debug.tlog("Picking up robot on inner transport tile at " + ri.location);
 					if (rc.isReady()) {
 						Actions.doPickUpUnit(ri.ID);
-						movingRobotOutwards = true;
-						movingOutwardsLocation = here.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
-						if (!inMap(movingOutwardsLocation)) {
-							Debug.ttlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
-							movingOutwardsLocation = symmetryHQLocations[0];
+						if (ri.type == RobotType.LANDSCAPER) {
+							// move landscapers to wall
+							movingRobotToWall = true;
+							Debug.ttlog("Moving landscaper from inner to wall");
+						} else {
+							movingRobotOutwards = true;
+							Debug.ttlog("Moving robot outwards");
+							movingOutwardsLocation = here.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
+							if (!inMap(movingOutwardsLocation)) {
+								Debug.ttlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
+								movingOutwardsLocation = symmetryHQLocations[0];
+							}
 						}
-						Debug.ttlog("Moving robot outwards");
 					} else {
 						Debug.ttlog("But not ready");
 					}
@@ -582,18 +494,17 @@ public class BotDeliveryDrone extends Globals {
 			// if miner is on wall that has high elevation, move him outwards
 			if (curRing == wallRingDistance && ri.type == RobotType.MINER) {
 				MapLocation outerLoc = ri.location.add(dirFromHQ);
-				// if we cannot sense the outerLoc, assume it is high and pick up the miner
-				if (!rc.canSenseLocation(outerLoc) || !Nav.checkElevation(ri.location, outerLoc)) {
+				if (!rc.canSenseLocation(outerLoc) || rc.senseElevation(ri.location) > smallWallDepth + 3) {
 					Debug.tlog("Picking up miner on wall at " + ri.location);
 					if (rc.isReady()) {
 						Actions.doPickUpUnit(ri.ID);
 						movingRobotOutwards = true;
+						Debug.ttlog("Moving robot outwards");
 						movingOutwardsLocation = here.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
 						if (!inMap(movingOutwardsLocation)) {
 							Debug.ttlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
 							movingOutwardsLocation = symmetryHQLocations[0];
 						}
-						Debug.ttlog("Moving robot outwards");
 					} else {
 						Debug.ttlog("But not ready");
 					}
@@ -601,8 +512,8 @@ public class BotDeliveryDrone extends Globals {
 				}
 			}
 
-			// if miner is on inner transport tile and is blocked by high elevation wall, move him outwards
-			// if landscaper is on inner transport tile and is blocked by high elevation wall, move onto wall
+			// if miner is on outer transport tile and is blocked by high elevation wall, move him inwards
+			// if landscaper is on outer transport tile and is blocked by high elevation wall, move onto wall
 			if (curRing == wallRingDistance + 1) {
 				MapLocation wallLoc = ri.location.subtract(dirFromHQ);
 				// if we cannot sense the wallLoc, assume it is high and pick up the miner
@@ -613,7 +524,7 @@ public class BotDeliveryDrone extends Globals {
 						if (ri.type == RobotType.LANDSCAPER) {
 							// move landscapers to wall
 							movingRobotToWall = true;
-							Debug.ttlog("Moving landscaper to wall from inner");
+							Debug.ttlog("Moving landscaper from outer to wall");
 						} else {
 							// move miners inside
 							movingRobotInwards = true;

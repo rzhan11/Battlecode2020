@@ -268,37 +268,37 @@ public class BotLandscaper extends Globals {
 						if (rc.getDirtCarrying() != 0) {
 							if(isFlooded) {
 								Debug.ttlog("DEPOSITING IN WATER IN DIRECTION: " + inFlood);
-								if(rc.canDepositDirt(inFlood)) rc.depositDirt(inFlood);
-							}
+							    if(rc.canDepositDirt(inFlood)) rc.depositDirt(inFlood);
+                            }
 							else {
-								int minDirt = 100000;
-								Direction minDir = null;
-								for (Direction d : Direction.allDirections()) {
-									MapLocation newloc = here.add(d);
-									RobotInfo ri = rc.senseRobotAtLocation(newloc);
-									if(ri != null && ri.type.isBuilding() && ri.team == rc.getTeam()) continue;
-									if(maxXYDistance(HQLocation, newloc) == 3 && rc.senseElevation(newloc) < smallWallDepth) {
-										minDir = d;
-										minDirt = -1;
-										break;
+                                int minDirt = 100000;
+                                Direction minDir = null;
+                                for (Direction d : Direction.allDirections()) {
+                                    MapLocation newloc = here.add(d);
+                                    RobotInfo ri = rc.senseRobotAtLocation(newloc);
+                                    if(ri != null && ri.type.isBuilding() && ri.team == rc.getTeam()) continue;
+                                    if(maxXYDistance(HQLocation, newloc) == 3 && rc.senseElevation(newloc) < smallWallDepth) {
+                                    	minDir = d;
+                                    	minDirt = -1;
+                                    	break;
 									}
-									else if (maxXYDistance(HQLocation, newloc) == 4) {
-										if (minDirt > rc.senseElevation(newloc)) {
-											minDir = d;
-											minDirt = rc.senseElevation(newloc);
-										}
-									}
-								}
+                                    else if (maxXYDistance(HQLocation, newloc) == 4) {
+                                        if (minDirt > rc.senseElevation(newloc)) {
+                                            minDir = d;
+                                            minDirt = rc.senseElevation(newloc);
+                                        }
+                                    }
+                                }
 								Debug.ttlog("DEPOSITING DIRT IN DIRECTION: " + minDir);
 								if (rc.canDepositDirt(minDir)) {
-									rc.depositDirt(minDir);
-								}
-							}
+                                	rc.depositDirt(minDir);
+                                }
+                            }
 						} else if(isFlooded) {
-							currentStep = 0;
-						} else {
-							currentStep = 2;
-						}
+                            currentStep = 0;
+                        } else {
+                            currentStep = 2;
+                        }
 					}
 					if (currentStep == 2) {
 						Debug.ttlog("MOVING");
