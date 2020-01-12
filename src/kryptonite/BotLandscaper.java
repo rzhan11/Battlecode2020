@@ -271,7 +271,7 @@ public class BotLandscaper extends Globals {
 							    if(rc.canDepositDirt(inFlood)) rc.depositDirt(inFlood);
                             }
 							else {
-                                int minDirt = 1000;
+                                int minDirt = 100000;
                                 Direction minDir = null;
                                 for (Direction d : Direction.allDirections()) {
                                     MapLocation newloc = here.add(d);
