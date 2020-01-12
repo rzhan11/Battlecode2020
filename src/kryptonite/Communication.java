@@ -14,6 +14,11 @@ public class Communication extends Globals {
 	final public static int SYMMETRY_MINER_BUILT_SIGNAL = 3;
 	final public static int BUILDER_MINER_BUILT_SIGNAL = 4;
 	final public static int SMALL_WALL_BUILD_SIGNAL = 5;
+	final public static int DRONE_CHECKPOINT = 6;
+	final public static int LANDSCAPER_CHECKPOINT = 7;
+
+	// the cost of each of the transaction signals
+	final public static int REFINERY_BUILT_COST = 1;
 
 	// used to alter our own data
 	public static int secretKey;
@@ -25,11 +30,11 @@ public class Communication extends Globals {
 										 0B01110111101111101111110111101011,
 										 0B11101111011111011111101111010110};
 
+
 	public static int[][] unsentMessages = new int[MAX_UNSENT_TRANSACTIONS_LENGTH][7];
 	public static int[] unsentCosts = new int[MAX_UNSENT_TRANSACTIONS_LENGTH];
 	public static int unsentTransactionsIndex = 0;
 	public static int unsentTransactionsLength = 0;
-
 	/*
 		Communication is made up of 7 integers (32-bit)
 		The first integer is used for security (confirming that it is our message)
@@ -126,6 +131,16 @@ public class Communication extends Globals {
 
 					case SMALL_WALL_BUILD_SIGNAL:
 						readTransactionSmallWallComplete(message,round);
+						break;
+
+					case DRONE_CHECKPOINT:
+						readTransactionDroneCheckpoint(message,round);
+						break;
+
+					case LANDSCAPER_CHECKPOINT:
+						readTransactionLandscaperCheckpoint(message,round);
+						break;
+
 		        }
 			}
 		}
@@ -269,6 +284,7 @@ message[3] = y coordinate of our HQ
 		xorMessage(message);
 		if (teamSoup >= 1) {
 			rc.submitTransaction(message, 1);
+			rc.submitTransaction(message, REFINERY_BUILT_COST);
 			teamSoup = rc.getTeamSoup();
 		} else {
 			Debug.tlog("Could not afford transaction");
@@ -349,5 +365,58 @@ message[3] = y coordinate of our HQ
 		Debug.ttlog("builderMinerID: " + builderMinerID);
 		Debug.ttlog("Posted round: " + round);
 		BotMiner.builderMinerID = builderMinerID;
+	}
+
+	public static void writeTransactionDroneCheckpoint(int checkpoint) throws GameActionException{
+		Debug.tlog("Writing transaction for drone checkpoint " + checkpoint );
+		int[] message = new int[7];
+		message[0] = encryptID(myID);
+		message[1] = DRONE_CHECKPOINT;
+		message[2] = checkpoint;
+
+		xorMessage(message);
+		if (teamSoup >= 1) {
+			rc.submitTransaction(message, 2);
+			teamSoup = rc.getTeamSoup();
+		} else {
+			Debug.tlog("Could not afford transaction");
+			saveUnsentTransaction(message, 2);
+		}
+
+	}
+
+	public static void readTransactionDroneCheckpoint(int[] message, int round) {
+		int checkpoint_number = message[2];
+		Debug.tlog("Reading 'Drone checkpoint'");
+		Debug.tlog("Submitter ID: " + decryptID(message[0]));
+		Debug.tlog("Checkpoint Number " + checkpoint_number);
+		Debug.tlog("Posted round: " + round);
+		BotBuilderMiner.droneCheckpoint = checkpoint_number;
+	}
+
+	public static void writeTransactionLandscaperCheckpoint(int checkpoint) throws GameActionException{
+		Debug.tlog("Writing transaction for landscaper checkpoint " + checkpoint );
+		int[] message = new int[7];
+		message[0] = encryptID(myID);
+		message[1] = LANDSCAPER_CHECKPOINT;
+		message[2] = checkpoint;
+		xorMessage(message);
+		if (teamSoup >= 1) {
+			rc.submitTransaction(message, 2);
+			teamSoup = rc.getTeamSoup();
+		} else {
+			Debug.tlog("Could not afford transaction");
+			saveUnsentTransaction(message, 2;
+		}
+
+	}
+
+	public static void readTransactionLandscaperCheckpoint(int[] message, int round) {
+		int checkpoint_number = message[2];
+		Debug.tlog("Reading 'Landscaper checkpoint'");
+		Debug.tlog("Submitter ID: " + decryptID(message[0]));
+		Debug.tlog("Checkpoint Number " + checkpoint_number);
+		Debug.tlog("Posted round: " + round);
+		BotBuilderMiner.landscaperCheckpoint = checkpoint_number;
 	}
 }

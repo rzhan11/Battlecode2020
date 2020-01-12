@@ -5,7 +5,7 @@ import battlecode.common.*;
 public class BotDesignSchool extends Globals {
 
 	public static int landscapersMade = 0;
-	public static int maxLandscapersMade = 12;
+	public static int[] landscaperCheckpoints = {8};
 
 	public static void loop() throws GameActionException {
 		while (true) {
@@ -23,16 +23,24 @@ public class BotDesignSchool extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
-		if (rc.isReady()) {
+		if (landscapersMade < landscaperCheckpoints[0]) {
 			for (Direction d : Direction.allDirections()) {
-				int actualMax = maxLandscapersMade * (1 + roundNum / 500);
-				if (teamSoup >= RobotType.LANDSCAPER.cost && rc.canBuildRobot(RobotType.LANDSCAPER, d) && landscapersMade < actualMax) {
-					rc.buildRobot(RobotType.LANDSCAPER, d);
-					teamSoup = rc.getTeamSoup();
-					landscapersMade++;
+				if (teamSoup >= RobotType.LANDSCAPER.cost && rc.canBuildRobot(RobotType.LANDSCAPER, d) && landscapersMade < landscaperCheckpoints[0]) {
+					Debug.tlog("Building landscapers at " + rc.adjacentLocation(d));
+					if (rc.isReady()) {
+						rc.buildRobot(RobotType.LANDSCAPER, d);
+						teamSoup = rc.getTeamSoup();
+						landscapersMade++;
+						if (landscapersMade >= landscaperCheckpoints[0]) {
+							Communication.writeTransactionLandscaperCheckpoint(1);
+						}
+						Debug.ttlog("Success");
+					} else {
+						Debug.ttlog("But not ready");
+					}
+					return;
 				}
 			}
 		}
-		return;
 	}
 }
