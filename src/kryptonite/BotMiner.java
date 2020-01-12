@@ -97,83 +97,6 @@ public class BotMiner extends Globals {
 
 	public static void turn() throws GameActionException {
 
-		//builder miner code
-		if (builderMinerID == rc.getID()) {
-			if (teamSoup >= RobotType.DESIGN_SCHOOL.cost && !designSchoolBuilt) {
-				// potential bug - what if we are already on the designSchoolLocation?
-				if(here.isAdjacentTo(designSchoolLocation)){
-					//build design school
-					Direction dir = here.directionTo(designSchoolLocation);
-					if (rc.canBuildRobot(RobotType.DESIGN_SCHOOL, dir)) {
-						rc.buildRobot(RobotType.DESIGN_SCHOOL, dir);
-						teamSoup = rc.getTeamSoup();
-						designSchoolBuilt = true;
-					}
-
-				} else {
-					Nav.bugNavigate(designSchoolLocation);
-					Debug.tlog("Going to designSchoolLocation");
-				}
-			} else if (teamSoup >= RobotType.FULFILLMENT_CENTER.cost && !fulfillmentCenterBuilt) {
-				// potential bug - what if we are already on the fulfillmentCenterLocation?
-				if (here.isAdjacentTo(fulfillmentCenterLocation)) {
-					// build fulfillment center
-					Direction dir = here.directionTo(fulfillmentCenterLocation);
-					if(rc.isReady() && rc.canBuildRobot(RobotType.FULFILLMENT_CENTER, dir)){
-						rc.buildRobot(RobotType.FULFILLMENT_CENTER, dir);
-						teamSoup = rc.getTeamSoup();
-						fulfillmentCenterBuilt = true;
-					}
-
-				} else {
-					Nav.bugNavigate(fulfillmentCenterLocation);
-					Debug.tlog("Going to fulfillmentCenterLocation");
-				}
-			} else if ((netGunsBuilt < 4 || (netGunsBuilt < 8 && vaporatorsBuilt >= 4)) && fulfillmentCenterBuilt && designSchoolBuilt && teamSoup >= RobotType.NET_GUN.cost){
-				// first build four netguns
-				// then build eight netguns after four vaporators, fulfillment center, and design school are built
-				MapLocation buildFromLocation = new MapLocation(HQLocation.x + dnetGunBuildLocations[netGunsBuilt][0],HQLocation.y + dnetGunBuildLocations[netGunsBuilt][1]);
-				MapLocation buildAtLocation = new MapLocation(HQLocation.x + dnetGunLocations[netGunsBuilt][0],HQLocation.y + dnetGunLocations[netGunsBuilt][1]);
-				if(here.equals(buildFromLocation)){
-					if(rc.canBuildRobot(RobotType.NET_GUN,here.directionTo(buildAtLocation))){
-						rc.buildRobot(RobotType.NET_GUN,here.directionTo(buildAtLocation));
-						netGunsBuilt++;
-					}
-				} else {
-					Nav.bugNavigate(buildFromLocation);
-				}
-			} else if(netGunsBuilt >= 4 && vaporatorsBuilt < 4){
-				// build vaporators after four netguns have been built
-				MapLocation buildFromLocation = new MapLocation(HQLocation.x + dvaporatorBuildLocations[vaporatorsBuilt][0],HQLocation.y + dvaporatorBuildLocations[vaporatorsBuilt][1]);
-				MapLocation buildAtLocation = new MapLocation(HQLocation.x + dvaporatorLocations[vaporatorsBuilt][0],HQLocation.y + dvaporatorLocations[vaporatorsBuilt][1]);
-				Debug.tlog("build from location " + buildFromLocation);
-				if(here.equals(buildFromLocation)){
-					if(rc.canBuildRobot(RobotType.VAPORATOR,here.directionTo(buildAtLocation))){
-						rc.buildRobot(RobotType.VAPORATOR,here.directionTo(buildAtLocation));
-						vaporatorsBuilt++;
-					}
-				} else {
-					Debug.tlog("Moving to buildFromLocation at " + buildFromLocation);
-					if (rc.isReady()) {
-						Direction move = Nav.bugNavigate(buildFromLocation);
-						if (move != null) {
-							Debug.ttlog("Moved " + move);
-						} else {
-							Debug.ttlog("But no move found");
-						}
-					} else {
-						Debug.ttlog("But not ready");
-					}
-				}
-			}
-			return;
-		}
-
-
-
-
-
-
 		locateSoup();
 		// updates known refineries based on what we can sense this turn
 		locateRefineries();
@@ -293,7 +216,9 @@ public class BotMiner extends Globals {
 				if (rc.isReady()) {
 					rc.buildRobot(RobotType.REFINERY, dir);
 					teamSoup = rc.getTeamSoup();
+
 					Debug.ttlog("Success");
+
 					Communication.writeTransactionRefineryBuilt(buildRefineryLocation);
 					addToRefineries(buildRefineryLocation);
 
