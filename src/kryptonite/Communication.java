@@ -18,6 +18,7 @@ public class Communication extends Globals {
 	final public static int LANDSCAPER_CHECKPOINT = 7;
 	final public static int VAPORATOR_CHECKPOINT = 8;
 	final public static int NETGUN_CHECKPOINT = 9;
+	final public static int FLOODING_FOUND = 10;
 
 	// the cost of each of the transaction signals
 	final public static int REFINERY_BUILT_COST = 1;
@@ -99,7 +100,6 @@ public class Communication extends Globals {
 	Reads in transactions that were submitted last round
 	*/
 	public static void readTransactions (int round) throws GameActionException {
-//		int startByte = Clock.getBytecodesLeft();
 		if (round < 1 || round >= rc.getRoundNum()) {
 			Debug.tlog("Tried to read Transactions of round " + round + " but not possible");
 			return;
@@ -111,6 +111,7 @@ public class Communication extends Globals {
 
 			int submitterID = decryptID(message[0]);
 			if (submitterID == -1) {
+				Debug.tlog("Found opponent Transactions");
 				continue; // not submitted by our team
 			} else {
 		        switch (message[1]) {
@@ -156,10 +157,13 @@ public class Communication extends Globals {
 					case NETGUN_CHECKPOINT:
 						readTransactionNetgunCheckpoint(message, round);
 						break;
+
+					case FLOODING_FOUND:
+						readTransactionFloodingFound(message, round);
+						break;
 		        }
 			}
 		}
-//		Debug.tlog("Bytecode " + (startByte - Clock.getBytecodesLeft()));
 	}
 
 	/*
@@ -320,8 +324,9 @@ message[3] = y coordinate of our HQ
 	}
 
 	/*
-	message[2] = x coordinate of refinery
-	message[3] = y coordinate of refinery
+	@todo: Remind Richard to finish this
+	message[2] = x coordinate of ...
+	message[3] = y coordinate of ...
 
 	*/
 	public static void writeTransactionSymmetryMinerBuilt(int symmetryMinerID, MapLocation symmetryLocation) throws GameActionException {
@@ -359,6 +364,10 @@ message[3] = y coordinate of our HQ
 		}
 	}
 
+	/*
+	message[2] = builderMinerID
+	 */
+
 	public static void writeTransactionBuilderMinerBuilt(int id) throws GameActionException{
 		Debug.tlog("Writing transaction for Builder Miner of ID: " + id);
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
@@ -377,12 +386,11 @@ message[3] = y coordinate of our HQ
 	}
 
 	public static void readTransactionBuilderMinerBuilt(int[] message, int round) {
-		int builderMinerID = message[2];
+		BotMiner.builderMinerID = message[2];
 		Debug.tlog("Reading 'Builder Miner Built' transaction");
 		Debug.ttlog("Submitter ID: " + decryptID(message[0]));
-		Debug.ttlog("builderMinerID: " + builderMinerID);
+		Debug.ttlog("builderMinerID: " + BotMiner.builderMinerID);
 		Debug.ttlog("Posted round: " + round);
-		BotMiner.builderMinerID = builderMinerID;
 	}
 
 	public static void writeTransactionDroneCheckpoint(int checkpoint) throws GameActionException{
@@ -480,5 +488,30 @@ message[3] = y coordinate of our HQ
 		Debug.tlog("Submitter ID: " + decryptID(message[0]));
 		Debug.tlog("Posted round: " + round);
 		BotDesignSchool.netgunCheckpoint = true;
+	}
+
+	public static void writeTransactionFloodingFound (MapLocation loc) throws GameActionException{
+		Debug.tlog("Writing transaction for 'Flooding Found'");
+		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
+		message[0] = encryptID(myID);
+		message[1] = FLOODING_FOUND;
+		message[2] = loc.x;
+		message[3] = loc.y;
+		xorMessage(message);
+		if (teamSoup >= 1) {
+			rc.submitTransaction(message, 1);
+			teamSoup = rc.getTeamSoup();
+		} else {
+			Debug.tlog("Could not afford transaction");
+			saveUnsentTransaction(message, 1);
+		}
+	}
+
+	public static void readTransactionFloodingFound (int[] message, int round) throws GameActionException {
+		BotDeliveryDrone.floodingMemory = new MapLocation(message[2], message[3]);
+		Debug.tlog("Reading transaction for 'Flooding Found'");
+		Debug.tlog("Submitter ID: " + decryptID(message[0]));
+		Debug.tlog("Location: " + BotDeliveryDrone.floodingMemory);
+		Debug.tlog("Posted round: " + round);
 	}
 }

@@ -59,6 +59,7 @@ public class BotDeliveryDrone extends Globals {
 		*/
 
 		locateFlooding();
+		Debug.tlog("floodingMemory: " + floodingMemory);
 
 		insideWall = largeWallRingRadius > maxXYDistance(HQLocation, here);
 		onWall = largeWallRingRadius == maxXYDistance(HQLocation, here);
@@ -567,6 +568,24 @@ public class BotDeliveryDrone extends Globals {
 
 				// go towards water
 				if (floodingMemory != null) {
+					// if on the flooded tile, tries to move off of it
+					if (here.equals(floodingMemory)) {
+						Debug.tlog("Moving to get off of floodingMemory");
+						if (rc.isReady()) {
+							for (Direction dir: directions) {
+								Direction move = Nav.tryMoveInDirection(dir);
+								if (move != null) {
+									Debug.ttlog("Moved " + move);
+								} else {
+									Debug.ttlog("But no move found");
+								}
+							}
+						} else {
+							Debug.ttlog("But not ready");
+						}
+						return true;
+					}
+
 					Debug.tlog("Moving to drop into water " + floodingMemory);
 					if (rc.isReady()) {
 						Direction move = Nav.bugNavigate(floodingMemory);
@@ -652,22 +671,36 @@ public class BotDeliveryDrone extends Globals {
 		Saves the flooded tile to memory
 	 */
 	public static void locateFlooding () throws GameActionException {
-//		if (floodingMemory != null && rc.canSenseLocation(floodingMemory)) {
-//			if () {
-//				Debug.tlog("Resetting floodingMemory at " + floodingMemory + " since it is dry");
-//				return;
-//			} else {
-//				Debug.tlog("Resetting floodingMemory at " + floodingMemory + " since it is dry");
-//			}
-//		}
+		// checks if floodingMemory still exists
+		if (floodingMemory != null && rc.canSenseLocation(floodingMemory)) {
+			if (rc.senseFlooding(floodingMemory)) {
+				Debug.tlog("Confirmed that floodingMemory at " + floodingMemory + " is flooded");
+				return;
+			} else {
+				floodingMemory = null;
+				Debug.tlog("Resetting floodingMemory at " + floodingMemory + " since it is dry");
+			}
+		}
 
+		Debug.tlog("Cannot confirm floodingMemory, searching for visible flooded tile");
+
+		// runs if floodingMemory is not visible or is null
+		// searches for a flooded tile that is empty
 		for (int[] dir: senseDirections) {
 			if (actualSensorRadiusSquared < dir[2]) {
 				break;
 			}
 			MapLocation loc = here.translate(dir[0], dir[1]);
-			if (rc.canSenseLocation(loc) && rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
+			if (inMap(loc) && rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
 				// floodingMemory[loc.x][loc.y] = rc.senseFlooding(loc);
+
+				Debug.tlog("Found visible flooded tile at " + loc);
+
+				// if floodingMemory is null, write a Transaction
+				if (floodingMemory == null) {
+					Communication.writeTransactionFloodingFound(loc);
+				}
+
 				floodingMemory = loc;
 				return;
 			}
