@@ -156,7 +156,6 @@ public class BotHQ extends Globals {
 			MapLocation loc = here.translate(dir[0], dir[1]);
 			if (rc.canSenseLocation(loc) && rc.senseSoup(loc) > 0) {
 				soupLocation = loc;
-				Debug.tlog("We are here");
 				break;
 			}
 		}
