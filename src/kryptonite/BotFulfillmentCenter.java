@@ -24,7 +24,7 @@ public class BotFulfillmentCenter extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
-		if (visibleEnemies != null) {
+		if (visibleEnemies.length > 0) {
 			for (RobotInfo ri : visibleEnemies) {
 				if (ri.type == RobotType.LANDSCAPER) {
 					if (teamSoup >= RobotType.DELIVERY_DRONE.cost) {

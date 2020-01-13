@@ -24,7 +24,7 @@ public class BotDesignSchool extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
-		if (visibleEnemies != null) {
+		if (visibleEnemies.length > 0) {
 			Debug.tlog("Enemies detected");
 			if (teamSoup >= RobotType.LANDSCAPER.cost) {
 				Debug.tlog("Trying to build protection landscapers");

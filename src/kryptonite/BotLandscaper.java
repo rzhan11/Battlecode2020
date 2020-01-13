@@ -7,10 +7,11 @@ public class BotLandscaper extends Globals {
 	private static MapLocation[] digLocations, smallWall, largeWall, smallWallCompleted;
 	private static int digLocationsLength, smallWallLength, largeWallLength, smallWallDepth,
 			smallWallCompletedLength, currentStep, role;
-	private static final int WALL_ROLE = 1, DEFENSE_ROLE = 2;
+	private static final int WALL_ROLE = 1, DEFENSE_ROLE = 2, SUPPORT_ROLE = 3;
 	private static boolean moveClockwise = true;
 
-	// @todo: Create Capabilities for Non-Wall Landscapers
+	// @todo: Landscapers should attack enemy buildings if in sight and not on large wall
+	// @todo: Landscapers should "heal" ally buildings if they are damaged
 	public static void loop() throws GameActionException {
 		while (true) {
 			try {
@@ -120,10 +121,17 @@ public class BotLandscaper extends Globals {
 			Globals.endTurn(false);
 		}
 	}
-	// @todo: Enable Landscaper Defenses for Buildings that Come to HQ
-	// @todo: Optimize Bytecode of 5x5 Construction
+
 	public static void turn() throws GameActionException {
 		if(!rc.isReady()) return;
+		if(maxXYDistance(HQLocation, here) != 4) {
+			for(RobotInfo ri : visibleEnemies) {
+				if(ri.type.isBuilding()) {
+					role = DEFENSE_ROLE;
+				}
+			}
+
+		}
 		if(role == WALL_ROLE) {
 			// If in a Dig Spot Place, move to the Outward Radius
 			if (inArray(digLocations, here, digLocationsLength)) {
@@ -220,26 +228,62 @@ public class BotLandscaper extends Globals {
 			else {
 				// If you are in the 5x5, get to the 7x7. Acceptable distances from the HQ are 9 and 13 (10, 18 are holes)
 				if (maxXYDistance(HQLocation, here) == 2) {
-					for (Direction d : Direction.allDirections()) {
-						MapLocation newloc = here.add(d);
-						int dis = HQLocation.distanceSquaredTo(newloc);
-						if (maxXYDistance(HQLocation, newloc) == 3) {
-							if (rc.canMove(d)) {
-								Debug.ttlog("MOVING TO 6x6 RING");
-								Actions.doMove(d);
+					if(largeWallFull) {
+						role = SUPPORT_ROLE;
+					}
+					if(role == WALL_ROLE || role == SUPPORT_ROLE) {
+						for (Direction d : Direction.allDirections()) {
+							MapLocation newloc = here.add(d);
+							if (maxXYDistance(HQLocation, newloc) == 3) {
+								if (rc.canMove(d)) {
+									Debug.ttlog("MOVING TO 7x7 RING");
+									Actions.doMove(d);
+								}
 							}
 						}
 					}
 				}
 				// If you are in the 6x6, get to the 7x7. All distances are acceptable
 				if (maxXYDistance(HQLocation, here) == 3) {
-					for (Direction d : Direction.allDirections()) {
-						MapLocation newloc = here.add(d);
-						if (maxXYDistance(HQLocation, newloc) == 4) {
-							if (rc.canMove(d)) {
-								Debug.ttlog("MOVING TO 7x7 RING");
+					if(largeWallFull) {
+						role = SUPPORT_ROLE;
+					}
+					if(role == WALL_ROLE) {
+						for (Direction d : Direction.allDirections()) {
+							MapLocation newloc = here.add(d);
+							if (maxXYDistance(HQLocation, newloc) == 4) {
+								if (rc.canMove(d)) {
+									Debug.ttlog("MOVING TO 7x7 RING");
+									currentStep = 0;
+									Actions.doMove(d);
+								}
+							}
+						}
+					}
+					if(role == SUPPORT_ROLE) {
+						if(currentStep == 0) {
+							if(rc.getDirtCarrying() < 25) {
+								if(rc.canDigDirt(Direction.CENTER)) rc.digDirt(Direction.CENTER);
+							}
+							else currentStep = 1;
+						}
+						if(currentStep == 1) {
+							if(rc.getDirtCarrying() == 0) {
 								currentStep = 0;
-								Actions.doMove(d);
+							}
+							else {
+								int minDirt = 100000;
+								Direction minDir = null;
+								for (Direction d : Direction.allDirections()) {
+									MapLocation newloc = here.add(d);
+									if (maxXYDistance(HQLocation, newloc) == 4) {
+										if (rc.senseElevation(newloc) < minDirt) {
+											minDirt = rc.senseElevation(newloc);
+											minDir = d;
+										}
+									}
+								}
+								if (rc.canDepositDirt(minDir)) rc.depositDirt(minDir);
 							}
 						}
 					}
@@ -358,9 +402,8 @@ public class BotLandscaper extends Globals {
 						}
 					}
 				}
-				if(rc.getDirtCarrying() <= 5) {
-					currentStep = 1;
-				}
+				if(rc.getRoundNum() < 1000) if(rc.getDirtCarrying() < 5) currentStep = 1;
+				else if(rc.getDirtCarrying() < RobotType.LANDSCAPER.dirtLimit) currentStep = 1;
 			}
 			else if(currentStep == 1) {
 				if(rc.getDirtCarrying() == 0) {
