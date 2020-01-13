@@ -151,6 +151,8 @@ public class Globals {
 			Nav.bugClosestDistanceToTarget = P_INF;
 		}
 
+		Communication.calculateDynamicCost();
+
 		Debug.tlog("Reading the previous round's Transactions");
 		Communication.readTransactions(roundNum - 1);
 
@@ -201,6 +203,7 @@ public class Globals {
 		Debug.log("Location: " + here);
 		Debug.log("actualSensorRadiusSquared: " + actualSensorRadiusSquared);
 		Debug.log("Cooldown: " + rc.getCooldownTurns());
+		Debug.log("dynamicCost: " + Communication.dynamicCost);
 		Debug.log();
 		if (myID == builderMinerID) {
 			Debug.log("I am the builder miner");

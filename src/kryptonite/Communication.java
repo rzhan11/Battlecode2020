@@ -7,6 +7,8 @@ public class Communication extends Globals {
 	final public static int MAX_UNSENT_TRANSACTIONS_LENGTH = 100;
 	final public static int READ_OLD_TRANSACTIONS_COST = 2500; // how many bytecodes readOldTransactions() will leave available
 
+	final public static int FIRST_TURN_DYNAMIC_COST = 3;
+
 	// each of these signals should be different
 	final public static int HQ_FIRST_TURN_SIGNAL = 0;
 	final public static int SOUP_CLUSTER_SIGNAL = 1;
@@ -32,11 +34,13 @@ public class Communication extends Globals {
 										 0B01110111101111101111110111101011,
 										 0B11101111011111011111101111010110};
 
+	public static int dynamicCost;
 
 	public static int[][] unsentMessages = new int[MAX_UNSENT_TRANSACTIONS_LENGTH][GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
-	public static int[] unsentCosts = new int[MAX_UNSENT_TRANSACTIONS_LENGTH];
 	public static int unsentTransactionsIndex = 0;
 	public static int unsentTransactionsLength = 0;
+
+
 	/*
 		Communication is made up of 7 integers (32-bit)
 		The first integer is used for security (confirming that it is our message)
@@ -174,6 +178,23 @@ public class Communication extends Globals {
 	}
 
 	/*
+	Returns the minimum cost that would be guaranteed to have been in last round's transactions
+	If first round, returns preset constant
+	 */
+	public static void calculateDynamicCost () throws GameActionException {
+		if (roundNum == 1) {
+			dynamicCost = FIRST_TURN_DYNAMIC_COST;
+		} else {
+			Transaction[] messages = rc.getBlock(roundNum - 1);
+			if (messages.length < GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH) {
+				dynamicCost = 1;
+			} else {
+				dynamicCost = messages[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH - 1].getCost() + 1;
+			}
+		}
+	}
+
+	/*
 	If a message was not sent due to cost, save it and try to send later
 	*/
 	public static void saveUnsentTransaction (int[] message, int cost) {
@@ -182,16 +203,14 @@ public class Communication extends Globals {
 			return;
 		}
 		unsentMessages[unsentTransactionsLength] = message;
-		unsentCosts[unsentTransactionsLength] = cost;
 		unsentTransactionsLength++;
 	}
 
 	public static void submitUnsentTransactions () throws GameActionException {
 		while (unsentTransactionsIndex < unsentTransactionsLength) {
 			int[] message = unsentMessages[unsentTransactionsIndex];
-			int cost = unsentCosts[unsentTransactionsIndex];
-			if (cost <= teamSoup) {
-				rc.submitTransaction(message, cost);
+			if (dynamicCost <= teamSoup) {
+				rc.submitTransaction(message, dynamicCost);
 				teamSoup = rc.getTeamSoup();
 				unsentTransactionsIndex++;
 
@@ -218,12 +237,12 @@ public class Communication extends Globals {
 		message[4] = myElevation;
 
 		xorMessage(message);
-		if (teamSoup >= 10) {
-			rc.submitTransaction(message, 10);
+		if (teamSoup >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
 			Debug.tlog("Could not afford transaction");
-			saveUnsentTransaction(message, 10);
+			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
@@ -249,12 +268,12 @@ message[3] = y coordinate of our HQ
 		message[1] = SMALL_WALL_BUILD_SIGNAL;
 
 		xorMessage(message);
-		if (teamSoup >= 10) {
-			rc.submitTransaction(message, 10);
+		if (teamSoup >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
 			Debug.tlog("Could not afford transaction");
-			saveUnsentTransaction(message, 10);
+			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
@@ -279,12 +298,12 @@ message[3] = y coordinate of our HQ
 		message[3] = soupClusterLocation.y;
 
 		xorMessage(message);
-		if (teamSoup >= 1) {
-			rc.submitTransaction(message, 1);
+		if (teamSoup >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
 			Debug.tlog("Could not afford transaction");
-			saveUnsentTransaction(message, 1);
+			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
@@ -312,12 +331,12 @@ message[3] = y coordinate of our HQ
 		message[3] = refineryLocation.y;
 
 		xorMessage(message);
-		if (teamSoup >= 1) {
-			rc.submitTransaction(message, 1);
+		if (teamSoup >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
 			Debug.tlog("Could not afford transaction");
-			saveUnsentTransaction(message, 1);
+			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
@@ -347,12 +366,12 @@ message[3] = y coordinate of our HQ
 		message[4] = symmetryLocation.y;
 
 		xorMessage(message);
-		if (teamSoup >= 1) {
-			rc.submitTransaction(message, 1);
+		if (teamSoup >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
 			Debug.tlog("Could not afford transaction");
-			saveUnsentTransaction(message, 1);
+			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
@@ -383,12 +402,12 @@ message[3] = y coordinate of our HQ
 		message[2] = id;
 
 		xorMessage(message);
-		if (teamSoup >= 1) {
-			rc.submitTransaction(message, 1);
+		if (teamSoup >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
 			Debug.tlog("Could not afford transaction");
-			saveUnsentTransaction(message, 1);
+			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
@@ -412,12 +431,12 @@ message[3] = y coordinate of our HQ
 		message[2] = checkpoint;
 
 		xorMessage(message);
-		if (teamSoup >= 1) {
-			rc.submitTransaction(message, 1);
+		if (teamSoup >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
 			Debug.tlog("Could not afford transaction");
-			saveUnsentTransaction(message, 1);
+			saveUnsentTransaction(message, dynamicCost);
 		}
 
 	}
@@ -442,12 +461,12 @@ message[3] = y coordinate of our HQ
 		message[1] = LANDSCAPER_CHECKPOINT_SIGNAL;
 		message[2] = checkpoint;
 		xorMessage(message);
-		if (teamSoup >= 1) {
-			rc.submitTransaction(message, 1);
+		if (teamSoup >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
 			Debug.tlog("Could not afford transaction");
-			saveUnsentTransaction(message, 1);
+			saveUnsentTransaction(message, dynamicCost);
 		}
 
 	}
@@ -471,12 +490,12 @@ message[3] = y coordinate of our HQ
 		message[0] = encryptID(myID);
 		message[1] = VAPORATOR_CHECKPOINT_SIGNAL;
 		xorMessage(message);
-		if (teamSoup >= 1) {
-			rc.submitTransaction(message, 1);
+		if (teamSoup >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
 			Debug.tlog("Could not afford transaction");
-			saveUnsentTransaction(message, 1);
+			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
@@ -497,12 +516,12 @@ message[3] = y coordinate of our HQ
 		message[0] = encryptID(myID);
 		message[1] = NETGUN_CHECKPOINT_SIGNAL;
 		xorMessage(message);
-		if (teamSoup >= 1) {
-			rc.submitTransaction(message, 1);
+		if (teamSoup >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
 			Debug.tlog("Could not afford transaction");
-			saveUnsentTransaction(message, 1);
+			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
@@ -527,12 +546,12 @@ message[3] = y coordinate of our HQ
 		message[3] = loc.y;
 
 		xorMessage(message);
-		if (teamSoup >= 1) {
-			rc.submitTransaction(message, 1);
+		if (teamSoup >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
 			Debug.tlog("Could not afford transaction");
-			saveUnsentTransaction(message, 1);
+			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
@@ -558,12 +577,12 @@ message[3] = y coordinate of our HQ
 		message[3] = exists;
 
 		xorMessage(message);
-		if (teamSoup >= 1) {
-			rc.submitTransaction(message, 1);
+		if (teamSoup >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
 			Debug.tlog("Could not afford transaction");
-			saveUnsentTransaction(message, 1);
+			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
@@ -590,12 +609,12 @@ message[3] = y coordinate of our HQ
 		message[1] = LARGE_WALL_FULL_SIGNAL;
 
 		xorMessage(message);
-		if (teamSoup >= 1) {
-			rc.submitTransaction(message, 1);
+		if (teamSoup >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
 			Debug.tlog("Could not afford transaction");
-			saveUnsentTransaction(message, 1);
+			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 

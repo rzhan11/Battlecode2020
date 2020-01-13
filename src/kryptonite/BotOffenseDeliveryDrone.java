@@ -19,7 +19,8 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
 
     public static void init() throws GameActionException {
         symmetryHQLocationsIndex = myID % symmetryHQLocations.length;
-        exploreSymmetryLocation= symmetryHQLocations[symmetryHQLocationsIndex];
+        exploreSymmetryLocation = symmetryHQLocations[symmetryHQLocationsIndex];
+        Debug.tlog("Initial exploreEymmetryLocation: " + exploreSymmetryLocation);
 
         initialized = true;
     }
@@ -178,9 +179,9 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
         while (isSymmetry[symmetryHQLocationsIndex] == 0) {
             symmetryHQLocationsIndex++;
             symmetryHQLocationsIndex %= symmetryHQLocations.length;
+            Debug.tlog("Retargetting exploreSymmetryLocation to " + exploreSymmetryLocation);
         }
         exploreSymmetryLocation = symmetryHQLocations[symmetryHQLocationsIndex];
-        Debug.tlog("Retargetting exploreSymmetryLocation to " + exploreSymmetryLocation);
     }
 
 }
