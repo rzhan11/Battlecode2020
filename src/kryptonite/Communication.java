@@ -398,6 +398,10 @@ message[3] = y coordinate of our HQ
 		Debug.ttlog("Posted round: " + round);
 	}
 
+	/*
+	message[2] = checkpoint
+	 */
+
 	public static void writeTransactionDroneCheckpoint(int checkpoint) throws GameActionException{
 		Debug.tlog("Writing transaction for drone checkpoint " + checkpoint );
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
@@ -425,6 +429,10 @@ message[3] = y coordinate of our HQ
 		BotBuilderMiner.reachedDroneCheckpoint = checkpoint_number;
 	}
 
+	/*
+	message[2] = checkpoint
+	 */
+
 	public static void writeTransactionLandscaperCheckpoint(int checkpoint) throws GameActionException{
 		Debug.tlog("Writing transaction for landscaper checkpoint " + checkpoint);
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
@@ -451,6 +459,10 @@ message[3] = y coordinate of our HQ
 		BotBuilderMiner.reachedLandscaperCheckpoint = checkpoint_number;
 	}
 
+	/*
+	message[2] = checkpoint
+	 */
+
 	public static void writeTransactionVaporatorCheckpoint() throws GameActionException{
 		Debug.tlog("Writing transaction for vaporator checkpoint");
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
@@ -473,6 +485,10 @@ message[3] = y coordinate of our HQ
 		BotFulfillmentCenter.reachedVaporatorCheckpoint = true;
 	}
 
+	/*
+	message[2] = checkpoint
+	 */
+
 	public static void writeTransactionNetgunCheckpoint() throws GameActionException{
 		Debug.tlog("Writing transaction for netgun checkpoint");
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
@@ -494,6 +510,11 @@ message[3] = y coordinate of our HQ
 		Debug.tlog("Posted round: " + round);
 		BotDesignSchool.reachedNetgunCheckpoint = true;
 	}
+
+	/*
+	message[2] = flooded tile x
+	message[3] = flooded tile y
+	 */
 
 	public static void writeTransactionFloodingFound (MapLocation loc) throws GameActionException{
 		Debug.tlog("Writing transaction for 'Flooding Found'");
@@ -521,13 +542,18 @@ message[3] = y coordinate of our HQ
 		Debug.tlog("Posted round: " + round);
 	}
 
-	public static void writeTransactionEnemyHQLocation (MapLocation loc) throws GameActionException{
+	/*
+	message[2] = symmetryIndex
+	message[3] = exists (0 = false, 1 = true)
+
+	 */
+	public static void writeTransactionEnemyHQLocation (int symmetryIndex, int exists) throws GameActionException{
 		Debug.tlog("Writing transaction for 'Enemy HQ Location'");
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = ENEMY_HQ_LOCATION;
-		message[2] = loc.x;
-		message[3] = loc.y;
+		message[2] = symmetryIndex;
+		message[3] = exists;
 
 		xorMessage(message);
 		if (teamSoup >= 1) {
@@ -540,10 +566,14 @@ message[3] = y coordinate of our HQ
 	}
 
 	public static void readTransactionEnemyHQLocation (int[] message, int round) throws GameActionException {
-		BotOffenseDeliveryDrone.enemyHQLocation = new MapLocation(message[2], message[3]);
+		if (message[3] == 1) {
+			BotOffenseDeliveryDrone.enemyHQLocation = symmetryHQLocations[message[2]];
+		}
+		BotOffenseDeliveryDrone.isSymmetry[message[2]] = message[3];
 		Debug.tlog("Reading transaction for 'Enemy HQ Location'");
 		Debug.tlog("Submitter ID: " + decryptID(message[0]));
-		Debug.tlog("Location: " + BotOffenseDeliveryDrone.enemyHQLocation);
+		Debug.tlog("Location: " + symmetryHQLocations[message[2]]);
+		Debug.tlog("Exists: " + BotOffenseDeliveryDrone.isSymmetry[message[2]]);
 		Debug.tlog("Posted round: " + round);
 	}
 }

@@ -37,6 +37,7 @@ public class Globals {
 	public static int HQElevation;
 	// MapLocations of enemy HQ if map has horizontal, vertical, or rotationally symmetry
 	public static MapLocation[] symmetryHQLocations = new MapLocation[3];
+	public static int[] isSymmetry = {-1, -1, -1}; // -1 is unknown, 0 is false, 1 is true
 
 	/*
 	Values that might change each turn
@@ -151,6 +152,7 @@ public class Globals {
 			Nav.bugClosestDistanceToTarget = P_INF;
 		}
 
+		Debug.tlog("Reading the previous round's Transactions");
 		Communication.readTransactions(roundNum - 1);
 
 		// tries to find our HQLocation and HQElevation by reading messages
@@ -290,9 +292,14 @@ public class Globals {
 		}
 	}
 
-	public static void moveLog(MapLocation loc) throws GameActionException {
+	public static boolean canPickUpType (RobotType rt) {
+		return rt == RobotType.MINER || rt == RobotType.LANDSCAPER || rt == RobotType.COW;
+	}
+
+	public static Direction moveLog(MapLocation loc) throws GameActionException {
+		Direction move = null;
 		if (rc.isReady()) {
-			Direction move = Nav.bugNavigate(loc);
+			move = Nav.bugNavigate(loc);
 			if (move != null) {
 				Debug.ttlog("Moved " + move);
 			} else {
@@ -301,6 +308,7 @@ public class Globals {
 		} else {
 			Debug.ttlog("But not ready");
 		}
+		return move;
 	}
 
 	// information about digLocations

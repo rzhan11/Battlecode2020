@@ -47,7 +47,7 @@ public class BotDeliveryDrone extends Globals {
 					loadWallInformation();
 				}
 
-				if (roundNum == OFFENSE_DRONE_TRIGGER_ROUND) {
+				if (roundNum >= OFFENSE_DRONE_TRIGGER_ROUND) {
 					isOffenseDrone = true;
 				}
 
@@ -62,10 +62,6 @@ public class BotDeliveryDrone extends Globals {
 			}
 			Globals.endTurn(false);
 		}
-	}
-
-	public static boolean canPickUpType (RobotType rt) {
-		return rt == RobotType.MINER || rt == RobotType.LANDSCAPER || rt == RobotType.COW;
 	}
 
 	public static void turn() throws GameActionException {

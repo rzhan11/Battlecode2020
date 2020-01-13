@@ -49,6 +49,52 @@ public class Nav extends Globals {
 	}
 
 	/*
+	Only drones can call this method
+	Tries to move in the target direction
+	Ignores flooded tiles
+	Will pick up allies that are in the way
+
+	Returns the Direction that we moved in
+	Returns null if did not move
+	*/
+	public static Direction tryForceMoveInDirection (Direction dir) throws GameActionException {
+		Direction move = tryMoveInDirection(dir);
+		if (move == null) {
+			MapLocation loc = rc.adjacentLocation(dir);
+			RobotInfo ri = rc.senseRobotAtLocation(loc);
+			if (ri != null && canPickUpType(ri.type)) {
+				Debug.ttlog("Picking up ally at " + loc);
+				Actions.doPickUpUnit(ri.ID);
+				move = dir;
+			}
+		}
+		return move;
+	}
+
+	/*
+	Only drones can call this method
+	Tries to move in the target direction
+	Ignores flooded tiles
+	Will pick up allies that are in the way
+
+	Returns the Direction that we moved in
+	Returns null if did not move
+	*/
+	public static Direction tryForceMoveInGeneralDirection (Direction dir) throws GameActionException {
+		Direction leftDir = dir.rotateLeft();
+		Direction rightDir = dir.rotateRight();
+
+		Direction move = tryForceMoveInDirection(dir);
+		if (move == null) {
+			move = tryForceMoveInDirection(leftDir);
+		}
+		if (move == null) {
+			move = tryForceMoveInDirection(rightDir);
+		}
+		return move;
+	}
+
+	/*
 	Tries to move in the target direction
 	If we are not a drone, it does not move into flooded tiles
 	Returns the Direction that we moved in
