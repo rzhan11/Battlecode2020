@@ -98,17 +98,24 @@ public class BotFulfillmentCenter extends Globals {
 			Debug.tlog("Drone checkpoint 1 reached");
 		}
 
-		// after all the vaporators have been built continue
-		if (reachedLandscaperCheckpoint == 1) {
-			Debug.tlog("Continuing: Landscaper checkpoint 1 reached");
+		// after netgun is done
+		if (reachedNetgunCheckpoint) {
+			Debug.tlog("Continuing: reachedNetgunCheckpoint checkpoint reached");
 		} else {
-			Debug.tlog("Returning: Landscaper checkpoint 1 not reached");
+			Debug.tlog("Returning: reachedNetgunCheckpoint checkpoint not reached");
 			return;
 		}
 
-		// TEMPORARILY DISABLED
+		// after large wall is full
+		if (largeWallFull) {
+			Debug.tlog("Continuing: largeWallFull checkpoint reached");
+		} else {
+			Debug.tlog("Returning: largeWallFull checkpoint not reached");
+			return;
+		}
+
 		// after second landscaper checkpoint, make as many drones as possible
-		/*
+
 		if (teamSoup >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost) {
 			Debug.tlog("Trying to build delivery drone");
 			boolean didBuild = tryBuild(RobotType.DELIVERY_DRONE, directions);
@@ -118,7 +125,7 @@ public class BotFulfillmentCenter extends Globals {
 		} else {
 			Debug.tlog("Can't afford delivery drone");
 		}
-		*/
+
 
 		return;
 	}
