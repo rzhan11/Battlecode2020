@@ -28,8 +28,6 @@ public class BotHQ extends Globals {
 
 					Communication.writeTransactionHQFirstTurn(here);
 
-					loadWallInformation();
-
 					// finds visible soup locations
 					locateNearbySoup();
 
@@ -70,7 +68,7 @@ public class BotHQ extends Globals {
 					}
 				}
 
-				Debug.tlog(count + " vs " + largeWallLength);
+				Debug.tlog("Large wall full: " + count + " / " + largeWallLength);
 
 				if (count == largeWallLength) {
 					Debug.ttlog("LARGE WALL IS FULL");

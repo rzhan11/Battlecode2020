@@ -341,16 +341,18 @@ public class Globals {
 
 	public static void loadWallInformation () throws GameActionException {
 
+		Debug.tlog("LOADING WALL INFORMATION 1");
+
 		// determine innerDigLocations
-		int innnerRingRadius = smallWallRingRadius;
+		int innerRingRadius = smallWallRingRadius;
 		innerDigLocations = new MapLocation[12];
 		innerDigLocationsOccupiedMemory = new boolean[innerDigLocations.length];
-		MapLocation templ = HQLocation.translate(innnerRingRadius, innnerRingRadius);
+		MapLocation templ = HQLocation.translate(innerRingRadius, innerRingRadius);
 		int index = 0;
-		for(int i = 0; i < innnerRingRadius + 1; i++) for(int j = 0; j < innnerRingRadius + 1; j++) {
+		for(int i = 0; i < innerRingRadius + 1; i++) for(int j = 0; j < innerRingRadius + 1; j++) {
 			MapLocation newl = templ.translate(-2 * i, -2 * j);
 			if(inMap(newl) && !HQLocation.equals(newl)) {
-				if (maxXYDistance(HQLocation, newl) >= innnerRingRadius) { // excludes holes inside the 5x5 plot
+				if (maxXYDistance(HQLocation, newl) >= innerRingRadius) { // excludes holes inside the 5x5 plot
 					innerDigLocations[index] = newl;
 					index++;
 				}
@@ -360,6 +362,7 @@ public class Globals {
 
 		Globals.endTurn(true);
 		Globals.update();
+		Debug.tlog("LOADING WALL INFORMATION 2");
 
 		// finds tiles that are on the 5x5 plot
 		smallWall = new MapLocation[49];
@@ -377,6 +380,7 @@ public class Globals {
 
 		Globals.endTurn(true);
 		Globals.update();
+		Debug.tlog("LOADING WALL INFORMATION 3");
 
 		// determine outerDigLocations
 		/* @todo - remind Richard if he still wants this
@@ -399,6 +403,7 @@ public class Globals {
 
 		Globals.endTurn(true);
 		Globals.update();
+		Debug.tlog("LOADING WALL INFORMATION 3");
 
 		largeWall = new MapLocation[36];
 		index = 0;
@@ -444,6 +449,7 @@ public class Globals {
 
 		Globals.endTurn(true);
 		Globals.update();
+		Debug.tlog("LOADING WALL INFORMATION 4");
 
 		hasLoadedWallInformation = true;
 	}
@@ -471,5 +477,23 @@ public class Globals {
 		}
 		Debug.ttlog("No open spots found");
 		return false;
+	}
+
+
+	/*
+	Given a direction, return an array of 8 directions (excludes CENTER)
+	that is ordered by how close they are to the given direction
+	 */
+	public static Direction[] getCloseDirections (Direction dir) {
+		Direction[] dirs = new Direction[8];
+		dirs[0] = dir;
+		dirs[1] = dir.rotateRight();
+		dirs[2] = dir.rotateLeft();
+		dirs[3] = dirs[1].rotateRight();
+		dirs[4] = dirs[2].rotateLeft();
+		dirs[5] = dirs[3].rotateRight();
+		dirs[6] = dirs[4].rotateLeft();
+		dirs[7] = dir.opposite();;
+		return null;
 	}
 }
