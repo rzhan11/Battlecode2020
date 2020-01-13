@@ -113,7 +113,7 @@ public class BotHQ extends Globals {
 				//try building
 				for (int k = 0; k < 8; k++) {
 					if (rc.canBuildRobot(RobotType.MINER, directions[k])) {
-						rc.buildRobot(RobotType.MINER, directions[k]);
+						Actions.doBuildRobot(RobotType.MINER, directions[k]);
 						teamSoup = rc.getTeamSoup();
 						madeBuilderMiner = true;
 
@@ -176,7 +176,7 @@ public class BotHQ extends Globals {
 			Direction dir = directions[i];
 			MapLocation loc = rc.adjacentLocation(dir);
 	        if (!exploredDirections[i] && rc.canBuildRobot(RobotType.MINER, dir)) {
-	            rc.buildRobot(RobotType.MINER, dir);
+	            Actions.doBuildRobot(RobotType.MINER, dir);
 				teamSoup = rc.getTeamSoup();
 				
 				exploredDirections[i] = true;
@@ -197,7 +197,7 @@ public class BotHQ extends Globals {
 			Direction dir = here.directionTo(symmetryHQLocations[i]);
 			MapLocation loc = rc.adjacentLocation(dir);
 			if (!builtSymmetryMiner[i] && rc.canBuildRobot(RobotType.MINER, dir)) {
-				rc.buildRobot(RobotType.MINER, dir);
+				Actions.doBuildRobot(RobotType.MINER, dir);
 				teamSoup = rc.getTeamSoup();
 				builtSymmetryMiner[i] = true;
 				symmetryMinerCount++;

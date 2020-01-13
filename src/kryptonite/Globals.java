@@ -77,8 +77,8 @@ public class Globals {
 	 */
 	public static boolean reachedVaporatorCheckpoint = false;
 	public static boolean reachedNetgunCheckpoint = false;
-	public static int reachedDroneCheckpoint = 0;
-	public static int reachedLandscaperCheckpoint = 0;
+	public static int reachedDroneCheckpoint = -1;
+	public static int reachedLandscaperCheckpoint = -1;
 
 
 	public static void init(RobotController theRC) throws GameActionException {
@@ -468,7 +468,7 @@ public class Globals {
 			if (!rc.senseFlooding(loc) && Nav.checkElevation(loc) && rc.senseRobotAtLocation(loc) == null) {
 				Debug.ttlog("Location: " + loc);
 				if (rc.isReady()) {
-					rc.buildRobot(rt, d);
+					Actions.doBuildRobot(rt, d);
 					teamSoup = rc.getTeamSoup();
 					Debug.ttlog("Success");
 					return true;
