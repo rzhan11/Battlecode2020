@@ -353,18 +353,22 @@ public class BotLandscaper extends Globals {
 							}
 
 							// move to corner
-							if (ls_within_two_clock && ls_within_two_counterclock) {
-								Debug.tlog("trying to move to corner ");
-								int distToHQ = HQLocation.distanceSquaredTo(here);
-								for (Direction dir: directions) {
-									MapLocation loc = rc.adjacentLocation(dir);
-									// on ring and gets farther from hq
-									if (maxXYDistance(HQLocation, loc) == 4 && HQLocation.distanceSquaredTo(loc) > distToHQ) {
-										if (!rc.senseFlooding(loc) && Nav.checkElevation(loc) && rc.senseRobotAtLocation(loc) == null) {
-											Debug.tlog("moving to corner ");
-											Actions.doMove(dir);
-											return;
-										}
+							Debug.tlog("trying to move to corner ");
+							int distToHQ = HQLocation.distanceSquaredTo(here);
+							for (Direction dir: directions) {
+								if (dir == d_clock && ls_within_two_clock) {
+									continue;
+								}
+								if (dir == d_counterclock && ls_within_two_counterclock) {
+									continue;
+								}
+								MapLocation loc = rc.adjacentLocation(dir);
+								// on ring and gets farther from hq
+								if (maxXYDistance(HQLocation, loc) == 4 && HQLocation.distanceSquaredTo(loc) > distToHQ) {
+									if (!rc.senseFlooding(loc) && Nav.checkElevation(loc) && rc.senseRobotAtLocation(loc) == null) {
+										Debug.tlog("moving to corner ");
+										Actions.doMove(dir);
+										return;
 									}
 								}
 							}
