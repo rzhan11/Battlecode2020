@@ -6,7 +6,6 @@ public class BotFulfillmentCenter extends Globals {
 
 	public static int dronesMade = 0;
 	public static int[] droneCheckpoints = {6, 20};
-	public static boolean vaporatorCheckpoint = false;
 
 	public static void loop() throws GameActionException {
 		while (true) {
@@ -26,49 +25,70 @@ public class BotFulfillmentCenter extends Globals {
 	public static void turn() throws GameActionException {
 		// initial drones made
 		if (dronesMade < droneCheckpoints[0]) {
-			for (Direction d : directions) {
-				MapLocation loc = rc.adjacentLocation(d);
-				if (teamSoup >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost + Communication.REFINERY_BUILT_COST &&
-						!rc.senseFlooding(loc) && Nav.checkElevation(loc) && dronesMade < droneCheckpoints[0] && rc.senseRobotAtLocation(loc) == null) {
-					Debug.tlog("Building delivery drone at " + rc.adjacentLocation(d));
-					if (rc.isReady()) {
-						rc.buildRobot(RobotType.DELIVERY_DRONE, d);
-						teamSoup = rc.getTeamSoup();
-						dronesMade++;
-						Debug.ttlog("Success");
-						if (dronesMade >= droneCheckpoints[0]) {
-							Communication.writeTransactionDroneCheckpoint(1);
-						}
-					} else {
-						Debug.ttlog("But not ready");
+			Debug.tlog("Drone checkpoint 0 not reached");
+			// leave enough to build a refinery
+			if (teamSoup >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost + Communication.REFINERY_BUILT_COST) {
+				Debug.tlog("Trying to build delivery drone");
+				boolean didBuild = tryBuild(RobotType.DELIVERY_DRONE);
+				if (didBuild) {
+					dronesMade++;
+					if (dronesMade >= droneCheckpoints[0]) {
+						Communication.writeTransactionDroneCheckpoint(0);
 					}
-					return;
 				}
 			}
+			return;
+		} else {
+			Debug.tlog("Drone checkpoint 0 reached");
+		}
 
 		// after all the vaporators have been built continue
-		} else if (vaporatorCheckpoint && dronesMade < droneCheckpoints[1]) {
-			for (Direction d : directions) {
-				MapLocation loc = rc.adjacentLocation(d);
-				if (teamSoup >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost + Communication.REFINERY_BUILT_COST &&
-						!rc.senseFlooding(loc) && Nav.checkElevation(loc) && dronesMade < droneCheckpoints[1] && rc.senseRobotAtLocation(loc) == null) {
-					Debug.tlog("Building delivery drone at " + rc.adjacentLocation(d));
-					if (rc.isReady()) {
-						rc.buildRobot(RobotType.DELIVERY_DRONE, d);
-						teamSoup = rc.getTeamSoup();
-						dronesMade++;
-						Debug.ttlog("Success");
-						if (dronesMade >= droneCheckpoints[1]) {
-							Communication.writeTransactionDroneCheckpoint(2);
-						}
-					} else {
-						Debug.ttlog("But not ready");
-					}
-					return;
-				}
-			}
+		if (reachedVaporatorCheckpoint) {
+			Debug.tlog("Continuing: Vaporator checkpoint reached");
+		} else {
+			Debug.tlog("Returning: Vaporator checkpoint not reached");
+			return;
 		}
-		return;
 
+		if (dronesMade < droneCheckpoints[1]) {
+			Debug.tlog("Drone checkpoint 1 not reached");
+			// leave enough to build a refinery
+			if (teamSoup >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost + Communication.REFINERY_BUILT_COST) {
+				Debug.tlog("Trying to build delivery drone");
+				boolean didBuild = tryBuild(RobotType.DELIVERY_DRONE);
+				if (didBuild) {
+					dronesMade++;
+					if (dronesMade >= droneCheckpoints[1]) {
+						Communication.writeTransactionDroneCheckpoint(1);
+					}
+				}
+			} else {
+				Debug.tlog("Can't afford delivery drone");
+			}
+			return;
+		} else {
+			Debug.tlog("Drone checkpoint 1 reached");
+		}
+
+		// after all the vaporators have been built continue
+		if (reachedLandscaperCheckpoint == 1) {
+			Debug.tlog("Continuing: Landscaper checkpoint 1 reached");
+		} else {
+			Debug.tlog("Returning: Landscaper checkpoint 1 not reached");
+			return;
+		}
+
+		// after second landscaper checkpoint, make as many drones as possible
+		if (teamSoup >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost + Communication.REFINERY_BUILT_COST) {
+			Debug.tlog("Trying to build delivery drone");
+			boolean didBuild = tryBuild(RobotType.DELIVERY_DRONE);
+			if (didBuild) {
+				dronesMade++;
+			}
+		} else {
+			Debug.tlog("Can't afford delivery drone");
+		}
+
+		return;
 	}
 }

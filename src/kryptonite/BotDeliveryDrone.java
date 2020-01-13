@@ -3,6 +3,10 @@ package kryptonite;
 import battlecode.common.*;
 
 public class BotDeliveryDrone extends Globals {
+
+	// roundNum where drones go onto offense
+	final public static int OFFENSE_DRONE_TRIGGER_ROUND = 2000;
+
 	public static boolean insideWall;
 	public static boolean onWall;
 	public static boolean outsideWall;
@@ -25,6 +29,8 @@ public class BotDeliveryDrone extends Globals {
 	public static boolean movingRobotOutwards;
 	public static MapLocation movingOutwardsLocation = null;
 
+	public static boolean isOffenseDrone = false;
+
 	public static void loop() throws GameActionException {
 		while (true) {
 			try {
@@ -40,7 +46,17 @@ public class BotDeliveryDrone extends Globals {
 
 					loadWallInformation();
 				}
-			    turn();
+
+				if (roundNum == OFFENSE_DRONE_TRIGGER_ROUND) {
+					isOffenseDrone = true;
+				}
+
+				if (isOffenseDrone) {
+					BotOffenseDeliveryDrone.turn();
+				} else {
+					turn();
+				}
+
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -677,8 +693,8 @@ public class BotDeliveryDrone extends Globals {
 				Debug.tlog("Confirmed that floodingMemory at " + floodingMemory + " is flooded");
 				return;
 			} else {
-				floodingMemory = null;
 				Debug.tlog("Resetting floodingMemory at " + floodingMemory + " since it is dry");
+				floodingMemory = null;
 			}
 		}
 

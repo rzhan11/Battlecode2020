@@ -7,6 +7,9 @@ public class Actions extends Globals {
 	public static int[] YELLOW = {255, 255, 0}; // moving
 	public static int[] MAGENTA = {255, 0, 255}; // picking up robot
 	public static int[] PURPLE = {128, 0, 128}; // dropping robot
+	public static int[] ORANGE = {256, 128, 0}; // shooting drone
+	public static int[] WHITE = {255, 255, 255}; // drone explore symmetry
+	public static int[] BLACK = {0, 0, 0}; // drone targetting HQLocation
 
 	private static int[] color;
 
@@ -26,5 +29,11 @@ public class Actions extends Globals {
 		color = PURPLE;
 		rc.setIndicatorLine(here, rc.adjacentLocation(dir), color[0], color[1], color[2]);
 		rc.dropUnit(dir);
+	}
+
+	public static void doShootUnit (int id) throws GameActionException {
+		color = ORANGE;
+		rc.setIndicatorLine(here, rc.senseRobot(id).location, color[0], color[1], color[2]);
+		rc.shootUnit(id);
 	}
 }

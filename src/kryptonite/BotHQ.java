@@ -69,8 +69,9 @@ public class BotHQ extends Globals {
 				}
 			}
 
-			if(id != -1){
-				rc.shootUnit(id);
+			// shoot radius less than sensor radius
+			if(id != -1 && closestDist <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
+				Actions.doShootUnit(id);
 			}
 		}
 
