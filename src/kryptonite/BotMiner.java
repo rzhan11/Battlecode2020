@@ -158,7 +158,7 @@ public class BotMiner extends Globals {
 
 				if (rc.isReady()) {
 					Debug.tlog("Trying to build refinery in adjacent tile.");
-					boolean result = tryBuild(RobotType.REFINERY);
+					boolean result = tryBuild(RobotType.REFINERY, directions);
 					if (result) {
 						Debug.ttlog("Success");
 
@@ -241,7 +241,7 @@ public class BotMiner extends Globals {
 				if (rc.senseFlooding(locToRef) || !Nav.checkElevation(locToRef)
 					|| (riToRef != null && riToRef.type.isBuilding())) {
 					Debug.tlog("Trying to build refinery in adjacent tile due to blocked path.");
-					boolean result = tryBuild(RobotType.REFINERY);
+					boolean result = tryBuild(RobotType.REFINERY, directions);
 					if (result) {
 						Communication.writeTransactionRefineryBuilt(buildRefineryLocation);
 						addToRefineries(buildRefineryLocation);

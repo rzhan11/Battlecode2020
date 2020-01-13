@@ -52,32 +52,6 @@ public class BotBuilderMiner extends BotMiner {
 		Debug.ttlog("netgun " + reachedNetgunCheckpoint);
 		Debug.ttlog("vaporator " + reachedVaporatorCheckpoint);
 
-			/*
-		if (teamSoup >= RobotType.FULFILLMENT_CENTER.cost + RobotType.REFINERY.cost && !fulfillmentCenterBuilt) {
-			// potential bug - what if we are already on the fulfillmentCenterLocation?
-			if (here.isAdjacentTo(fulfillmentCenterLocation)) {
-				// build fulfillment center
-				Direction dir = here.directionTo(fulfillmentCenterLocation);
-				MapLocation loc = rc.adjacentLocation(dir);
-				if (!rc.senseFlooding(loc) && Nav.checkElevation(loc) && rc.senseRobotAtLocation(loc) == null) {
-					Debug.tlog("Building fulfillment center at " + loc);
-					if (rc.isReady()) {
-						Actions.doBuildRobot(RobotType.FULFILLMENT_CENTER, dir);
-						teamSoup = rc.getTeamSoup();
-						fulfillmentCenterBuilt = true;
-						Debug.ttlog("Success");
-					} else {
-						Debug.ttlog("But not ready");
-					}
-					return;
-				}
-			} else {
-				Debug.tlog("Going to fulfillmentCenterLocation");
-				moveLog(fulfillmentCenterLocation);
-				return;
-			}
-			*/
-
 		// first step is to build the fulfillment center
 		// This fragment of code checks to build the center if the cost of the refinery, sending that signal and the fufillment center are all
 		// less than teamSoup
@@ -91,6 +65,10 @@ public class BotBuilderMiner extends BotMiner {
 				for(int dx = -2; dx <= 2; dx++){
 					for(int dy = -2; dy <= 2; dy++){
 						MapLocation buildLocation = new MapLocation(HQLocation.x + dx, HQLocation.y+dy);
+						// forces it to be on 5x5 ring
+						if (maxXYDistance(HQLocation, buildLocation) != 2) {
+							continue;
+						}
 						Direction dir = here.directionTo(buildLocation);
 						if(rc.canBuildRobot(RobotType.FULFILLMENT_CENTER,dir)){
 							Actions.doBuildRobot(RobotType.FULFILLMENT_CENTER,dir);
@@ -112,29 +90,6 @@ public class BotBuilderMiner extends BotMiner {
 			return;
 		}
 
-		/*
-		if (here.isAdjacentTo(designSchoolLocation)) {
-			//build design school
-			Direction dir = here.directionTo(designSchoolLocation);
-			MapLocation loc = rc.adjacentLocation(dir);
-			if (!rc.senseFlooding(loc) && Nav.checkElevation(loc) && rc.senseRobotAtLocation(loc) == null) {
-				Debug.tlog("Building design school at " + loc);
-				if (rc.isReady()) {
-					Actions.doBuildRobot(RobotType.DESIGN_SCHOOL, dir);
-					teamSoup = rc.getTeamSoup();
-					designSchoolBuilt = true;
-					Debug.ttlog("Success");
-				} else
-					Debug.ttlog("But not ready");
-				return;
-			}
-
-		} else {
-			Debug.tlog("Going to designSchoolLocation");
-			moveLog(designSchoolLocation);
-			return;
-		}
-		*/
 		// after the drone checkpoint has been reached, this fragment then builds the designSchool with the same cost requirements
 		// as the fulfillment center
 		if (!designSchoolBuilt) {
@@ -147,6 +102,10 @@ public class BotBuilderMiner extends BotMiner {
 					for(int dx = -2; dx <= 2; dx++){
 						for(int dy = -2; dy <= 2; dy++){
 							MapLocation buildLocation = new MapLocation(HQLocation.x + dx, HQLocation.y+dy);
+							// forces it to be on 5x5 ring
+							if (maxXYDistance(HQLocation, buildLocation) != 2) {
+								continue;
+							}
 							Direction dir = here.directionTo(buildLocation);
 							if(rc.canBuildRobot(RobotType.DESIGN_SCHOOL,dir)){
 								Actions.doBuildRobot(RobotType.DESIGN_SCHOOL,dir);

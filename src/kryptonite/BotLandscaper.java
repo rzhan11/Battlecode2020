@@ -63,6 +63,8 @@ public class BotLandscaper extends Globals {
 
 	public static void turn() throws GameActionException {
 
+		Debug.tlog("smallWallCompleted " + smallWallCompleted);
+		Debug.tlog("largeWallFull " + largeWallFull);
 
 		if(!rc.isReady()) return;
 
@@ -190,6 +192,7 @@ public class BotLandscaper extends Globals {
 								if (rc.canMove(d)) {
 									Debug.ttlog("MOVING TO 7x7 RING");
 									Actions.doMove(d);
+									return;
 								}
 							}
 						}
@@ -208,6 +211,7 @@ public class BotLandscaper extends Globals {
 									Debug.ttlog("MOVING TO 7x7 RING");
 									currentStep = 0;
 									Actions.doMove(d);
+									return;
 								}
 							}
 						}
@@ -252,8 +256,6 @@ public class BotLandscaper extends Globals {
 							return;
 						}
 					}
-
-					//neeyanth put code here
 
 					while (true) { // fake while loop, only ever runs once, used while so i can break
 						Debug.ttlog("MOVING");
@@ -350,6 +352,23 @@ public class BotLandscaper extends Globals {
 								return;
 							}
 
+							// move to corner
+							if (ls_within_two_clock && ls_within_two_counterclock) {
+								Debug.tlog("trying to move to corner ");
+								int distToHQ = HQLocation.distanceSquaredTo(here);
+								for (Direction dir: directions) {
+									MapLocation loc = rc.adjacentLocation(dir);
+									// on ring and gets farther from hq
+									if (maxXYDistance(HQLocation, loc) == 4 && HQLocation.distanceSquaredTo(loc) > distToHQ) {
+										if (!rc.senseFlooding(loc) && Nav.checkElevation(loc) && rc.senseRobotAtLocation(loc) == null) {
+											Debug.tlog("moving to corner ");
+											Actions.doMove(dir);
+											return;
+										}
+									}
+								}
+							}
+
 							Debug.tlog("Unexpected case " + ls_in_clock + " " + ls_in_clock2 + " v " + ls_in_counterclock + " " + ls_in_counterclock);
 							// do nothing
 							// do not return
@@ -357,6 +376,7 @@ public class BotLandscaper extends Globals {
 
 						break;
 					}
+
 
 					// STATE == not trying to move
 					// or needs to use dirt to move
