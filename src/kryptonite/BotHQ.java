@@ -16,8 +16,7 @@ public class BotHQ extends Globals {
 
 	private static boolean madeBuilderMiner = false;
 
-	public static int minerDirectionX = 0;
-	public static int minerDirectionY = 0;
+	public static MapLocation soupLocation = null;
 
 	public static void loop() throws GameActionException {
 		while (true) {
@@ -167,22 +166,19 @@ public class BotHQ extends Globals {
 	Does not affect HQ yet - Remind Richard
 	*/
 	public static void locateNearbySoup () throws GameActionException {
-		MapLocation[] soups = new MapLocation[senseDirections.length];
-		int size = 0;
 		int minDistance = Integer.MAX_VALUE;
 
 		for (int[] dir: senseDirections) {
+			if (actualSensorRadiusSquared < dir[2]) {
+				break;
+			}
 			MapLocation loc = here.translate(dir[0], dir[1]);
 			if (rc.canSenseLocation(loc) && rc.senseSoup(loc) > 0) {
-				if (here.distanceSquaredTo(loc) <= minDistance) {
-					minerDirectionX = dir[0];
-					minerDirectionY = dir[1];
-				}
+				soupLocation = loc;
+				break;
 			}
 		}
-		if (size == 0) {
-			return;
-		}
+		return;
 	}
 
 	/*
@@ -191,18 +187,24 @@ public class BotHQ extends Globals {
 	Returns false if did not build a miner
 	*/
 	public static boolean buildMiner() throws GameActionException {
-		for (int i = 0; i < directions.length; i++) {
-			Direction dir = directions[i];
+		Direction[] orderedDirections;
+		if (soupLocation == null) {
+			orderedDirections = getCloseDirections(here.directionTo(symmetryHQLocations[2]));
+		} else
+		orderedDirections = getCloseDirections(here.directionTo(soupLocation));
+
+		for (int i = 0; i < orderedDirections.length; i++) {
+			Direction dir = orderedDirections[i];
 			MapLocation loc = rc.adjacentLocation(dir);
-	        if (!exploredDirections[i] && rc.canBuildRobot(RobotType.MINER, dir)) {
-	            Actions.doBuildRobot(RobotType.MINER, dir);
+			if (!exploredDirections[i] && rc.canBuildRobot(RobotType.MINER, dir)) {
+				Actions.doBuildRobot(RobotType.MINER, dir);
 				teamSoup = rc.getTeamSoup();
-				
 				exploredDirections[i] = true;
 				explorerMinerCount++;
 				return true;
 			}
 		}
+
 		return false;
 	}
 
