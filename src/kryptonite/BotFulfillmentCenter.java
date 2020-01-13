@@ -78,7 +78,9 @@ public class BotFulfillmentCenter extends Globals {
 			return;
 		}
 
+		// TEMPORARILY DISABLED
 		// after second landscaper checkpoint, make as many drones as possible
+		/*
 		if (teamSoup >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost) {
 			Debug.tlog("Trying to build delivery drone");
 			boolean didBuild = tryBuild(RobotType.DELIVERY_DRONE);
@@ -88,6 +90,7 @@ public class BotFulfillmentCenter extends Globals {
 		} else {
 			Debug.tlog("Can't afford delivery drone");
 		}
+		*/
 
 		return;
 	}
