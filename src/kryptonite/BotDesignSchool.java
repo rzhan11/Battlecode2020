@@ -24,7 +24,7 @@ public class BotDesignSchool extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
-		if (visibleEnemies != null) {
+		if (visibleEnemies.length > 0) {
 			Debug.tlog("Enemies detected");
 			if (teamSoup >= RobotType.LANDSCAPER.cost) {
 				Debug.tlog("Trying to build protection landscapers");
@@ -62,10 +62,10 @@ public class BotDesignSchool extends Globals {
 			Debug.tlog("Landscaper checkpoint 0 reached");
 		}
 
-		if (reachedNetgunCheckpoint) {
-			Debug.tlog("Continuing: Netgun checkpoint reached");
+		if (reachedVaporatorCheckpoint) {
+			Debug.tlog("Continuing: Vaporator checkpoint reached");
 		} else {
-			Debug.tlog("Returning: Netgun checkpoint not reached");
+			Debug.tlog("Returning: Vaporator checkpoint not reached");
 			return;
 		}
 

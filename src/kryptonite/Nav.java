@@ -63,9 +63,13 @@ public class Nav extends Globals {
 			MapLocation loc = rc.adjacentLocation(dir);
 			RobotInfo ri = rc.senseRobotAtLocation(loc);
 			if (ri != null && canPickUpType(ri.type)) {
-				Debug.ttlog("Picking up ally at " + loc);
-				Actions.doPickUpUnit(ri.ID);
-				move = dir;
+				if (ri.ID == builderMinerID) {
+					Debug.ttlog("Cannot force through builder miner");
+				} else {
+					Debug.ttlog("Picking up ally at " + loc);
+					Actions.doPickUpUnit(ri.ID);
+					move = dir;
+				}
 			}
 		}
 		return move;

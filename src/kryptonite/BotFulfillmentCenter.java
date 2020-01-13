@@ -5,7 +5,7 @@ import battlecode.common.*;
 public class BotFulfillmentCenter extends Globals {
 
 	public static int dronesMade = 0;
-	public static int[] droneCheckpoints = {6, 20};
+	public static int[] droneCheckpoints = {6, 8};
 	public static boolean[] checkpointSent = {false, false};
 
 	public static void loop() throws GameActionException {
@@ -24,7 +24,7 @@ public class BotFulfillmentCenter extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
-		if (visibleEnemies != null) {
+		if (visibleEnemies.length > 0) {
 			for (RobotInfo ri : visibleEnemies) {
 				if (ri.type == RobotType.LANDSCAPER) {
 					if (teamSoup >= RobotType.DELIVERY_DRONE.cost) {

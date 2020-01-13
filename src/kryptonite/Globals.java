@@ -155,6 +155,7 @@ public class Globals {
 
 		Debug.tlog("Reading the previous round's Transactions");
 		Communication.readTransactions(roundNum - 1);
+		Debug.tlog("Done reading the previous round's Transactions");
 
 		// tries to find our HQLocation and HQElevation by reading messages
 		// will skip turn if not found
@@ -265,6 +266,19 @@ public class Globals {
 		return Math.max(Math.abs(ml1.x - ml2.x), Math.abs(ml1.y - ml2.y));
 	}
 
+	/*
+	Useful for ring structures
+	*/
+	public static int manhattanDistance(MapLocation ml1, MapLocation ml2) {
+		return Math.abs(ml1.x - ml2.x) + Math.abs(ml1.y - ml2.y);
+	}
+
+//	/*
+//	Assumes can sense
+//	 */
+//	public static boolean isOccupied(MapLocation loc) {
+//	}
+
 	public static boolean inArray(Object[] arr, Object item, int length) {
 		for(int i = 0; i < length; i++) if(arr[i].equals(item)) return true;
 		return false;
@@ -356,6 +370,10 @@ public class Globals {
 			MapLocation newl = templ.translate(-2 * i, -2 * j);
 			if(inMap(newl) && !HQLocation.equals(newl)) {
 				if (maxXYDistance(HQLocation, newl) >= innerRingRadius) { // excludes holes inside the 5x5 plot
+					// excludes corners
+//					if (HQLocation.distanceSquaredTo(newl) == 18) {
+//						continue;
+//					}
 					innerDigLocations[index] = newl;
 					index++;
 				}

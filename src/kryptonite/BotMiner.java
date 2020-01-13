@@ -148,12 +148,30 @@ public class BotMiner extends Globals {
 				Debug.tlog("Retargetting buildRefineryLocation to " + buildRefineryLocation + " with " + buildRefineryVisibleSoup + " soup");
 			}
 
-			// if buildRefineryLocation is occupied or is flooded, revert to closest refinery
+			// if buildRefineryLocation is occupied or is flooded
+			// build buildRefineryLocation to any adjacent tile
+			// otherwise revert to closest refinery
 			if (rc.canSenseLocation(buildRefineryLocation) && (rc.senseRobotAtLocation(buildRefineryLocation) != null || rc.senseFlooding(buildRefineryLocation))) {
 				buildRefineryLocation = null;
 				buildRefineryVisibleSoup = -1;
 				Debug.tlog("Refinery build location at " + buildRefineryLocation + " is flooded/occupied.");
 
+				if (rc.isReady()) {
+					Debug.tlog("Trying to build refinery in adjacent tile.");
+					boolean result = tryBuild(RobotType.REFINERY);
+					if (result) {
+						Debug.ttlog("Success");
+
+						Communication.writeTransactionRefineryBuilt(buildRefineryLocation);
+						addToRefineries(buildRefineryLocation);
+
+						buildRefineryLocation = null;
+						buildRefineryVisibleSoup = -1;
+						return;
+					}
+				}
+
+				// STATE == did not build refinery in adjacent direction
 				refineriesIndex = findClosestRefinery();
 				Debug.tlog("Reverting to known refinery at " + refineries[refineriesIndex]);
 				break;
@@ -212,16 +230,40 @@ public class BotMiner extends Globals {
 					return;
 				}
 			} else {
+				// STATE == not adjacent to refinery
+
+				// consider building in any direction
+				// if blocked by elevation or flooding or building, then try to build in any direction
+				// however excludes non-building occupiers
+				Direction dirToRef = here.directionTo(buildRefineryLocation);
+				MapLocation locToRef = rc.adjacentLocation(dirToRef);
+				RobotInfo riToRef = rc.senseRobotAtLocation(locToRef);
+				if (rc.senseFlooding(locToRef) || !Nav.checkElevation(locToRef)
+					|| (riToRef != null && riToRef.type.isBuilding())) {
+					Debug.tlog("Trying to build refinery in adjacent tile due to blocked path.");
+					boolean result = tryBuild(RobotType.REFINERY);
+					if (result) {
+						Communication.writeTransactionRefineryBuilt(buildRefineryLocation);
+						addToRefineries(buildRefineryLocation);
+
+						buildRefineryLocation = null;
+						buildRefineryVisibleSoup = -1;
+						return;
+					}
+				}
+
 				if (rc.isReady()) {
 					Direction move = Nav.bugNavigate(buildRefineryLocation);
 					Debug.tlog("Moving to buildRefineryLocation at " + buildRefineryLocation);
 					if (move != null) {
 						Debug.ttlog("Moved " + move);
+						return;
 					} else {
 						Debug.ttlog("But no move found");
 					}
 				} else {
 					Debug.ttlog("But not ready");
+					return;
 				}
 			}
 
@@ -519,6 +561,9 @@ public class BotMiner extends Globals {
 		int closestIndex = -1;
 		for (int i = 0; i < refineriesSize; i++) {
 			if (!deadRefineries[i]) {
+				if (largeWallFull && refineries[i].equals(HQLocation)) {
+					continue;
+				}
 				int dist = here.distanceSquaredTo(refineries[i]);
 				if (dist < closestDistance) {
 					closestDistance = dist;
@@ -527,10 +572,11 @@ public class BotMiner extends Globals {
 			}
 		}
 
+		// not true anymore since HQ is ignored after largeWallFull
 		// in the worst case, HQ should appear as the closest refinery
-		if (closestIndex == -1) {
-			Debug.tlogi("ERROR: Failed sanity check - Cannot find any refineries");
-		}
+//		if (closestIndex == -1) {
+//			Debug.tlogi("ERROR: Failed sanity check - Cannot find any refineries");
+//		}
 
 		return closestIndex;
 	}
@@ -545,8 +591,12 @@ public class BotMiner extends Globals {
 
 		int closestIndex = findClosestRefinery();
 
+		if (closestIndex == -1) {
+			Debug.tlog("No refineries found, largeWall must be full");
+		}
+
 		// if there is a close enough refinery, target it
-		if (here.distanceSquaredTo(refineries[closestIndex]) <= REFINERY_DISTANCE_LIMIT) {
+		if (closestIndex != -1 && here.distanceSquaredTo(refineries[closestIndex]) <= REFINERY_DISTANCE_LIMIT) {
 			refineriesIndex = closestIndex;
 			Debug.tlog("Targetting close refinery at " + refineries[refineriesIndex]);
 			return;
