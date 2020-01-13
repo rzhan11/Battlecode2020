@@ -6,6 +6,7 @@ public class BotDesignSchool extends Globals {
 
 	public static int landscapersMade = 0;
 	public static int[] landscaperCheckpoints = {8, 32};
+	public static boolean[] checkpointReached = {false, false};
 
 	public static void loop() throws GameActionException {
 		while (true) {
@@ -23,6 +24,24 @@ public class BotDesignSchool extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
+		if (visibleEnemies != null) {
+			Debug.tlog("Enemies detected");
+			if (teamSoup >= RobotType.LANDSCAPER.cost) {
+				Debug.tlog("Trying to build protection landscapers");
+				boolean didBuild = tryBuild(RobotType.LANDSCAPER);
+				if (didBuild) {
+					landscapersMade++;
+					if (landscapersMade >= landscaperCheckpoints[0] && !checkpointReached[0]) {
+						Communication.writeTransactionLandscaperCheckpoint(0);
+						checkpointReached[0] = true;
+					} else if (landscapersMade >= landscaperCheckpoints[1] && !checkpointReached[1]) {
+						Communication.writeTransactionLandscaperCheckpoint(1);
+						checkpointReached[1] = true;
+					}
+				}
+			}
+			return;
+		}
 		//initial 8 landscapers
 		if (landscapersMade < landscaperCheckpoints[0]) {
 			Debug.tlog("Landscaper checkpoint 0 not reached");
@@ -32,8 +51,9 @@ public class BotDesignSchool extends Globals {
 				boolean didBuild = tryBuild(RobotType.LANDSCAPER);
 				if (didBuild) {
 					landscapersMade++;
-					if (landscapersMade >= landscaperCheckpoints[0]) {
+					if (landscapersMade >= landscaperCheckpoints[0] && !checkpointReached[0]) {
 						Communication.writeTransactionLandscaperCheckpoint(0);
+						checkpointReached[0] = true;
 					}
 				}
 			}
@@ -57,8 +77,9 @@ public class BotDesignSchool extends Globals {
 				if (didBuild) {
 					landscapersMade++;
 				}
-				if (landscapersMade >= landscaperCheckpoints[1]) {
+				if (landscapersMade >= landscaperCheckpoints[1] && !checkpointReached[1]) {
 					Communication.writeTransactionLandscaperCheckpoint(1);
+					checkpointReached[1] = true;
 				}
 			}
 			Debug.tlog("Can't afford landscaper");
