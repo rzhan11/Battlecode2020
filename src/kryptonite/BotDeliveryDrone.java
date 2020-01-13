@@ -152,8 +152,9 @@ public class BotDeliveryDrone extends Globals {
 					}
 				}
 
-				// if movingOutwardsLocation is flooded, revert to symmetry
-				if (rc.canSenseLocation(movingOutwardsLocation) && rc.senseFlooding(movingOutwardsLocation)) {
+				// if movingOutwardsLocation is flooded or not in map, revert to symmetry
+				if (rc.canSenseLocation(movingOutwardsLocation) &&
+						(rc.senseFlooding(movingOutwardsLocation))) {
 					Debug.tlog("movingOutwardsLocation is flooded, reverting to symmetry");
 					movingOutwardsLocation = symmetryHQLocations[0];
 				}
@@ -379,20 +380,22 @@ public class BotDeliveryDrone extends Globals {
 			// STATE: no visible, pick-up-able ally robots are on inner/outer transport tiles or wall
 
 			// checks if we are already in an innerDigLocation
-			/*
+
 			if (inArray(innerDigLocations, here, innerDigLocationsLength)) {
 				Debug.tlog("Already in an innerDigLocation, just chilling here.");
 				return;
 			}
-			*/
+
 
 			// checks if we are already in an outerDigLocation
+			/*
 			if (inArray(outerDigLocations, here, outerDigLocationsLength)) {
 				Debug.tlog("Already in an outerDigLocation, just chilling here.");
 				return;
 			}
+			 */
 
-			/*
+			// STATE == not in an innerDigLocation
 			MapLocation closestInnerDigLocation = findClosestOpenLocation(innerDigLocations, innerDigLocationsOccupiedMemory, innerDigLocationsLength);
 			if (closestInnerDigLocation != null) {
 				// go to dig location
@@ -409,10 +412,11 @@ public class BotDeliveryDrone extends Globals {
 				}
 				return;
 			}
-			*/
 
+
+
+			/*
 			// STATE == not in an outerDigLocation
-
 			MapLocation closestOuterDigLocation = findClosestOpenLocation(outerDigLocations, outerDigLocationsOccupiedMemory, outerDigLocationsLength);
 			if (closestOuterDigLocation != null) {
 				// go to dig location
@@ -429,6 +433,7 @@ public class BotDeliveryDrone extends Globals {
 				}
 				return;
 			}
+			 */
 
 			Debug.tlog("Inner and outer dig locations are visibly occupied or occupied in memory");
 		}
@@ -490,8 +495,8 @@ public class BotDeliveryDrone extends Globals {
 							Debug.ttlog("Moving landscaper from inner to wall");
 						} else {
 							movingRobotOutwards = true;
-							Debug.ttlog("Moving robot outwards");
-							movingOutwardsLocation = here.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
+							movingOutwardsLocation = ri.location.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
+							Debug.ttlog("Moving robot outwards to " + movingOutwardsLocation);
 							if (!inMap(movingOutwardsLocation)) {
 								Debug.ttlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
 								movingOutwardsLocation = symmetryHQLocations[0];
@@ -512,8 +517,8 @@ public class BotDeliveryDrone extends Globals {
 					if (rc.isReady()) {
 						Actions.doPickUpUnit(ri.ID);
 						movingRobotOutwards = true;
-						Debug.ttlog("Moving robot outwards");
-						movingOutwardsLocation = here.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
+						movingOutwardsLocation = ri.location.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
+						Debug.ttlog("Moving robot outwards to " + movingOutwardsLocation);
 						if (!inMap(movingOutwardsLocation)) {
 							Debug.ttlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
 							movingOutwardsLocation = symmetryHQLocations[0];

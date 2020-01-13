@@ -62,10 +62,10 @@ public class BotDesignSchool extends Globals {
 			Debug.tlog("Landscaper checkpoint 0 reached");
 		}
 
-		if (reachedNetgunCheckpoint) {
-			Debug.tlog("Continuing: Netgun checkpoint reached");
+		if (reachedVaporatorCheckpoint) {
+			Debug.tlog("Continuing: Vaporator checkpoint reached");
 		} else {
-			Debug.tlog("Returning: Netgun checkpoint not reached");
+			Debug.tlog("Returning: Vaporator checkpoint not reached");
 			return;
 		}
 

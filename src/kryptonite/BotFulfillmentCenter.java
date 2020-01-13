@@ -5,7 +5,7 @@ import battlecode.common.*;
 public class BotFulfillmentCenter extends Globals {
 
 	public static int dronesMade = 0;
-	public static int[] droneCheckpoints = {6, 20};
+	public static int[] droneCheckpoints = {6, 8};
 	public static boolean[] checkpointSent = {false, false};
 
 	public static void loop() throws GameActionException {
@@ -111,7 +111,7 @@ public class BotFulfillmentCenter extends Globals {
 		/*
 		if (teamSoup >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost) {
 			Debug.tlog("Trying to build delivery drone");
-			boolean didBuild = tryBuild(RobotType.DELIVERY_DRONE);
+			boolean didBuild = tryBuild(RobotType.DELIVERY_DRONE, directions);
 			if (didBuild) {
 				dronesMade++;
 			}
