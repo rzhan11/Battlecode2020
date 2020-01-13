@@ -49,7 +49,7 @@ public class BotBuilderMiner extends BotMiner {
 		// first step is to build the fulfillment center
 		// This fragment of code checks to build the center if the cost of the refinery, sending that signal and the fufillment center are all
 		// less than teamSoup
-		if (teamSoup >= RobotType.FULFILLMENT_CENTER.cost + RobotType.REFINERY.cost + Communication.REFINERY_BUILT_COST && !fulfillmentCenterBuilt) {
+		if (teamSoup >= RobotType.FULFILLMENT_CENTER.cost + RobotType.REFINERY.cost && !fulfillmentCenterBuilt) {
 			/*
 			// potential bug - what if we are already on the fulfillmentCenterLocation?
 			if (here.isAdjacentTo(fulfillmentCenterLocation)) {
@@ -101,7 +101,7 @@ public class BotBuilderMiner extends BotMiner {
 		// after the drone checkpoint has been reached, this fragment then builds the designSchool with the same cost requirements
 		// as the fulfillment center
 		else if (reachedDroneCheckpoint == 0 && !designSchoolBuilt) {
-			if (teamSoup >= RobotType.DESIGN_SCHOOL.cost + RobotType.REFINERY.cost + Communication.REFINERY_BUILT_COST) {
+			if (teamSoup >= RobotType.DESIGN_SCHOOL.cost + RobotType.REFINERY.cost) {
 				// potential bug - what if we are already on the designSchoolLocation?
 				/*
 				if (here.isAdjacentTo(designSchoolLocation)) {
@@ -162,7 +162,7 @@ public class BotBuilderMiner extends BotMiner {
 				MapLocation buildAtLocation = new MapLocation(HQLocation.x + dnetGunLocations[netGunsBuilt][0], HQLocation.y + dnetGunLocations[netGunsBuilt][1]);
 				if (here.equals(buildFromLocation)) {
 					MapLocation loc = rc.adjacentLocation(here.directionTo(buildAtLocation));
-					if (teamSoup >= RobotType.NET_GUN.cost + RobotType.REFINERY.cost + Communication.REFINERY_BUILT_COST
+					if (teamSoup >= RobotType.NET_GUN.cost + RobotType.REFINERY.cost
 							&& !rc.senseFlooding(loc) && Nav.checkElevation(loc)
 							&& rc.senseRobotAtLocation(loc) == null) {
 						Debug.tlog("Building netgun at " + loc);
@@ -190,7 +190,7 @@ public class BotBuilderMiner extends BotMiner {
 				for(int k = 0; k < 5; k++){
 					MapLocation buildLocation = new MapLocation(HQLocation.x+netGunQuadrant[k][0],HQLocation.y+netGunQuadrant[k][1]);
 					Direction dir = here.directionTo(buildLocation);
-					if (here.isAdjacentTo(buildLocation) && teamSoup >= RobotType.NET_GUN.cost + RobotType.REFINERY.cost + Communication.REFINERY_BUILT_COST
+					if (here.isAdjacentTo(buildLocation) && teamSoup >= RobotType.NET_GUN.cost + RobotType.REFINERY.cost
 							&& !rc.senseFlooding(buildLocation) && Nav.checkElevation(buildLocation)
 							&& rc.senseRobotAtLocation(buildLocation) == null) {
 						Debug.tlog("Building netgun at " + buildLocation);
@@ -224,7 +224,7 @@ public class BotBuilderMiner extends BotMiner {
 				Debug.tlog("build from location " + buildFromLocation);
 				if(here.equals(buildFromLocation)){
 					MapLocation loc = rc.adjacentLocation(here.directionTo(buildAtLocation));
-					if(teamSoup >= RobotType.VAPORATOR.cost + RobotType.REFINERY.cost + Communication.REFINERY_BUILT_COST
+					if(teamSoup >= RobotType.VAPORATOR.cost + RobotType.REFINERY.cost
 							&& !rc.senseFlooding(loc) && Nav.checkElevation(loc)
 							&& rc.senseRobotAtLocation(loc) == null) {
 						Debug.tlog("Building vaporator at " + loc);
@@ -253,7 +253,7 @@ public class BotBuilderMiner extends BotMiner {
 					for(int dy = -2; dy <= 2; dy++){
 						MapLocation buildLocation = new MapLocation(HQLocation.x + dx, HQLocation.y+dy);
 						Direction dir = here.directionTo(buildLocation);
-						if(here.isAdjacentTo(buildLocation) && teamSoup >= RobotType.VAPORATOR.cost + RobotType.REFINERY.cost + Communication.REFINERY_BUILT_COST
+						if(here.isAdjacentTo(buildLocation) && teamSoup >= RobotType.VAPORATOR.cost + RobotType.REFINERY.cost
 								&& !rc.senseFlooding(buildLocation) && Nav.checkElevation(buildLocation)
 								&& rc.senseRobotAtLocation(buildLocation) == null) {
 							Debug.tlog("Building vaporator at " + buildLocation);
@@ -273,7 +273,7 @@ public class BotBuilderMiner extends BotMiner {
 				}
 				if(!built){
 					Debug.ttlog("Vaporator Not Built");
-					if(teamSoup >= RobotType.VAPORATOR.cost + RobotType.REFINERY.cost + Communication.REFINERY_BUILT_COST) {
+					if(teamSoup >= RobotType.VAPORATOR.cost + RobotType.REFINERY.cost) {
 						moveLog(HQLocation);
 					}
 				}

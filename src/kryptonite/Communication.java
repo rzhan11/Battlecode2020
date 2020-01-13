@@ -22,9 +22,6 @@ public class Communication extends Globals {
 	final public static int ENEMY_HQ_LOCATION_SIGNAL = 11;
 	final public static int LARGE_WALL_FULL_SIGNAL = 12;
 
-	// the cost of each of the transaction signals
-	final public static int REFINERY_BUILT_COST = 1;
-
 	// used to alter our own data
 	public static int secretKey;
 	public static int[] secretXORKeys = {0B01011011101111011111011111101111,
@@ -315,12 +312,12 @@ message[3] = y coordinate of our HQ
 		message[3] = refineryLocation.y;
 
 		xorMessage(message);
-		if (teamSoup >= REFINERY_BUILT_COST) {
-			rc.submitTransaction(message, REFINERY_BUILT_COST);
+		if (teamSoup >= 1) {
+			rc.submitTransaction(message, 1);
 			teamSoup = rc.getTeamSoup();
 		} else {
 			Debug.tlog("Could not afford transaction");
-			saveUnsentTransaction(message, REFINERY_BUILT_COST);
+			saveUnsentTransaction(message, 1);
 		}
 	}
 

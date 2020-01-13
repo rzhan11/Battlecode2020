@@ -27,7 +27,7 @@ public class BotDesignSchool extends Globals {
 		if (landscapersMade < landscaperCheckpoints[0]) {
 			Debug.tlog("Landscaper checkpoint 0 not reached");
 			// leave enough to build a refinery
-			if (teamSoup >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost + Communication.REFINERY_BUILT_COST) {
+			if (teamSoup >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost) {
 				Debug.tlog("Trying to build landscaper");
 				boolean didBuild = tryBuild(RobotType.LANDSCAPER);
 				if (didBuild) {
@@ -51,7 +51,7 @@ public class BotDesignSchool extends Globals {
 
 		// next 24 landscapers built after the 8 net guns 12 drones and 4 vaporators built
 		if (landscapersMade < landscaperCheckpoints[1]) {
-			if (teamSoup >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost + Communication.REFINERY_BUILT_COST) {
+			if (teamSoup >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost) {
 				Debug.tlog("Trying to build landscaper");
 				boolean didBuild = tryBuild(RobotType.LANDSCAPER);
 				if (didBuild) {
