@@ -65,10 +65,6 @@ public class BotMiner extends Globals {
 					Globals.update();
 				}
 
-				/*
-				Skip the normal turn() actions if it is the firstTurn
-				This prevents the miner from exceeding the bytecode limit on the first turn
-				*/
 				if (builderMinerID == rc.getID()) {
 					BotBuilderMiner.turn();
 				} else {

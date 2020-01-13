@@ -19,6 +19,7 @@ public class Communication extends Globals {
 	final public static int VAPORATOR_CHECKPOINT = 8;
 	final public static int NETGUN_CHECKPOINT = 9;
 	final public static int FLOODING_FOUND = 10;
+	final public static int ENEMY_HQ_LOCATION = 11;
 
 	// the cost of each of the transaction signals
 	final public static int REFINERY_BUILT_COST = 1;
@@ -160,6 +161,10 @@ public class Communication extends Globals {
 
 					case FLOODING_FOUND:
 						readTransactionFloodingFound(message, round);
+						break;
+
+					case ENEMY_HQ_LOCATION:
+						readTransactionEnemyHQLocation(message, round);
 						break;
 		        }
 			}
@@ -417,7 +422,7 @@ message[3] = y coordinate of our HQ
 		Debug.tlog("Submitter ID: " + decryptID(message[0]));
 		Debug.tlog("Checkpoint Number " + checkpoint_number);
 		Debug.tlog("Posted round: " + round);
-		BotBuilderMiner.droneCheckpoint = checkpoint_number;
+		BotBuilderMiner.reachedDroneCheckpoint = checkpoint_number;
 	}
 
 	public static void writeTransactionLandscaperCheckpoint(int checkpoint) throws GameActionException{
@@ -443,7 +448,7 @@ message[3] = y coordinate of our HQ
 		Debug.tlog("Submitter ID: " + decryptID(message[0]));
 		Debug.tlog("Posted round: " + round);
 		Debug.tlog("Checkpoint Number " + checkpoint_number);
-		BotBuilderMiner.landscaperCheckpoint = checkpoint_number;
+		BotBuilderMiner.reachedLandscaperCheckpoint = checkpoint_number;
 	}
 
 	public static void writeTransactionVaporatorCheckpoint() throws GameActionException{
@@ -465,7 +470,7 @@ message[3] = y coordinate of our HQ
 		Debug.tlog("Reading 'Vaporator checkpoint'");
 		Debug.tlog("Submitter ID: " + decryptID(message[0]));
 		Debug.tlog("Posted round: " + round);
-		BotFulfillmentCenter.vaporatorCheckpoint = true;
+		BotFulfillmentCenter.reachedVaporatorCheckpoint = true;
 	}
 
 	public static void writeTransactionNetgunCheckpoint() throws GameActionException{
@@ -487,7 +492,7 @@ message[3] = y coordinate of our HQ
 		Debug.tlog("Reading 'Netgun checkpoint'");
 		Debug.tlog("Submitter ID: " + decryptID(message[0]));
 		Debug.tlog("Posted round: " + round);
-		BotDesignSchool.netgunCheckpoint = true;
+		BotDesignSchool.reachedNetgunCheckpoint = true;
 	}
 
 	public static void writeTransactionFloodingFound (MapLocation loc) throws GameActionException{
@@ -497,6 +502,7 @@ message[3] = y coordinate of our HQ
 		message[1] = FLOODING_FOUND;
 		message[2] = loc.x;
 		message[3] = loc.y;
+
 		xorMessage(message);
 		if (teamSoup >= 1) {
 			rc.submitTransaction(message, 1);
@@ -512,6 +518,32 @@ message[3] = y coordinate of our HQ
 		Debug.tlog("Reading transaction for 'Flooding Found'");
 		Debug.tlog("Submitter ID: " + decryptID(message[0]));
 		Debug.tlog("Location: " + BotDeliveryDrone.floodingMemory);
+		Debug.tlog("Posted round: " + round);
+	}
+
+	public static void writeTransactionEnemyHQLocation (MapLocation loc) throws GameActionException{
+		Debug.tlog("Writing transaction for 'Enemy HQ Location'");
+		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
+		message[0] = encryptID(myID);
+		message[1] = ENEMY_HQ_LOCATION;
+		message[2] = loc.x;
+		message[3] = loc.y;
+
+		xorMessage(message);
+		if (teamSoup >= 1) {
+			rc.submitTransaction(message, 1);
+			teamSoup = rc.getTeamSoup();
+		} else {
+			Debug.tlog("Could not afford transaction");
+			saveUnsentTransaction(message, 1);
+		}
+	}
+
+	public static void readTransactionEnemyHQLocation (int[] message, int round) throws GameActionException {
+		BotOffenseDeliveryDrone.enemyHQLocation = new MapLocation(message[2], message[3]);
+		Debug.tlog("Reading transaction for 'Enemy HQ Location'");
+		Debug.tlog("Submitter ID: " + decryptID(message[0]));
+		Debug.tlog("Location: " + BotOffenseDeliveryDrone.enemyHQLocation);
 		Debug.tlog("Posted round: " + round);
 	}
 }

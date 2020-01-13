@@ -22,9 +22,6 @@ public class BotBuilderMiner extends BotMiner {
 
 	private static boolean initialized = false;
 
-	public static int droneCheckpoint = 0;
-	public static int landscaperCheckpoint = 0;
-
 	public static int[] maxNetGuns = {4,8};
 	public static int maxVaporators = 4;
 
@@ -77,7 +74,7 @@ public class BotBuilderMiner extends BotMiner {
 
 		// after the drone checkpoint has been reached, this fragment then builds the designSchool with the same cost requirements
 		// as the fulfillment center
-		else if (droneCheckpoint == 1 && !designSchoolBuilt) {
+		else if (reachedDroneCheckpoint == 0 && !designSchoolBuilt) {
 			if (teamSoup >= RobotType.DESIGN_SCHOOL.cost + RobotType.REFINERY.cost + Communication.REFINERY_BUILT_COST) {
 				// potential bug - what if we are already on the designSchoolLocation?
 				if (here.isAdjacentTo(designSchoolLocation)) {
@@ -104,8 +101,8 @@ public class BotBuilderMiner extends BotMiner {
 			}
 		}
 		// now building the 4 net guns then vaporators then 8 netguns
-		else if (landscaperCheckpoint == 1) {
-			if (netGunsBuilt < maxNetGuns[droneCheckpoint-1]) {
+		else if (reachedLandscaperCheckpoint == 0) {
+			if (netGunsBuilt < maxNetGuns[reachedDroneCheckpoint]) {
 				MapLocation buildFromLocation = new MapLocation(HQLocation.x + dnetGunBuildLocations[netGunsBuilt][0], HQLocation.y + dnetGunBuildLocations[netGunsBuilt][1]);
 				MapLocation buildAtLocation = new MapLocation(HQLocation.x + dnetGunLocations[netGunsBuilt][0], HQLocation.y + dnetGunLocations[netGunsBuilt][1]);
 				if (here.equals(buildFromLocation)) {
@@ -163,8 +160,8 @@ public class BotBuilderMiner extends BotMiner {
 			}
 		}
 
-		else if (landscaperCheckpoint == 2){
-			Debug.tlog("Message Received");
+		else if (reachedLandscaperCheckpoint == 1){
+			Debug.tlog("Landscaper checkpoint eceived");
 		}
 
 		return;

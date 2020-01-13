@@ -72,6 +72,15 @@ public class Globals {
 
 	public static int builderMinerID = -1;
 
+	/*
+	CHECKPOINTS
+	 */
+	public static boolean reachedVaporatorCheckpoint = false;
+	public static boolean reachedNetgunCheckpoint = false;
+	public static int reachedDroneCheckpoint = 0;
+	public static int reachedLandscaperCheckpoint = 0;
+
+
 	public static void init(RobotController theRC) throws GameActionException {
 		rc = theRC;
 
@@ -426,4 +435,28 @@ public class Globals {
 		Globals.update();
 	}
 
+
+	/*
+	Assumes cost and isReady are already checked
+	Tries to build a given robot type in any direction
+	 */
+	public static boolean tryBuild (RobotType rt) throws GameActionException {
+		for (Direction d : directions) {
+			MapLocation loc = rc.adjacentLocation(d);
+			if (!rc.senseFlooding(loc) && Nav.checkElevation(loc) && rc.senseRobotAtLocation(loc) == null) {
+				Debug.ttlog("Location: " + loc);
+				if (rc.isReady()) {
+					rc.buildRobot(rt, d);
+					teamSoup = rc.getTeamSoup();
+					Debug.ttlog("Success");
+					return true;
+				} else {
+					Debug.ttlog("But not ready");
+					return false;
+				}
+			}
+		}
+		Debug.ttlog("No open spots found");
+		return false;
+	}
 }
