@@ -16,6 +16,9 @@ public class BotHQ extends Globals {
 
 	private static boolean madeBuilderMiner = false;
 
+	public static int minerDirectionX = 0;
+	public static int minerDirectionY = 0;
+
 	public static void loop() throws GameActionException {
 		while (true) {
 			try {
@@ -147,19 +150,15 @@ public class BotHQ extends Globals {
 	public static void locateNearbySoup () throws GameActionException {
 		MapLocation[] soups = new MapLocation[senseDirections.length];
 		int size = 0;
+		int minDistance = Integer.MAX_VALUE;
 
-		int totalX = 0;
-		int totalY = 0;
-		int visibleSoup = 0;
 		for (int[] dir: senseDirections) {
 			MapLocation loc = here.translate(dir[0], dir[1]);
 			if (rc.canSenseLocation(loc) && rc.senseSoup(loc) > 0) {
-				totalX += loc.x;
-				totalY += loc.y;
-				visibleSoup += rc.senseSoup(loc);
-
-				soups[size] = loc;
-				size++;
+				if (here.distanceSquaredTo(loc) <= minDistance) {
+					minerDirectionX = dir[0];
+					minerDirectionY = dir[1];
+				}
 			}
 		}
 		if (size == 0) {
