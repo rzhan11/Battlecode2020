@@ -4,6 +4,9 @@ import battlecode.common.*;
 
 public class BotHQ extends Globals {
 
+	final public static int RELAX_LARGE_WALL_FULL_ROUND_NUM = 1000;
+	final public static int RELAX_LARGE_WALL_FULL_AMOUNT = 3;
+
 	private static boolean[] exploredDirections = new boolean[8]; // whether or not a Miner has been sent in this direction
 	private static int explorerMinerCount = 0;
 
@@ -40,20 +43,48 @@ public class BotHQ extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
+		if (!hasLoadedWallInformation && madeBuilderMiner) {
+			loadWallInformation();
+		}
 
-		// try to shoot the closest visible enemy units
-		if(!smallWallComplete) {
-			boolean flag = true;
-			for (int i = 0; i < smallWallLength; i++) {
-				RobotInfo unit = rc.senseRobotAtLocation(smallWall[i]);
-				if(unit == null || !unit.type.isBuilding()) if(rc.senseElevation(smallWall[i]) != smallWallDepth) flag = false;
+		if (hasLoadedWallInformation) {
+			if(!smallWallComplete) {
+				boolean flag = true;
+				for (int i = 0; i < smallWallLength; i++) {
+					RobotInfo unit = rc.senseRobotAtLocation(smallWall[i]);
+					if(unit == null || !unit.type.isBuilding()) if(rc.senseElevation(smallWall[i]) != smallWallDepth) flag = false;
+				}
+				if(flag) {
+					Debug.ttlog("SMALL WALL IS DONE");
+					smallWallComplete = true;
+					Communication.writeTransactionSmallWallComplete();
+				}
 			}
-			if(flag) {
-				Debug.ttlog("THE SMALL WALL IS DONEEEE");
-				Communication.writeTransactionSmallWallComplete();
+
+			if (!largeWallFull) {
+				int count = 0;
+				for (int i = 0; i < largeWallLength; i++) {
+					RobotInfo unit = rc.senseRobotAtLocation(largeWall[i]);
+					if (unit != null && unit.type == RobotType.LANDSCAPER) {
+						count++;
+					}
+				}
+
+				Debug.tlog(count + " vs " + largeWallLength);
+
+				if (count == largeWallLength) {
+					Debug.ttlog("LARGE WALL IS FULL");
+					largeWallFull = true;
+					Communication.writeTransactionLargeWallFull();
+				} else if (count >= largeWallLength - RELAX_LARGE_WALL_FULL_AMOUNT && roundNum >= RELAX_LARGE_WALL_FULL_ROUND_NUM) {
+					Debug.ttlog("LARGE WALL IS ABOUT FULL");
+					largeWallFull = true;
+					Communication.writeTransactionLargeWallFull();
+				}
 			}
 		}
 
+		// try to shoot the closest visible enemy units
 		if (rc.isReady()) {
 			int closestDist = P_INF;
 			int id = -1;
@@ -89,6 +120,7 @@ public class BotHQ extends Globals {
 						RobotInfo ri = rc.senseRobotAtLocation(here.add(directions[k]));
 						//SEND TRANSACTION
 						Communication.writeTransactionBuilderMinerBuilt(ri.ID);
+
 						return;
 					}
 				}

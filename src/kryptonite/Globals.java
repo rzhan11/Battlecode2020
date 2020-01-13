@@ -45,7 +45,6 @@ public class Globals {
 
 	public static boolean firstTurn = true;
 
-	public static boolean smallWallComplete = false;
 	public static int roundNum;
 	public static int teamSoup;
 
@@ -312,6 +311,8 @@ public class Globals {
 	}
 
 	// information about digLocations
+	public static boolean hasLoadedWallInformation = false;
+
 	public static MapLocation[] innerDigLocations;
 	public static boolean[] innerDigLocationsOccupiedMemory; // the last time this digLocation was visible, was it occupied?
 	public static int innerDigLocationsLength;
@@ -325,11 +326,13 @@ public class Globals {
 	public static int smallWallDepth; // HQElevation + 3, set in the readTransactionHQFirstTurn
 	public static MapLocation[] smallWall;
 	public static int smallWallLength;
+	public static boolean smallWallComplete = false;
 
 	public static int largeWallRingRadius = 4;
 	public static int largeWallRingSize = 2 * largeWallRingRadius + 1;
 	public static MapLocation[] largeWall;
 	public static int largeWallLength;
+	public static boolean largeWallFull = false;
 
 	/*
 	Loads wall information into variables
@@ -441,6 +444,8 @@ public class Globals {
 
 		Globals.endTurn(true);
 		Globals.update();
+
+		hasLoadedWallInformation = true;
 	}
 
 

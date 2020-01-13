@@ -47,7 +47,7 @@ public class BotDeliveryDrone extends Globals {
 					loadWallInformation();
 				}
 
-				if (roundNum >= OFFENSE_DRONE_TRIGGER_ROUND) {
+				if (largeWallFull) {
 					isOffenseDrone = true;
 				}
 

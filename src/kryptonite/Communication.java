@@ -14,12 +14,13 @@ public class Communication extends Globals {
 	final public static int SYMMETRY_MINER_BUILT_SIGNAL = 3;
 	final public static int BUILDER_MINER_BUILT_SIGNAL = 4;
 	final public static int SMALL_WALL_BUILD_SIGNAL = 5;
-	final public static int DRONE_CHECKPOINT = 6;
-	final public static int LANDSCAPER_CHECKPOINT = 7;
-	final public static int VAPORATOR_CHECKPOINT = 8;
-	final public static int NETGUN_CHECKPOINT = 9;
-	final public static int FLOODING_FOUND = 10;
-	final public static int ENEMY_HQ_LOCATION = 11;
+	final public static int DRONE_CHECKPOINT_SIGNAL = 6;
+	final public static int LANDSCAPER_CHECKPOINT_SIGNAL = 7;
+	final public static int VAPORATOR_CHECKPOINT_SIGNAL = 8;
+	final public static int NETGUN_CHECKPOINT_SIGNAL = 9;
+	final public static int FLOODING_FOUND_SIGNAL = 10;
+	final public static int ENEMY_HQ_LOCATION_SIGNAL = 11;
+	final public static int LARGE_WALL_FULL_SIGNAL = 12;
 
 	// the cost of each of the transaction signals
 	final public static int REFINERY_BUILT_COST = 1;
@@ -143,28 +144,32 @@ public class Communication extends Globals {
 						readTransactionSmallWallComplete(message, round);
 						break;
 
-					case DRONE_CHECKPOINT:
+					case DRONE_CHECKPOINT_SIGNAL:
 						readTransactionDroneCheckpoint(message, round);
 						break;
 
-					case LANDSCAPER_CHECKPOINT:
+					case LANDSCAPER_CHECKPOINT_SIGNAL:
 						readTransactionLandscaperCheckpoint(message, round);
 						break;
 
-					case VAPORATOR_CHECKPOINT:
+					case VAPORATOR_CHECKPOINT_SIGNAL:
 						readTransactionVaporatorCheckpoint(message, round);
 						break;
 
-					case NETGUN_CHECKPOINT:
+					case NETGUN_CHECKPOINT_SIGNAL:
 						readTransactionNetgunCheckpoint(message, round);
 						break;
 
-					case FLOODING_FOUND:
+					case FLOODING_FOUND_SIGNAL:
 						readTransactionFloodingFound(message, round);
 						break;
 
-					case ENEMY_HQ_LOCATION:
+					case ENEMY_HQ_LOCATION_SIGNAL:
 						readTransactionEnemyHQLocation(message, round);
+						break;
+
+					case LARGE_WALL_FULL_SIGNAL:
+						readTransactionLargeWallFull(message, round);
 						break;
 		        }
 			}
@@ -406,7 +411,7 @@ message[3] = y coordinate of our HQ
 		Debug.tlog("Writing transaction for drone checkpoint " + checkpoint );
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
-		message[1] = DRONE_CHECKPOINT;
+		message[1] = DRONE_CHECKPOINT_SIGNAL;
 		message[2] = checkpoint;
 
 		xorMessage(message);
@@ -437,7 +442,7 @@ message[3] = y coordinate of our HQ
 		Debug.tlog("Writing transaction for landscaper checkpoint " + checkpoint);
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
-		message[1] = LANDSCAPER_CHECKPOINT;
+		message[1] = LANDSCAPER_CHECKPOINT_SIGNAL;
 		message[2] = checkpoint;
 		xorMessage(message);
 		if (teamSoup >= 1) {
@@ -467,7 +472,7 @@ message[3] = y coordinate of our HQ
 		Debug.tlog("Writing transaction for vaporator checkpoint");
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
-		message[1] = VAPORATOR_CHECKPOINT;
+		message[1] = VAPORATOR_CHECKPOINT_SIGNAL;
 		xorMessage(message);
 		if (teamSoup >= 1) {
 			rc.submitTransaction(message, 1);
@@ -493,7 +498,7 @@ message[3] = y coordinate of our HQ
 		Debug.tlog("Writing transaction for netgun checkpoint");
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
-		message[1] = NETGUN_CHECKPOINT;
+		message[1] = NETGUN_CHECKPOINT_SIGNAL;
 		xorMessage(message);
 		if (teamSoup >= 1) {
 			rc.submitTransaction(message, 1);
@@ -520,7 +525,7 @@ message[3] = y coordinate of our HQ
 		Debug.tlog("Writing transaction for 'Flooding Found'");
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
-		message[1] = FLOODING_FOUND;
+		message[1] = FLOODING_FOUND_SIGNAL;
 		message[2] = loc.x;
 		message[3] = loc.y;
 
@@ -551,7 +556,7 @@ message[3] = y coordinate of our HQ
 		Debug.tlog("Writing transaction for 'Enemy HQ Location'");
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
-		message[1] = ENEMY_HQ_LOCATION;
+		message[1] = ENEMY_HQ_LOCATION_SIGNAL;
 		message[2] = symmetryIndex;
 		message[3] = exists;
 
@@ -574,6 +579,33 @@ message[3] = y coordinate of our HQ
 		Debug.tlog("Submitter ID: " + decryptID(message[0]));
 		Debug.tlog("Location: " + symmetryHQLocations[message[2]]);
 		Debug.tlog("Exists: " + BotOffenseDeliveryDrone.isSymmetry[message[2]]);
+		Debug.tlog("Posted round: " + round);
+	}
+
+	/*
+	none
+
+	 */
+	public static void writeTransactionLargeWallFull () throws GameActionException{
+		Debug.tlog("Writing transaction for 'Large Wall Full'");
+		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
+		message[0] = encryptID(myID);
+		message[1] = LARGE_WALL_FULL_SIGNAL;
+
+		xorMessage(message);
+		if (teamSoup >= 1) {
+			rc.submitTransaction(message, 1);
+			teamSoup = rc.getTeamSoup();
+		} else {
+			Debug.tlog("Could not afford transaction");
+			saveUnsentTransaction(message, 1);
+		}
+	}
+
+	public static void readTransactionLargeWallFull (int[] message, int round) throws GameActionException {
+		largeWallFull = true;
+		Debug.tlog("Reading transaction for 'Large Wall Full'");
+		Debug.tlog("Submitter ID: " + decryptID(message[0]));
 		Debug.tlog("Posted round: " + round);
 	}
 }
