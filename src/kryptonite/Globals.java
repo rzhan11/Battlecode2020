@@ -343,7 +343,7 @@ public class Globals {
 	public static int smallWallDepth; // HQElevation + 3, set in the readTransactionHQFirstTurn
 	public static MapLocation[] smallWall;
 	public static int smallWallLength;
-	public static boolean smallWallComplete = false;
+	public static boolean smallWallFinished = false;
 
 	public static int largeWallRingRadius = 4;
 	public static int largeWallRingSize = 2 * largeWallRingRadius + 1;

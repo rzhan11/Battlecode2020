@@ -30,7 +30,6 @@ public class BotLandscaper extends Globals {
 							break;
 						}
 					}
-//					if(rc.getRoundNum() >= 500) smallWallComplete = true;
 					// finds spots that can be used for digging
 					allDigLocations = new MapLocation[50];
 					MapLocation templ = HQLocation.translate(5,5);
@@ -63,7 +62,9 @@ public class BotLandscaper extends Globals {
 
 	public static void turn() throws GameActionException {
 
-		Debug.tlog("smallWallCompleted " + smallWallCompleted);
+		if(rc.getRoundNum() >= 500) smallWallFinished = true;
+
+		Debug.tlog("smallWallFinished " + smallWallFinished);
 		Debug.tlog("largeWallFull " + largeWallFull);
 
 		if(!rc.isReady()) return;
@@ -107,7 +108,7 @@ public class BotLandscaper extends Globals {
 			}
 
 			// If the First Wall isn't Complete and you can do stuff in your current position, do it
-			if (!smallWallComplete) {
+			if (!smallWallFinished) {
 				// Update smallWallCompleted Array
 				for (Direction d : Direction.allDirections()) {
 					MapLocation tempLoc = here.add(d);

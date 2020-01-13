@@ -62,27 +62,31 @@ public class BotBuilderMiner extends BotMiner {
 
 				//find a spot in the 5x5 where it can build fulfillment center
 				boolean built = false;
-				for(int dx = -2; dx <= 2; dx++){
-					for(int dy = -2; dy <= 2; dy++){
-						MapLocation buildLocation = new MapLocation(HQLocation.x + dx, HQLocation.y+dy);
-						// forces it to be on 5x5 ring
-						if (maxXYDistance(HQLocation, buildLocation) != 2) {
-							continue;
-						}
-						Direction dir = here.directionTo(buildLocation);
-						if(rc.canBuildRobot(RobotType.FULFILLMENT_CENTER,dir)){
-							Actions.doBuildRobot(RobotType.FULFILLMENT_CENTER,dir);
-							built = true;
-							teamSoup = rc.getTeamSoup();
-							fulfillmentCenterBuilt = true;
-							Debug.ttlog("Fulfillment Center Built");
-							return;
-						}
+				for (Direction dir: directions) {
+					MapLocation buildLocation = rc.adjacentLocation(dir);
+					// forces it to be on 5x5 ring
+					if (maxXYDistance(HQLocation, buildLocation) != 2) {
+						continue;
+					}
+					Debug.tlog("working " + buildLocation);
+					if(rc.canBuildRobot(RobotType.FULFILLMENT_CENTER,dir)){
+						Actions.doBuildRobot(RobotType.FULFILLMENT_CENTER,dir);
+						built = true;
+						teamSoup = rc.getTeamSoup();
+						fulfillmentCenterBuilt = true;
+						Debug.ttlog("Fulfillment Center Built");
+						return;
 					}
 				}
 				if(!built){
 					Debug.ttlog("Fulfillment Center Not Built");
-					moveLog(HQLocation);
+
+					int dx = HQLocation.x - here.x;
+					int dy = HQLocation.y - here.y;
+					MapLocation reflectLoc = new MapLocation(HQLocation.x + dx, HQLocation.y + dy);
+
+					Debug.tlog("Going to reflection at " + reflectLoc);
+					moveLog(reflectLoc);
 				}
 			} else {
 				Debug.tlog("Not enough soup for Fulfillment Center + Refinery");
@@ -90,8 +94,7 @@ public class BotBuilderMiner extends BotMiner {
 			return;
 		}
 
-		// after the drone checkpoint has been reached, this fragment then builds the designSchool with the same cost requirements
-		// as the fulfillment center
+		// after the drone checkpoint has been reached, this fragment then builds the designSchool with the same cost requirements as the fulfillment center
 		if (!designSchoolBuilt) {
 			Debug.tlog("Trying for designSchool");
 			if (reachedDroneCheckpoint == 0) {
@@ -99,27 +102,31 @@ public class BotBuilderMiner extends BotMiner {
 					// potential bug - what if we are already on the designSchoolLocation?
 					//find a spot in the 5x5 where it can build fulfillment center
 					boolean built = false;
-					for(int dx = -2; dx <= 2; dx++){
-						for(int dy = -2; dy <= 2; dy++){
-							MapLocation buildLocation = new MapLocation(HQLocation.x + dx, HQLocation.y+dy);
-							// forces it to be on 5x5 ring
-							if (maxXYDistance(HQLocation, buildLocation) != 2) {
-								continue;
-							}
-							Direction dir = here.directionTo(buildLocation);
-							if(rc.canBuildRobot(RobotType.DESIGN_SCHOOL,dir)){
-								Actions.doBuildRobot(RobotType.DESIGN_SCHOOL,dir);
-								built = true;
-								teamSoup = rc.getTeamSoup();
-								designSchoolBuilt = true;
-								Debug.ttlog("Design School Built");
-								return;
-							}
+					for (Direction dir: directions) {
+						MapLocation buildLocation = rc.adjacentLocation(dir);
+						// forces it to be on 5x5 ring
+						if (maxXYDistance(HQLocation, buildLocation) != 2) {
+							continue;
+						}
+						Debug.tlog("working " + buildLocation);
+						if(rc.canBuildRobot(RobotType.DESIGN_SCHOOL,dir)){
+							Actions.doBuildRobot(RobotType.DESIGN_SCHOOL,dir);
+							built = true;
+							teamSoup = rc.getTeamSoup();
+							designSchoolBuilt = true;
+							Debug.ttlog("Design School Built");
+							return;
 						}
 					}
 					if(!built){
 						Debug.ttlog("Design School Not Built");
-						moveLog(HQLocation);
+
+						int dx = HQLocation.x - here.x;
+						int dy = HQLocation.y - here.y;
+						MapLocation reflectLoc = new MapLocation(HQLocation.x + dx, HQLocation.y + dy);
+
+						Debug.tlog("Going to reflection at " + reflectLoc);
+						moveLog(reflectLoc);
 					}
 				} else {
 					Debug.tlog("Not enough soup for Design School + Refinery");

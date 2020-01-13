@@ -62,16 +62,16 @@ public class BotHQ extends Globals {
 			}
 		}
 		if (hasLoadedWallInformation) {
-			if(!smallWallComplete) {
+			if(!smallWallFinished) {
 				boolean canSeeAll = true;
-				smallWallComplete = true; // temporary flag, will be set to false if not valid
+				smallWallFinished = true; // temporary flag, will be set to false if not valid
 
 				for (int i = 0; i < smallWallLength; i++) {
 					if (rc.canSenseLocation(smallWall[i])) {
 						RobotInfo unit = rc.senseRobotAtLocation(smallWall[i]);
 						if(unit == null || !unit.type.isBuilding()) {
 							if(rc.senseElevation(smallWall[i]) != smallWallDepth) {
-								smallWallComplete = false;
+								smallWallFinished = false;
 								Debug.tlog("smallWall not complete at " + smallWall[i]);
 								break;
 							}
@@ -85,7 +85,7 @@ public class BotHQ extends Globals {
 				if (!canSeeAll) {
 					Debug.tlog("Cannot see all of small wall");
 				} else {
-					if(smallWallComplete) {
+					if(smallWallFinished) {
 						Debug.ttlog("SMALL WALL IS DONE");
 						Communication.writeTransactionSmallWallComplete();
 					}

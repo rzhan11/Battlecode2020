@@ -279,7 +279,7 @@ message[3] = y coordinate of our HQ
 
 	public static void readTransactionSmallWallComplete (int[] message, int round) {
 		Debug.tlog("Reading 'Small Wall Complete' transaction");
-		smallWallComplete = true;
+		smallWallFinished = true;
 		Debug.ttlog("Submitter ID: " + decryptID(message[0]));
 		Debug.ttlog("Posted round: " + round);
 	}
