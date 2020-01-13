@@ -50,37 +50,56 @@ public class BotHQ extends Globals {
 
 		if (hasLoadedWallInformation) {
 			if(!smallWallComplete) {
+				boolean canSeeAll = true;
 				boolean flag = true;
 				for (int i = 0; i < smallWallLength; i++) {
-					RobotInfo unit = rc.senseRobotAtLocation(smallWall[i]);
-					if(unit == null || !unit.type.isBuilding()) if(rc.senseElevation(smallWall[i]) != smallWallDepth) flag = false;
+					if (rc.canSenseLocation(smallWall[i])) {
+						RobotInfo unit = rc.senseRobotAtLocation(smallWall[i]);
+						if(unit == null || !unit.type.isBuilding()) if(rc.senseElevation(smallWall[i]) != smallWallDepth) flag = false;
+					} else { // if cannot see one of the walls, do not mark as complete
+						canSeeAll = false;
+					}
 				}
-				if(flag) {
-					Debug.ttlog("SMALL WALL IS DONE");
-					smallWallComplete = true;
-					Communication.writeTransactionSmallWallComplete();
+
+				if (!canSeeAll) {
+					Debug.tlog("Cannot see all of large wall");
+				} else {
+					if(flag) {
+						Debug.ttlog("SMALL WALL IS DONE");
+						smallWallComplete = true;
+						Communication.writeTransactionSmallWallComplete();
+					}
 				}
+
 			}
 
 			if (!largeWallFull) {
+				boolean canSeeAll = true;
 				int count = 0;
 				for (int i = 0; i < largeWallLength; i++) {
-					RobotInfo unit = rc.senseRobotAtLocation(largeWall[i]);
-					if (unit != null && unit.type == RobotType.LANDSCAPER) {
-						count++;
+					if (rc.canSenseLocation(largeWall[i])) {
+						RobotInfo unit = rc.senseRobotAtLocation(largeWall[i]);
+						if (unit != null && unit.type == RobotType.LANDSCAPER) {
+							count++;
+						}
+					} else {
+						canSeeAll = false;
 					}
 				}
 
 				Debug.tlog("Large wall full: " + count + " / " + largeWallLength);
-
-				if (count == largeWallLength) {
-					Debug.ttlog("LARGE WALL IS FULL");
-					largeWallFull = true;
-					Communication.writeTransactionLargeWallFull();
-				} else if (count >= largeWallLength - RELAX_LARGE_WALL_FULL_AMOUNT && roundNum >= RELAX_LARGE_WALL_FULL_ROUND_NUM) {
-					Debug.ttlog("LARGE WALL IS ABOUT FULL");
-					largeWallFull = true;
-					Communication.writeTransactionLargeWallFull();
+				if (!canSeeAll) {
+					Debug.tlog("Cannot see all of large wall");
+				} else {
+					if (count == largeWallLength) {
+						Debug.ttlog("LARGE WALL IS FULL");
+						largeWallFull = true;
+						Communication.writeTransactionLargeWallFull();
+					} else if (count >= largeWallLength - RELAX_LARGE_WALL_FULL_AMOUNT && roundNum >= RELAX_LARGE_WALL_FULL_ROUND_NUM) {
+						Debug.ttlog("LARGE WALL IS ABOUT FULL");
+						largeWallFull = true;
+						Communication.writeTransactionLargeWallFull();
+					}
 				}
 			}
 		}
