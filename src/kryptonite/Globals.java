@@ -480,8 +480,8 @@ public class Globals {
 	Assumes cost and isReady are already checked
 	Tries to build a given robot type in any direction
 	 */
-	public static boolean tryBuild (RobotType rt) throws GameActionException {
-		for (Direction d : directions) {
+	public static boolean tryBuild (RobotType rt, Direction[] dir) throws GameActionException {
+		for (Direction d : dir) {
 			MapLocation loc = rc.adjacentLocation(d);
 			if (!rc.senseFlooding(loc) && Nav.checkElevation(loc) && rc.senseRobotAtLocation(loc) == null) {
 				Debug.ttlog("Location: " + loc);
