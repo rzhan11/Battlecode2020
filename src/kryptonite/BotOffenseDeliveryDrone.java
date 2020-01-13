@@ -20,7 +20,7 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
     public static void init() throws GameActionException {
         symmetryHQLocationsIndex = myID % symmetryHQLocations.length;
         exploreSymmetryLocation = symmetryHQLocations[symmetryHQLocationsIndex];
-        Debug.tlog("Initial exploreEymmetryLocation: " + exploreSymmetryLocation);
+        Debug.tlog("Initial exploreSymmetryLocation: " + exploreSymmetryLocation);
 
         initialized = true;
     }

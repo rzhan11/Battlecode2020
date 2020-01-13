@@ -196,7 +196,7 @@ public class BotMiner extends Globals {
 				// all conditions for building refinery have been met
 				Debug.tlog("Building refinery at " + buildRefineryLocation);
 				if (rc.isReady()) {
-					rc.buildRobot(RobotType.REFINERY, dir);
+					Actions.doBuildRobot(RobotType.REFINERY, dir);
 					teamSoup = rc.getTeamSoup();
 
 					Debug.ttlog("Success");

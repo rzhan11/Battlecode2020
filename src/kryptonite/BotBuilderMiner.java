@@ -59,7 +59,7 @@ public class BotBuilderMiner extends BotMiner {
 				if (!rc.senseFlooding(loc) && Nav.checkElevation(loc) && rc.senseRobotAtLocation(loc) == null) {
 					Debug.tlog("Building fulfillment center at " + loc);
 					if (rc.isReady()) {
-						rc.buildRobot(RobotType.FULFILLMENT_CENTER, dir);
+						Actions.doBuildRobot(RobotType.FULFILLMENT_CENTER, dir);
 						teamSoup = rc.getTeamSoup();
 						fulfillmentCenterBuilt = true;
 						Debug.ttlog("Success");
@@ -83,7 +83,7 @@ public class BotBuilderMiner extends BotMiner {
 					MapLocation buildLocation = new MapLocation(HQLocation.x + dx, HQLocation.y+dy);
 					Direction dir = here.directionTo(buildLocation);
 					if(rc.canBuildRobot(RobotType.FULFILLMENT_CENTER,dir)){
-						rc.buildRobot(RobotType.FULFILLMENT_CENTER,dir);
+						Actions.doBuildRobot(RobotType.FULFILLMENT_CENTER,dir);
 						built = true;
 						teamSoup = rc.getTeamSoup();
 						fulfillmentCenterBuilt = true;
@@ -111,7 +111,7 @@ public class BotBuilderMiner extends BotMiner {
 					if (!rc.senseFlooding(loc) && Nav.checkElevation(loc) && rc.senseRobotAtLocation(loc) == null) {
 						Debug.tlog("Building design school at " + loc);
 						if (rc.isReady()) {
-							rc.buildRobot(RobotType.DESIGN_SCHOOL, dir);
+							Actions.doBuildRobot(RobotType.DESIGN_SCHOOL, dir);
 							teamSoup = rc.getTeamSoup();
 							designSchoolBuilt = true;
 							Debug.ttlog("Success");
@@ -133,7 +133,7 @@ public class BotBuilderMiner extends BotMiner {
 						MapLocation buildLocation = new MapLocation(HQLocation.x + dx, HQLocation.y+dy);
 						Direction dir = here.directionTo(buildLocation);
 						if(rc.canBuildRobot(RobotType.DESIGN_SCHOOL,dir)){
-							rc.buildRobot(RobotType.DESIGN_SCHOOL,dir);
+							Actions.doBuildRobot(RobotType.DESIGN_SCHOOL,dir);
 							built = true;
 							teamSoup = rc.getTeamSoup();
 							designSchoolBuilt = true;
@@ -167,7 +167,7 @@ public class BotBuilderMiner extends BotMiner {
 							&& rc.senseRobotAtLocation(loc) == null) {
 						Debug.tlog("Building netgun at " + loc);
 						if (rc.isReady()) {
-							rc.buildRobot(RobotType.NET_GUN, here.directionTo(buildAtLocation));
+							Actions.doBuildRobot(RobotType.NET_GUN, here.directionTo(buildAtLocation));
 							teamSoup = rc.getTeamSoup();
 							netGunsBuilt++;
 							if (netGunsBuilt >= maxNetGuns[1]) {
@@ -195,7 +195,7 @@ public class BotBuilderMiner extends BotMiner {
 							&& rc.senseRobotAtLocation(buildLocation) == null) {
 						Debug.tlog("Building netgun at " + buildLocation);
 						if (rc.isReady()) {
-							rc.buildRobot(RobotType.NET_GUN, dir);
+							Actions.doBuildRobot(RobotType.NET_GUN, dir);
 							teamSoup = rc.getTeamSoup();
 							netGunsBuilt++;
 							built = true;
@@ -229,7 +229,7 @@ public class BotBuilderMiner extends BotMiner {
 							&& rc.senseRobotAtLocation(loc) == null) {
 						Debug.tlog("Building vaporator at " + loc);
 						if (rc.isReady()) {
-							rc.buildRobot(RobotType.VAPORATOR, here.directionTo(buildAtLocation));
+							Actions.doBuildRobot(RobotType.VAPORATOR, here.directionTo(buildAtLocation));
 							teamSoup = rc.getTeamSoup();
 							vaporatorsBuilt++;
 							if (vaporatorsBuilt >= maxVaporators) {
@@ -258,7 +258,7 @@ public class BotBuilderMiner extends BotMiner {
 								&& rc.senseRobotAtLocation(buildLocation) == null) {
 							Debug.tlog("Building vaporator at " + buildLocation);
 							if (rc.isReady()) {
-								rc.buildRobot(RobotType.VAPORATOR, dir);
+								Actions.doBuildRobot(RobotType.VAPORATOR, dir);
 								built = true;
 								teamSoup = rc.getTeamSoup();
 								vaporatorsBuilt++;
