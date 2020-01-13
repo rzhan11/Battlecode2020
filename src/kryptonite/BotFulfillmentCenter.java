@@ -24,12 +24,14 @@ public class BotFulfillmentCenter extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
+		Direction[] dirToEnemyHQ = getCloseDirections(here.directionTo(symmetryHQLocations[2]));
+
 		if (visibleEnemies != null) {
 			for (RobotInfo ri : visibleEnemies) {
 				if (ri.type == RobotType.LANDSCAPER) {
 					if (teamSoup >= RobotType.DELIVERY_DRONE.cost) {
 						Debug.tlog("Landscapers detected, building drones");
-						boolean didBuild = tryBuild(RobotType.DELIVERY_DRONE);
+						boolean didBuild = tryBuild(RobotType.DELIVERY_DRONE, dirToEnemyHQ);
 						if (didBuild) {
 							dronesMade++;
 							if (dronesMade >= droneCheckpoints[0] && !checkpointSent[0]) {
@@ -52,7 +54,7 @@ public class BotFulfillmentCenter extends Globals {
 			// leave enough to build a refinery
 			if (teamSoup >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost) {
 				Debug.tlog("Trying to build delivery drone");
-				boolean didBuild = tryBuild(RobotType.DELIVERY_DRONE);
+				boolean didBuild = tryBuild(RobotType.DELIVERY_DRONE, dirToEnemyHQ);
 				if (didBuild) {
 					dronesMade++;
 					if (dronesMade >= droneCheckpoints[0] && !checkpointSent[0]) {
@@ -79,7 +81,7 @@ public class BotFulfillmentCenter extends Globals {
 			// leave enough to build a refinery
 			if (teamSoup >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost) {
 				Debug.tlog("Trying to build delivery drone");
-				boolean didBuild = tryBuild(RobotType.DELIVERY_DRONE);
+				boolean didBuild = tryBuild(RobotType.DELIVERY_DRONE, dirToEnemyHQ);
 				if (didBuild) {
 					dronesMade++;
 					if (dronesMade >= droneCheckpoints[1] && !checkpointSent[1]) {

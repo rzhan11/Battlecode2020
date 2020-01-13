@@ -28,7 +28,7 @@ public class BotDesignSchool extends Globals {
 			Debug.tlog("Enemies detected");
 			if (teamSoup >= RobotType.LANDSCAPER.cost) {
 				Debug.tlog("Trying to build protection landscapers");
-				boolean didBuild = tryBuild(RobotType.LANDSCAPER);
+				boolean didBuild = tryBuild(RobotType.LANDSCAPER, directions);
 				if (didBuild) {
 					landscapersMade++;
 					if (landscapersMade >= landscaperCheckpoints[0] && !checkpointReached[0]) {
@@ -48,7 +48,7 @@ public class BotDesignSchool extends Globals {
 			// leave enough to build a refinery
 			if (teamSoup >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost) {
 				Debug.tlog("Trying to build landscaper");
-				boolean didBuild = tryBuild(RobotType.LANDSCAPER);
+				boolean didBuild = tryBuild(RobotType.LANDSCAPER, directions);
 				if (didBuild) {
 					landscapersMade++;
 					if (landscapersMade >= landscaperCheckpoints[0] && !checkpointReached[0]) {
@@ -73,7 +73,7 @@ public class BotDesignSchool extends Globals {
 		if (landscapersMade < landscaperCheckpoints[1]) {
 			if (teamSoup >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost) {
 				Debug.tlog("Trying to build landscaper");
-				boolean didBuild = tryBuild(RobotType.LANDSCAPER);
+				boolean didBuild = tryBuild(RobotType.LANDSCAPER, directions);
 				if (didBuild) {
 					landscapersMade++;
 				}
