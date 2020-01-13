@@ -79,6 +79,16 @@ public class BotMiner extends Globals {
 
 	public static void turn() throws GameActionException {
 
+		if (visibleEnemies.length > 0) {
+			for (RobotInfo ri : visibleEnemies) {
+				if (ri.type == RobotType.LANDSCAPER) {
+					for (Direction dir : directions) {
+						if (rc.senseRobotAtLocation(rc.adjacentLocation(dir)).type == RobotType.HQ)
+							return;
+					}
+				}
+			}
+		}
 		locateSoup();
 		// updates known refineries based on what we can sense this turn
 		locateRefineries();
