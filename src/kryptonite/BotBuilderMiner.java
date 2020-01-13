@@ -64,8 +64,8 @@ public class BotBuilderMiner extends BotMiner {
 				boolean built = false;
 				for (Direction dir: directions) {
 					MapLocation buildLocation = rc.adjacentLocation(dir);
-					// forces it to be on 5x5 ring
-					if (maxXYDistance(HQLocation, buildLocation) != 2) {
+					// forces it to be on 3x3 ring
+					if (maxXYDistance(HQLocation, buildLocation) != 1) {
 						continue;
 					}
 					Debug.tlog("working " + buildLocation);
@@ -80,13 +80,7 @@ public class BotBuilderMiner extends BotMiner {
 				}
 				if(!built){
 					Debug.ttlog("Fulfillment Center Not Built");
-
-					int dx = HQLocation.x - here.x;
-					int dy = HQLocation.y - here.y;
-					MapLocation reflectLoc = new MapLocation(HQLocation.x + dx, HQLocation.y + dy);
-
-					Debug.tlog("Going to reflection at " + reflectLoc);
-					moveLog(reflectLoc);
+					moveLog(HQLocation);
 				}
 			} else {
 				Debug.tlog("Not enough soup for Fulfillment Center + Refinery");
@@ -104,8 +98,8 @@ public class BotBuilderMiner extends BotMiner {
 					boolean built = false;
 					for (Direction dir: directions) {
 						MapLocation buildLocation = rc.adjacentLocation(dir);
-						// forces it to be on 5x5 ring
-						if (maxXYDistance(HQLocation, buildLocation) != 2) {
+						// forces it to be on 3x3 ring
+						if (maxXYDistance(HQLocation, buildLocation) != 1) {
 							continue;
 						}
 						Debug.tlog("working " + buildLocation);
@@ -120,13 +114,7 @@ public class BotBuilderMiner extends BotMiner {
 					}
 					if(!built){
 						Debug.ttlog("Design School Not Built");
-
-						int dx = HQLocation.x - here.x;
-						int dy = HQLocation.y - here.y;
-						MapLocation reflectLoc = new MapLocation(HQLocation.x + dx, HQLocation.y + dy);
-
-						Debug.tlog("Going to reflection at " + reflectLoc);
-						moveLog(reflectLoc);
+						moveLog(HQLocation);
 					}
 				} else {
 					Debug.tlog("Not enough soup for Design School + Refinery");
@@ -155,9 +143,6 @@ public class BotBuilderMiner extends BotMiner {
 							teamSoup = rc.getTeamSoup();
 							netGunsBuilt++;
 							built = true;
-							if (netGunsBuilt >= maxNetGuns[0]) {
-								Communication.writeTransactionNetgunCheckpoint();
-							}
 							Debug.ttlog("Success");
 							return;
 						} else {
@@ -213,7 +198,12 @@ public class BotBuilderMiner extends BotMiner {
 				if (!built) {
 					Debug.ttlog("Vaporator Not Built");
 					if (teamSoup >= RobotType.VAPORATOR.cost + RobotType.REFINERY.cost) {
-						moveLog(HQLocation);
+						int dx = HQLocation.x - here.x;
+						int dy = HQLocation.y - here.y;
+						MapLocation reflectLoc = new MapLocation(HQLocation.x + dx, HQLocation.y + dy);
+
+						Debug.tlog("Going to reflection at " + reflectLoc);
+						moveLog(reflectLoc);
 					}
 				}
 			} else {

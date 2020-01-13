@@ -340,7 +340,7 @@ public class Globals {
 
 	public static int smallWallRingRadius = 3;
 	public static int smallWallRingSize = 2 * smallWallRingRadius + 1;
-	public static int smallWallDepth; // HQElevation + 3, set in the readTransactionHQFirstTurn
+	public static int smallWallDepth; // HQElevation + 1, set in the readTransactionHQFirstTurn
 	public static MapLocation[] smallWall;
 	public static int smallWallLength;
 	public static boolean smallWallFinished = false;
@@ -397,7 +397,7 @@ public class Globals {
 			}
 		}
 		smallWallLength = index;
-		smallWallDepth = HQElevation + 3;
+		smallWallDepth = HQElevation + 1;
 
 		Globals.endTurn(true);
 		Globals.update();
@@ -483,6 +483,8 @@ public class Globals {
 	public static boolean tryBuild (RobotType rt, Direction[] dir) throws GameActionException {
 		for (Direction d : dir) {
 			MapLocation loc = rc.adjacentLocation(d);
+			Debug.tlog("dir " + d);
+			Debug.tlog("loc " + loc);
 			if (!rc.senseFlooding(loc) && Nav.checkElevation(loc) && rc.senseRobotAtLocation(loc) == null) {
 				Debug.ttlog("Location: " + loc);
 				if (rc.isReady()) {

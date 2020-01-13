@@ -29,6 +29,10 @@ public class BotDeliveryDrone extends Globals {
 	public static boolean movingRobotOutwards;
 	public static MapLocation movingOutwardsLocation = null;
 
+	public static MapLocation[] campLocations;
+	public static boolean[] campLocationsOccupiedMemory; // the last time this campLocation was visible, was it occupied?
+	public static int campLocationsLength;
+
 	public static boolean isOffenseDrone = false;
 
 	public static void loop() throws GameActionException {
@@ -38,6 +42,32 @@ public class BotDeliveryDrone extends Globals {
 				if (firstTurn) {
 
 					Nav.isDrone = true;
+
+					Debug.tlog("LOADING CAMP LOCATIONS");
+
+					// determine campLocations
+					int innerRingRadius = smallWallRingRadius;
+					campLocations = new MapLocation[8];
+					campLocationsOccupiedMemory = new boolean[campLocations.length];
+					MapLocation templ = HQLocation.translate(innerRingRadius, innerRingRadius);
+					int index = 0;
+					for(int i = 0; i < innerRingRadius + 1; i++) for(int j = 0; j < innerRingRadius + 1; j++) {
+						MapLocation newl = templ.translate(-2 * i, -2 * j);
+						if(inMap(newl) && !HQLocation.equals(newl)) {
+							if (maxXYDistance(HQLocation, newl) >= innerRingRadius) { // excludes holes inside the 5x5 plot
+								// excludes corners
+								if (HQLocation.distanceSquaredTo(newl) == 18) {
+									continue;
+								}
+								campLocations[index] = newl;
+								index++;
+							}
+						}
+					}
+					campLocationsLength = index;
+
+					Globals.endTurn(true);
+					Globals.update();
 
 					// floodingMemory = new boolean[MAX_MAP_SIZE][MAX_MAP_SIZE];
 					//
@@ -281,7 +311,7 @@ public class BotDeliveryDrone extends Globals {
 			RobotInfo closestAllyInfo = null;
 			for (RobotInfo ri: visibleAllies) {
 				if (isBuilderMiner(ri.ID)) continue;
-				if (canPickUpType(ri.type) && inArray(innerDigLocations, ri.location, innerDigLocationsLength)) {
+				if (canPickUpType(ri.type) && inArray(campLocations, ri.location, campLocationsLength)) {
 					int dist = here.distanceSquaredTo(ri.location);
 					if (dist < closestAllyDist) {
 						closestAllyDist = dist;
@@ -322,7 +352,6 @@ public class BotDeliveryDrone extends Globals {
 
 			// check if adjacent robots are on transport tiles/wall
 			for (RobotInfo ri: adjacentAllies) {
-				if (isBuilderMiner(ri.ID)) continue;
 				boolean result = tryPickUpTransport(ri);
 				if (result) {
 					return;
@@ -333,7 +362,6 @@ public class BotDeliveryDrone extends Globals {
 
 			// try to move towards the closest visible robot that is on transport tiles/wall
 			for (RobotInfo ri: visibleAllies) {
-				if (isBuilderMiner(ri.ID)) continue;
 				if (canPickUpType(ri.type)) {
 					boolean shouldTransport = false;
 
@@ -341,6 +369,7 @@ public class BotDeliveryDrone extends Globals {
 					Direction dirFromHQ = HQLocation.directionTo(ri.location);
 
 					if (curRing == largeWallRingRadius - 1) {
+						if (isBuilderMiner(ri.ID)) continue;
 						// inner transport tile
 						MapLocation wallLoc = ri.location.add(dirFromHQ);
 						if (!rc.canSenseLocation(wallLoc) || !Nav.checkElevation(ri.location, wallLoc)) {
@@ -379,10 +408,10 @@ public class BotDeliveryDrone extends Globals {
 
 			// STATE: no visible, pick-up-able ally robots are on inner/outer transport tiles or wall
 
-			// checks if we are already in an innerDigLocation
+			// checks if we are already in an campLocation
 
-			if (inArray(innerDigLocations, here, innerDigLocationsLength)) {
-				Debug.tlog("Already in an innerDigLocation, just chilling here.");
+			if (inArray(campLocations, here, campLocationsLength)) {
+				Debug.tlog("Already in an campLocation, just chilling here.");
 				return;
 			}
 
@@ -395,13 +424,13 @@ public class BotDeliveryDrone extends Globals {
 			}
 			 */
 
-			// STATE == not in an innerDigLocation
-			MapLocation closestInnerDigLocation = findClosestOpenLocation(innerDigLocations, innerDigLocationsOccupiedMemory, innerDigLocationsLength);
-			if (closestInnerDigLocation != null) {
+			// STATE == not in an campLocation
+			MapLocation closestcampLocation = findClosestOpenLocation(campLocations, campLocationsOccupiedMemory, campLocationsLength);
+			if (closestcampLocation != null) {
 				// go to dig location
-				Debug.tlog("Moving to closestInnerDigLocation at " + closestInnerDigLocation);
+				Debug.tlog("Moving to closestcampLocation at " + closestcampLocation);
 				if (rc.isReady()) {
-					Direction move = Nav.bugNavigate(closestInnerDigLocation);
+					Direction move = Nav.bugNavigate(closestcampLocation);
 					if (move != null) {
 						Debug.ttlog("Moved " + move);
 					} else {
@@ -483,6 +512,7 @@ public class BotDeliveryDrone extends Globals {
 			// if miner is on inner transport tile and is blocked by high elevation wall, move him outwards
 			// if landscaper is on inner transport tile and is blocked by high elevation wall, move onto wall
 			if (curRing == largeWallRingRadius - 1) {
+				if (isBuilderMiner(ri.ID)) return false;
 				MapLocation wallLoc = ri.location.add(dirFromHQ);
 				// if we cannot sense the wallLoc, assume it is high and pick up the robot
 				if (!rc.canSenseLocation(wallLoc) || !Nav.checkElevation(ri.location, wallLoc)) {
@@ -516,12 +546,17 @@ public class BotDeliveryDrone extends Globals {
 					Debug.tlog("Picking up miner on wall at " + ri.location);
 					if (rc.isReady()) {
 						Actions.doPickUpUnit(ri.ID);
-						movingRobotOutwards = true;
-						movingOutwardsLocation = ri.location.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
-						Debug.ttlog("Moving robot outwards to " + movingOutwardsLocation);
-						if (!inMap(movingOutwardsLocation)) {
-							Debug.ttlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
-							movingOutwardsLocation = symmetryHQLocations[0];
+						if (isBuilderMiner(ri.ID)) {
+							movingRobotInwards = true;
+							Debug.ttlog("Moving builder miner inwards from wall");
+						} else {
+							movingRobotOutwards = true;
+							movingOutwardsLocation = ri.location.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
+							Debug.ttlog("Moving robot outwards to " + movingOutwardsLocation);
+							if (!inMap(movingOutwardsLocation)) {
+								Debug.ttlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
+								movingOutwardsLocation = symmetryHQLocations[0];
+							}
 						}
 					} else {
 						Debug.ttlog("But not ready");

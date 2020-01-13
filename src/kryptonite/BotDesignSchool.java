@@ -5,7 +5,7 @@ import battlecode.common.*;
 public class BotDesignSchool extends Globals {
 
 	public static int landscapersMade = 0;
-	public static int[] landscaperCheckpoints = {8, 32};
+	public static int[] landscaperCheckpoints = {31, 32, 48};
 	public static boolean[] checkpointReached = {false, false};
 
 	public static void loop() throws GameActionException {
@@ -45,6 +45,7 @@ public class BotDesignSchool extends Globals {
 		//initial 8 landscapers
 		if (landscapersMade < landscaperCheckpoints[0]) {
 			Debug.tlog("Landscaper checkpoint 0 not reached");
+			Debug.tlog("soup " + teamSoup);
 			// leave enough to build a refinery
 			if (teamSoup >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost) {
 				Debug.tlog("Trying to build landscaper");
@@ -62,7 +63,7 @@ public class BotDesignSchool extends Globals {
 			Debug.tlog("Landscaper checkpoint 0 reached");
 		}
 
-		if (reachedVaporatorCheckpoint) {
+		if (reachedNetgunCheckpoint) {
 			Debug.tlog("Continuing: Vaporator checkpoint reached");
 		} else {
 			Debug.tlog("Returning: Vaporator checkpoint not reached");
@@ -85,6 +86,31 @@ public class BotDesignSchool extends Globals {
 			Debug.tlog("Can't afford landscaper");
 		} else {
 			Debug.tlog("Landscaper checkpoint 1 reached");
+		}
+
+		if (largeWallFull) {
+			Debug.tlog("Continuing: largeWallFull checkpoint reached");
+		} else {
+			Debug.tlog("Returning: largeWallFull checkpoint not reached");
+			return;
+		}
+
+		// next 16 landscapers built after largeWallFull
+		if (landscapersMade < landscaperCheckpoints[2]) {
+			if (teamSoup >= RobotType.LANDSCAPER.cost) {
+				Debug.tlog("Trying to build landscaper");
+				boolean didBuild = tryBuild(RobotType.LANDSCAPER, directions);
+				if (didBuild) {
+					landscapersMade++;
+				}
+				if (landscapersMade >= landscaperCheckpoints[2] && !checkpointReached[1]) {
+					Communication.writeTransactionLandscaperCheckpoint(2);
+					checkpointReached[2] = true;
+				}
+			}
+			Debug.tlog("Can't afford landscaper");
+		} else {
+			Debug.tlog("Landscaper checkpoint 2 reached");
 		}
 
 

@@ -2,6 +2,8 @@ package kryptonite;
 
 import battlecode.common.*;
 
+import java.util.Map;
+
 public class BotLandscaper extends Globals {
 
 
@@ -250,11 +252,14 @@ public class BotLandscaper extends Globals {
 					Debug.ttlog("ON THE WALL");
 					boolean isFlooded = false;
 					Direction inFlood = null;
-					for(Direction d : Direction.allDirections()) {
-						if(rc.senseFlooding(here.add(d)) && maxXYDistance(HQLocation, here.add(d)) <= 4) {
+					for(Direction d : directions) {
+						MapLocation loc = rc.adjacentLocation(d);
+						Debug.tlog("loc " + loc);
+						if(inMap(loc) && rc.senseFlooding(loc) && maxXYDistance(HQLocation, loc) <= 4) {
+							Debug.tlog("yo " + loc);
 							inFlood = d;
 							isFlooded = true;
-							return;
+							break;
 						}
 					}
 
@@ -385,6 +390,7 @@ public class BotLandscaper extends Globals {
 						break;
 					}
 
+					Debug.tlog("hi");
 
 					// STATE == not trying to move
 					// or needs to use dirt to move

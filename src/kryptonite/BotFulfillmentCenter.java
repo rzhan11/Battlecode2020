@@ -5,7 +5,7 @@ import battlecode.common.*;
 public class BotFulfillmentCenter extends Globals {
 
 	public static int dronesMade = 0;
-	public static int[] droneCheckpoints = {6, 8};
+	public static int[] droneCheckpoints = {7, 8};
 	public static boolean[] checkpointSent = {false, false};
 
 	public static void loop() throws GameActionException {
