@@ -363,6 +363,9 @@ public class BotLandscaper extends Globals {
 									continue;
 								}
 								MapLocation loc = rc.adjacentLocation(dir);
+								if (!inMap(loc)) {
+									continue;
+								}
 								// on ring and gets farther from hq
 								if (maxXYDistance(HQLocation, loc) == 4 && HQLocation.distanceSquaredTo(loc) > distToHQ) {
 									if (!rc.senseFlooding(loc) && Nav.checkElevation(loc) && rc.senseRobotAtLocation(loc) == null) {
