@@ -47,6 +47,20 @@ public class BotHQ extends Globals {
 			loadWallInformation();
 		}
 
+		if (visibleEnemies.length > 0) {
+			for (RobotInfo ri : visibleEnemies) {
+				if (ri.type == RobotType.LANDSCAPER && here.distanceSquaredTo(ri.location) < RobotType.MINER.sensorRadiusSquared) {
+					Debug.tlog("Enemy Landscaper detected");
+					if (teamSoup >= RobotType.MINER.cost) {
+						Debug.tlog("Trying to build protection miner");
+						boolean didBuild = tryBuild(RobotType.MINER, directions);
+						if (didBuild) {
+							explorerMinerCount++;
+						}
+					}
+				}
+			}
+		}
 		if (hasLoadedWallInformation) {
 			if(!smallWallComplete) {
 				boolean canSeeAll = true;
