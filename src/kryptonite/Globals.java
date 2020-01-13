@@ -497,6 +497,6 @@ public class Globals {
 		dirs[5] = dirs[3].rotateRight();
 		dirs[6] = dirs[4].rotateLeft();
 		dirs[7] = dir.opposite();;
-		return null;
+		return dirs;
 	}
 }
