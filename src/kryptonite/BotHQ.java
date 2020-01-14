@@ -55,7 +55,7 @@ public class BotHQ extends Globals {
 
 		if (visibleEnemies.length > 0) {
 			for (RobotInfo ri : visibleEnemies) {
-				if (ri.type == RobotType.LANDSCAPER && here.distanceSquaredTo(ri.location) < RobotType.MINER.sensorRadiusSquared) {
+				if (ri.type == RobotType.LANDSCAPER && here.distanceSquaredTo(ri.location) < BLOCK_LANDSCAPER_DIST) {
 					Debug.tlog("Enemy Landscaper detected");
 					if (teamSoup >= RobotType.MINER.cost) {
 						Debug.tlog("Trying to build protection miner");
@@ -194,8 +194,6 @@ public class BotHQ extends Globals {
 	Does not affect HQ yet - Remind Richard
 	*/
 	public static void locateNearbySoup () throws GameActionException {
-		int minDistance = Integer.MAX_VALUE;
-
 		for (int[] dir: senseDirections) {
 			if (actualSensorRadiusSquared < dir[2]) {
 				break;
