@@ -198,12 +198,12 @@ public class Globals {
 	public static void printMyInfo () {
 		if(noTurnLog) return;
 		Debug.log();
-		Debug.log("Robot: " + myType);
-		Debug.log("roundNum: " + roundNum);
-		Debug.log("ID: " + myID);
-		Debug.log("Location: " + here);
-		Debug.log("actualSensorRadiusSquared: " + actualSensorRadiusSquared);
+//		Debug.log("Robot: " + myType);
+//		Debug.log("roundNum: " + roundNum);
+//		Debug.log("ID: " + myID);
+		Debug.log("here: " + here);
 		Debug.log("Cooldown: " + rc.getCooldownTurns());
+		Debug.log("actualSensorRadiusSquared: " + actualSensorRadiusSquared);
 		Debug.log("dynamicCost: " + Communication.dynamicCost);
 		Debug.log();
 		if (myID == builderMinerID) {
@@ -236,14 +236,13 @@ public class Globals {
 				}
 			}
 			if(!noTurnLog) {
-				Debug.tlog("Remaining bytecode: " + Clock.getBytecodesLeft());
-				Debug.tlog("---------------");
+				Debug.log("----------");
 				if (earlyEnd) {
-					Debug.tlog("-----EARLY-----");
+					Debug.log("-EARLY----");
 				}
-				Debug.tlog("---END TURN----");
-				Debug.tlog("---------------");
-				Debug.log();
+				Debug.log("-END TURN-");
+				Debug.log("----------");
+				Debug.tlog("Bytecode: " + Clock.getBytecodesLeft());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

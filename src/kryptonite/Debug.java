@@ -11,7 +11,7 @@ public class Debug extends Globals {
 	*/
 	public static void log () {
 		if (DISPLAY_LOGS) {
-			System.out.println("-");
+			System.out.println("\n");
 		}
 	}
 
@@ -21,7 +21,7 @@ public class Debug extends Globals {
 	*/
 	public static void log (String str) {
 		if (DISPLAY_LOGS) {
-			System.out.println(str);
+			System.out.println("\n" + str);
 		}
 	}
 
@@ -31,7 +31,7 @@ public class Debug extends Globals {
 	*/
 	public static void tlog (String str) {
 		if (DISPLAY_LOGS) {
-			System.out.println("-" + str);
+			System.out.println("\n-" + str);
 		}
 	}
 
@@ -41,39 +41,26 @@ public class Debug extends Globals {
 	*/
 	public static void ttlog (String str) {
 		if (DISPLAY_LOGS) {
-			System.out.println("--" + str);
+			System.out.println("\n--" + str);
 		}
 	}
 
 	/* (Log Important)
-	Always prints a separator line, currently a single dash
 	Ignores the 'DISPLAY_LOGS' flag
 	*/
 	public static void logi () {
-		System.out.println("-");
+		System.out.println("\n");
 	}
 
-	/* (Log Important)
-	Always prints message
-	Ignores the 'DISPLAY_LOGS' flag
-	*/
 	public static void logi (String str) {
-		System.out.println(str);
+		System.out.println("\n" + str);
 	}
 
-	/* (Log Important)
-	Always prints message with a single tab in front
-	Ignores the 'DISPLAY_LOGS' flag
-	*/
 	public static void tlogi (String str) {
-		System.out.println("-" + str);
+		System.out.println("\n-" + str);
 	}
 
-	/* (Log Important)
-	Always prints message with a double tab in front
-	Ignores the 'DISPLAY_LOGS' flag
-	*/
 	public static void ttlogi (String str) {
-		System.out.println("--" + str);
+		System.out.println("\n--" + str);
 	}
 }
