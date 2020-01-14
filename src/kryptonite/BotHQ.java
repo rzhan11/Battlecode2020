@@ -2,6 +2,7 @@ package kryptonite;
 
 import battlecode.common.*;
 
+import static kryptonite.Communication.*;
 import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
@@ -29,12 +30,12 @@ public class BotHQ extends Globals {
 			try {
 				Globals.update();
 				if (firstTurn) {
-					Debug.tlog("Possible enemy HQ locations");
-					Debug.ttlog("" + symmetryHQLocations[0]);
-					Debug.ttlog("" + symmetryHQLocations[1]);
-					Debug.ttlog("" + symmetryHQLocations[2]);
+					log("Possible enemy HQ locations");
+					tlog("" + symmetryHQLocations[0]);
+					tlog("" + symmetryHQLocations[1]);
+					tlog("" + symmetryHQLocations[2]);
 
-					Communication.writeTransactionHQFirstTurn(here);
+					writeTransactionHQFirstTurn(here);
 
 					// finds visible soup locations
 					locateNearbySoup();
@@ -56,9 +57,9 @@ public class BotHQ extends Globals {
 		if (visibleEnemies.length > 0) {
 			for (RobotInfo ri : visibleEnemies) {
 				if (ri.type == RobotType.LANDSCAPER && here.distanceSquaredTo(ri.location) < RobotType.MINER.sensorRadiusSquared) {
-					Debug.tlog("Enemy Landscaper detected");
+					log("Enemy Landscaper detected");
 					if (teamSoup >= RobotType.MINER.cost) {
-						Debug.tlog("Trying to build protection miner");
+						log("Trying to build protection miner");
 						boolean didBuild = tryBuild(RobotType.MINER, directions);
 						if (didBuild) {
 							explorerMinerCount++;
@@ -78,7 +79,7 @@ public class BotHQ extends Globals {
 						if(unit == null || !unit.type.isBuilding()) {
 							if(rc.senseElevation(smallWall[i]) != smallWallDepth) {
 								smallWallFinished = false;
-								Debug.tlog("smallWall not complete at " + smallWall[i]);
+								log("smallWall not complete at " + smallWall[i]);
 								break;
 							}
 						}
@@ -89,11 +90,11 @@ public class BotHQ extends Globals {
 				}
 
 				if (!canSeeAll) {
-					Debug.tlog("Cannot see all of small wall");
+					log("Cannot see all of small wall");
 				} else {
 					if(smallWallFinished) {
-						Debug.ttlog("SMALL WALL IS DONE");
-						Communication.writeTransactionSmallWallComplete();
+						tlog("SMALL WALL IS DONE");
+						writeTransactionSmallWallComplete();
 					}
 				}
 
@@ -114,18 +115,18 @@ public class BotHQ extends Globals {
 					}
 				}
 
-				Debug.tlog("Large wall full: " + count + " / " + largeWallLength);
+				log("Large wall full: " + count + " / " + largeWallLength);
 				if (!canSeeAll) {
-					Debug.tlog("Cannot see all of large wall");
+					log("Cannot see all of large wall");
 				} else {
 					if (count == largeWallLength) {
-						Debug.ttlog("LARGE WALL IS FULL");
+						tlog("LARGE WALL IS FULL");
 						largeWallFull = true;
-						Communication.writeTransactionLargeWallFull();
+						writeTransactionLargeWallFull();
 					} else if (count >= largeWallLength - RELAX_LARGE_WALL_FULL_AMOUNT && roundNum >= RELAX_LARGE_WALL_FULL_ROUND_NUM) {
-						Debug.ttlog("LARGE WALL IS ABOUT FULL");
+						tlog("LARGE WALL IS ABOUT FULL");
 						largeWallFull = true;
-						Communication.writeTransactionLargeWallFull();
+						writeTransactionLargeWallFull();
 					}
 				}
 			}
@@ -166,7 +167,7 @@ public class BotHQ extends Globals {
 						//make transaction
 						RobotInfo ri = rc.senseRobotAtLocation(here.add(directions[k]));
 						//SEND TRANSACTION
-						Communication.writeTransactionBuilderMinerBuilt(ri.ID);
+						writeTransactionBuilderMinerBuilt(ri.ID);
 
 						return;
 					}
@@ -252,7 +253,7 @@ public class BotHQ extends Globals {
 				symmetryMinerCount++;
 
 				RobotInfo ri = rc.senseRobotAtLocation(loc);
-				Communication.writeTransactionSymmetryMinerBuilt(ri.ID, symmetryHQLocations[i]);
+				writeTransactionSymmetryMinerBuilt(ri.ID, symmetryHQLocations[i]);
 				return true;
 			}
 		}

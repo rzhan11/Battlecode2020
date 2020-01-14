@@ -2,17 +2,55 @@ package kryptonite;
 
 import battlecode.common.*;
 
+import static kryptonite.Communication.*;
 import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
 
 public class Debug extends Globals {
 
+	public static boolean SILENCE_LOGS = true;
+	public static boolean SILENCE_INDICATORS = true;
+
+	/*
+	Selectively turn off print logs for certain units
+	NOTE: important messages will still be displayed
+	 */
 	public static boolean isDisplayLogs() {
+		if (SILENCE_LOGS) {
+			return false;
+		}
 		switch (myType) {
 			case DELIVERY_DRONE: return true;
 			case DESIGN_SCHOOL: return true;
 			case FULFILLMENT_CENTER: return true;
+			case HQ: return true;
+			case LANDSCAPER: return false;
+			case MINER:
+				if (isBuilderMiner(myID)) {
+					return true;
+				}
+				return false;
+			case NET_GUN: return false;
+			case REFINERY: return false;
+			case VAPORATOR: return false;
+			default:
+				logi("ERROR: Sanity check failed - unknown class " + myType);
+				return false;
+		}
+	}
+
+	/*
+	Selectively turn off dots and lines for certain units
+	 */
+	public static boolean isDisplayIndicators() {
+		if (SILENCE_INDICATORS) {
+			return false;
+		}
+		switch (myType) {
+			case DELIVERY_DRONE: return false;
+			case DESIGN_SCHOOL: return false;
+			case FULFILLMENT_CENTER: return false;
 			case HQ: return true;
 			case LANDSCAPER: return false;
 			case MINER:
@@ -24,28 +62,7 @@ public class Debug extends Globals {
 			case REFINERY: return false;
 			case VAPORATOR: return false;
 			default:
-				Debug.tlogi("ERROR: Sanity check failed - unknown class " + myType);
-				return false;
-		}
-	}
-
-	public static boolean isDisplayIndicators() {
-		switch (myType) {
-			case DELIVERY_DRONE: return false;
-			case DESIGN_SCHOOL: return false;
-			case FULFILLMENT_CENTER: return false;
-			case HQ: return true;
-			case LANDSCAPER: return false;
-			case MINER:
-				if (isBuilderMiner(myID)) {
-					return false;
-				}
-				return true;
-			case NET_GUN: return false;
-			case REFINERY: return false;
-			case VAPORATOR: return false;
-			default:
-				Debug.tlogi("ERROR: Sanity check failed - unknown class " + myType);
+				logi("ERROR: Sanity check failed - unknown class " + myType);
 				return false;
 		}
 	}

@@ -2,6 +2,7 @@ package kryptonite;
 
 import battlecode.common.*;
 
+import static kryptonite.Communication.*;
 import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
@@ -72,8 +73,8 @@ public class BotLandscaper extends Globals {
 
 		if(rc.getRoundNum() >= 500) smallWallFinished = true;
 
-		Debug.tlog("smallWallFinished " + smallWallFinished);
-		Debug.tlog("largeWallFull " + largeWallFull);
+		log("smallWallFinished " + smallWallFinished);
+		log("largeWallFull " + largeWallFull);
 
 		if(!rc.isReady()) return;
 
@@ -99,13 +100,13 @@ public class BotLandscaper extends Globals {
 			// If in a Dig Spot Place, move to the Outward Radius
 			if (inArray(allDigLocations, here, allDigLocationsLength)) {
 				Direction move = HQLocation.directionTo(here);
-				Debug.ttlog("GOING TO OUTER RING");
+				tlog("GOING TO OUTER RING");
 				landscaperMove(move);
 			}
 
 			// From Richard - added a check for if we are in the inner 3x3 ring
 			if (inArray(allDigLocations, here, allDigLocationsLength) || inMap(HQLocation, here) <= 1) {
-				Debug.ttlog("Trying to move out of 3x3 ring");
+				tlog("Trying to move out of 3x3 ring");
 				for (Direction dir : directions) {
 					MapLocation loc = rc.adjacentLocation(dir);
 					// if the target location is in the 5x5 ring and is not occupied/flooded
@@ -156,16 +157,16 @@ public class BotLandscaper extends Globals {
 						MapLocation moveLoc = here.add(d);
 						if (inArray(allDigLocations, moveLoc, allDigLocationsLength)) {
 							// Go to Outer Ring
-							Debug.ttlog("GOING TO OUTER RING");
+							tlog("GOING TO OUTER RING");
 							Direction move = HQLocation.directionTo(here);
 							landscaperMove(move);
 						} else {
-							Debug.ttlog("ROTATING CLOCKWISE");
+							tlog("ROTATING CLOCKWISE");
 							if (rc.canMove(d)) {
 								Actions.doMove(d);
 							} else if (rc.senseRobotAtLocation(moveLoc) != null) {
 								moveClockwise = false;
-								Debug.ttlog("COLLIDING, SWAPPING DIRECTION");
+								tlog("COLLIDING, SWAPPING DIRECTION");
 							}
 						}
 					} else {
@@ -173,16 +174,16 @@ public class BotLandscaper extends Globals {
 						MapLocation moveLoc = here.add(d);
 						if (inArray(allDigLocations, moveLoc, allDigLocationsLength)) {
 							// Go to Outer Ring
-							Debug.ttlog("GOING TO OUTER RING");
+							tlog("GOING TO OUTER RING");
 							Direction move = HQLocation.directionTo(here);
 							landscaperMove(move);
 						} else {
-							Debug.ttlog("ROTATING COUNTERCLOCKWISE");
+							tlog("ROTATING COUNTERCLOCKWISE");
 							if (rc.canMove(d)) {
 								Actions.doMove(d);
 							} else if (rc.senseRobotAtLocation(moveLoc) != null) {
 								moveClockwise = true;
-								Debug.ttlog("COLLIDING, SWAPPING DIRECTION");
+								tlog("COLLIDING, SWAPPING DIRECTION");
 							}
 						}
 					}
@@ -200,7 +201,7 @@ public class BotLandscaper extends Globals {
 							MapLocation newloc = here.add(d);
 							if (inMap(HQLocation, newloc) == 3) {
 								if (rc.canMove(d)) {
-									Debug.ttlog("MOVING TO 7x7 RING");
+									tlog("MOVING TO 7x7 RING");
 									Actions.doMove(d);
 									return;
 								}
@@ -218,7 +219,7 @@ public class BotLandscaper extends Globals {
 							MapLocation newloc = here.add(d);
 							if (inMap(HQLocation, newloc) == 4) {
 								if (rc.canMove(d)) {
-									Debug.ttlog("MOVING TO 7x7 RING");
+									tlog("MOVING TO 7x7 RING");
 									currentStep = 0;
 									Actions.doMove(d);
 									return;
@@ -256,24 +257,24 @@ public class BotLandscaper extends Globals {
 				}
 				// STATE == on the large wall
 				if (inMap(HQLocation, here) == 4) {
-					Debug.ttlog("ON THE WALL");
+					tlog("ON THE WALL");
 
 					// tries to fill in flooded tiles
 					for(Direction d : directions) {
 						MapLocation loc = rc.adjacentLocation(d);
 						if(inMap(loc) && rc.senseFlooding(loc) && inMap(HQLocation, loc) <= 4) {
-							Debug.tlog("Flooded base tile at " + loc);
+							log("Flooded base tile at " + loc);
 							if (rc.isReady()) {
 								if (rc.getDirtCarrying() == 0) {
-									Debug.ttlog("Digging dirt");
+									tlog("Digging dirt");
 									landscaperDig(2);
 								} else {
-									Debug.ttlog("Depositing dirt");
+									tlog("Depositing dirt");
 									Actions.doDepositDirt(d);
 									depositsWithoutMove++;
 								}
 							} else {
-								Debug.ttlog("But not ready");
+								tlog("But not ready");
 							}
 							return;
 						}
@@ -293,14 +294,14 @@ public class BotLandscaper extends Globals {
 					MapLocation loc_clock2 = loc_clock.add(d_clock2);
 					MapLocation loc_counterclock = here.add(d_counterclock);
 					MapLocation loc_counterclock2 = loc_counterclock.add(d_counterclock2);
-					Debug.ttlog("loc_clock");
-					Debug.ttlog("here: loc_clock");
-					Debug.ttlog("d_cw: " + d_clock);
-					Debug.ttlog("d_ccw: " + d_counterclock);
-					Debug.ttlog("cw1 "+loc_clock);
-					Debug.ttlog("cw2 "+loc_clock2);
-					Debug.ttlog("ccw1 "+loc_counterclock);
-					Debug.ttlog("ccw2 "+loc_counterclock2);
+					tlog("loc_clock");
+					tlog("here: loc_clock");
+					tlog("d_cw: " + d_clock);
+					tlog("d_ccw: " + d_counterclock);
+					tlog("cw1 "+loc_clock);
+					tlog("cw2 "+loc_clock2);
+					tlog("ccw1 "+loc_counterclock);
+					tlog("ccw2 "+loc_counterclock2);
 
 					if (rc.canSenseLocation(loc_clock)
 							&& rc.canSenseLocation(loc_clock2)
@@ -320,10 +321,10 @@ public class BotLandscaper extends Globals {
 						boolean ls_in_counterclock2 = ri_counterclock2 != null && ri_counterclock2.type == RobotType.LANDSCAPER;
 						boolean ls_within_two_counterclock = ls_in_counterclock || ls_in_counterclock2;
 
-						Debug.tlog("ls " + ls_in_clock + " " + ls_in_clock2 + " v " + ls_in_counterclock + " " + ls_in_counterclock2);
+						log("ls " + ls_in_clock + " " + ls_in_clock2 + " v " + ls_in_counterclock + " " + ls_in_counterclock2);
 
 						if (ls_within_two_clock && ls_within_two_counterclock) {
-							Debug.tlog("Standing still");
+							log("Standing still");
 							buildWall();
 							return;
 						}
@@ -331,7 +332,7 @@ public class BotLandscaper extends Globals {
 						if (!ls_within_two_clock && ls_within_two_counterclock) {
 							// surroundings look like (LL)X__ (top of clock)
 							// move clockwise
-							Debug.tlog("MOVING CLOCKWISE IN " + d_clock);
+							log("MOVING CLOCKWISE IN " + d_clock);
 							if (depositsWithoutMove < DEPOSITS_WITHOUT_MOVE_LIMIT) {
 								buildWall();
 								return;
@@ -341,7 +342,7 @@ public class BotLandscaper extends Globals {
 								landscaperWallMove(d_clock);
 								return;
 							} else {
-								Debug.ttlog("But not ready");
+								tlog("But not ready");
 							}
 							return;
 						}
@@ -349,7 +350,7 @@ public class BotLandscaper extends Globals {
 						if (ls_within_two_clock && !ls_within_two_counterclock) {
 							// surroundings look like __X(LL) (top of clock)
 							// move counterclockwise
-							Debug.tlog("MOVING COUNTERCLOCKWISE IN " + d_counterclock);;
+							log("MOVING COUNTERCLOCKWISE IN " + d_counterclock);;
 							if (depositsWithoutMove < DEPOSITS_WITHOUT_MOVE_LIMIT) {
 								buildWall();
 								return;
@@ -359,7 +360,7 @@ public class BotLandscaper extends Globals {
 								landscaperWallMove(d_counterclock);
 								return;
 							} else {
-								Debug.ttlog("But not ready");
+								tlog("But not ready");
 							}
 							return;
 						}
@@ -385,7 +386,7 @@ public class BotLandscaper extends Globals {
 							return;
 						}
 
-						Debug.tlog("ERROR: Sanity check failed - Unknown wall status");
+						log("ERROR: Sanity check failed - Unknown wall status");
 					}
 
 
@@ -552,7 +553,7 @@ public class BotLandscaper extends Globals {
 	private static void buildWall () throws GameActionException {
 		if (rc.isReady()) {
 			if (rc.getDirtCarrying() == 0) {
-				Debug.ttlog("Digging dirt");
+				tlog("Digging dirt");
 				landscaperDig(2);
 			} else {
 				int minDirt = P_INF;
@@ -585,12 +586,12 @@ public class BotLandscaper extends Globals {
 						}
 					}
 				}
-				Debug.ttlog("Depositing dirt in direction " + minDir);
+				tlog("Depositing dirt in direction " + minDir);
 				Actions.doDepositDirt(minDir);
 				depositsWithoutMove++;
 			}
 		} else {
-			Debug.ttlog("But not ready");
+			tlog("But not ready");
 		}
 	}
 }

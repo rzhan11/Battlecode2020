@@ -2,6 +2,7 @@ package kryptonite;
 
 import battlecode.common.*;
 
+import static kryptonite.Communication.*;
 import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
@@ -57,7 +58,8 @@ public class Globals {
 	public static boolean droppedLastTurn = false;
 	public static int lastActiveTurn = 0;
 
-	public static int oldTransactionsIndex = 1;
+	public static int oldBlocksIndex = 1;
+	public static int oldTransactionsIndex = 0;
 
 	public static int builderMinerID = -1;
 
@@ -95,9 +97,9 @@ public class Globals {
 		mapHeight = rc.getMapHeight();
 
 		if (us == Team.A) {
-			Communication.secretKey = 1337;
+			secretKey = 1337;
 		} else {
-			Communication.secretKey = 7331;
+			secretKey = 7331;
 		}
 
 		here = rc.getLocation();
@@ -109,7 +111,7 @@ public class Globals {
 		findHQLocation();
 
 		symmetryHQLocationsIndex = myID % symmetryHQLocations.length;
-		Debug.tlog("Initial exploreSymmetryLocation: " + symmetryHQLocations[symmetryHQLocationsIndex]);
+		log("Initial exploreSymmetryLocation: " + symmetryHQLocations[symmetryHQLocationsIndex]);
 	}
 
 	public static void update() throws GameActionException {
@@ -118,10 +120,10 @@ public class Globals {
 		teamSoup = rc.getTeamSoup();
 
 		if (firstTurn) {
-			Debug.log();
-			Debug.tlog("---------------");
-			Debug.tlog("--FIRST TURN---");
-			Debug.tlog("---------------");
+			log();
+			log("---------------");
+			log("--FIRST TURN---");
+			log("---------------");
 		}
 
 		myElevation = rc.senseElevation(here);
@@ -131,7 +133,7 @@ public class Globals {
 		actualSensorRadiusSquared = rc.getCurrentSensorRadiusSquared();
 		extremePollution = actualSensorRadiusSquared < 2;
 		if (extremePollution) {
-			Debug.tlog("WARNING: Extreme pollution has made actualSensorRadiusSquared < 2, so errors may occur. Ask Richard.");
+			log("WARNING: Extreme pollution has made actualSensorRadiusSquared < 2, so errors may occur. Ask Richard.");
 		}
 
 		printMyInfo();
@@ -148,7 +150,7 @@ public class Globals {
 			droppedLastTurn = false;
 		} else {
 			droppedLastTurn = true;
-			Debug.tlog("Was dropped last turn");
+			log("Was dropped last turn");
 			Nav.bugTracing = false;
 			Nav.bugLastWall = null;
 			Nav.bugClosestDistanceToTarget = P_INF;
@@ -156,11 +158,17 @@ public class Globals {
 
 		// visually checks for enemy HQ location at target explore symmetry point
 
-		Communication.calculateDynamicCost();
+		calculateDynamicCost();
 
-		Debug.tlog("Reading the previous round's Transactions");
-		Communication.readTransactions(roundNum - 1);
-		Debug.tlog("Done reading the previous round's Transactions");
+		if (roundNum > 1) {
+			log("Reading the previous round's transactions");
+			int result = readBlock(roundNum - 1, 0);
+			if (result < 0) {
+				logi("WARNING: Did not fully read the previous round's transactions");
+			} else {
+				log("Done reading the previous round's transactions");
+			}
+		}
 
 		if (symmetryHQLocations == null) {
 			findHQLocation();
@@ -169,7 +177,7 @@ public class Globals {
 		updateSymmetry();
 
 		// tries to submit unsent messages from previous turns
-		Communication.submitUnsentTransactions();
+		submitUnsentTransactions();
 	}
 
 	/*
@@ -179,18 +187,18 @@ public class Globals {
 
 	public static void printMyInfo () {
 		if(noTurnLog) return;
-		Debug.log();
-//		Debug.log("Robot: " + myType);
-//		Debug.log("roundNum: " + roundNum);
-//		Debug.log("ID: " + myID);
-		Debug.log("*Location: " + here);
-		Debug.log("*Cooldown: " + rc.getCooldownTurns());
-		Debug.log("*actualSensorRadiusSquared: " + actualSensorRadiusSquared);
-		Debug.log("*dynamicCost: " + Communication.dynamicCost);
-		Debug.log();
-		if (myID == builderMinerID) {
+		log("------------------------------\n");
+//		log("Robot: " + myType);
+//		log("roundNum: " + roundNum);
+//		log("ID: " + myID);
+		log("*Location: " + here);
+		log("*Cooldown: " + rc.getCooldownTurns());
+		log("*actualSensorRadiusSquared: " + actualSensorRadiusSquared);
+		log("*dynamicCost: " + dynamicCost);
+		log("------------------------------\n");
+		if (isBuilderMiner(myID)) {
 			drawDot(here, BROWN);
-			Debug.log("I am the builder miner");
+			log("I am the builder miner");
 		}
 	}
 
@@ -202,30 +210,30 @@ public class Globals {
 			firstTurn &= earlyEnd; // if early end, do not count as full turn
 			lastActiveTurn = roundNum;
 
-			Communication.readOldTransactions();
+			readOldBlocks();
 			// check if we went over the bytecode limit
 			int endTurn = rc.getRoundNum();
 			if (roundNum != endTurn) {
 				printMyInfo();
-				Debug.tlogi("BYTECODE LIMIT EXCEEDED");
+				logi("BYTECODE LIMIT EXCEEDED");
 				int bytecodeOver = Clock.getBytecodeNum();
 				int turns = endTurn - roundNum;
-				Debug.ttlogi("Overused bytecode: " + (bytecodeOver + (turns - 1) * myType.bytecodeLimit));
-				Debug.ttlogi("Skipped turns: " + turns);
+				tlogi("Overused bytecode: " + (bytecodeOver + (turns - 1) * myType.bytecodeLimit));
+				tlogi("Skipped turns: " + turns);
 
 				// catch up on missed Transactions
 				for (int i = roundNum; i < endTurn; i++) {
-					Communication.readTransactions(i);
+					readBlock(i, 0);
 				}
 			}
 			if(!noTurnLog) {
-				Debug.log("----------");
+				log("------------------------------\n");
 				if (earlyEnd) {
-					Debug.log("-EARLY----");
+					log("EARLY");
 				}
-				Debug.log("-END TURN-");
-				Debug.log("----------");
-				Debug.tlog("Bytecode: " + Clock.getBytecodesLeft());
+				log("END TURN");
+				log("Bytecode left: " + Clock.getBytecodesLeft());
+				log("------------------------------\n");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -240,21 +248,21 @@ public class Globals {
 			HQLocation = here;
 			HQElevation = myElevation;
 		} else {
-			Communication.readTransactions(oldTransactionsIndex);
-			oldTransactionsIndex++;
+			readBlock(oldBlocksIndex, 0);
+			oldBlocksIndex++;
 			while (HQLocation == null) {
-				if (oldTransactionsIndex >= spawnRound) {
-					Debug.tlogi("Cannot find HQLocation");
+				log("Did not find HQLocation in block " + (oldBlocksIndex - 1));
+				if (oldBlocksIndex >= spawnRound) {
 					Globals.endTurn(true);
 					Globals.update();
 				}
-				if (HQLocation == null && isLowBytecodeLimit(myType)) {
-					Debug.tlog("Did not find HQLocation, low bytecode limit");
+				if (isLowBytecodeLimit(myType)) {
+					tlog("Low bytecode limit");
 					Globals.endTurn(true);
 					Globals.update();
 				}
-				Communication.readTransactions(oldTransactionsIndex);
-				oldTransactionsIndex++;
+				readBlock(oldBlocksIndex, 0);
+				oldBlocksIndex++;
 			}
 		}
 
@@ -302,12 +310,12 @@ public class Globals {
 		if (rc.isReady()) {
 			move = Nav.bugNavigate(loc);
 			if (move != null) {
-				Debug.ttlog("Moved " + move);
+				tlog("Moved " + move);
 			} else {
-				Debug.ttlog("But no move found");
+				tlog("But no move found");
 			}
 		} else {
-			Debug.ttlog("But not ready");
+			tlog("But not ready");
 		}
 		return move;
 	}
@@ -324,23 +332,23 @@ public class Globals {
 					enemyHQLocation = loc;
 					isSymmetryHQLocation[i] = 1;
 
-					Debug.tlog("Found enemy HQ at " + enemyHQLocation);
+					log("Found enemy HQ at " + enemyHQLocation);
 
-					Communication.writeTransactionEnemyHQLocation(i, 1);
+					writeTransactionEnemyHQLocation(i, 1);
 				} else {
 					//STATE == enemy NOT FOUND
 
-					Debug.tlog("Denied enemy HQ at " + loc);
+					log("Denied enemy HQ at " + loc);
 					isSymmetryHQLocation[i] = 0;
 
-					Communication.writeTransactionEnemyHQLocation(i, 0);
+					writeTransactionEnemyHQLocation(i, 0);
 				}
 			}
 		}
 
 		checkPossibleSymmetry();
 
-//		Debug.drawLine(here, getSymmetryLocation(), Actions.WHITE);
+//		drawLine(here, getSymmetryLocation(), Actions.WHITE);
 	}
 
 	/*
@@ -354,7 +362,6 @@ public class Globals {
 		int denyCount = 0;
 		int notDenyIndex = -1;
 		for (int i = 0; i < symmetryHQLocations.length; i++) {
-			Debug.tlog("i " + i + " " + isSymmetryHQLocation[i]);
 			if (isSymmetryHQLocation[i] == 0) {
 				denyCount++;
 			} else {
@@ -364,14 +371,14 @@ public class Globals {
 		if (denyCount == 2) {
 			enemyHQLocation = symmetryHQLocations[notDenyIndex];
 			isSymmetryHQLocation[notDenyIndex] = 1;
-			Debug.tlog("Determined through 2 denials that enemy HQ is at " + enemyHQLocation);
+			log("Determined through 2 denials that enemy HQ is at " + enemyHQLocation);
 			return;
 		}
 
 		while (isSymmetryHQLocation[symmetryHQLocationsIndex] == 0) {
 			symmetryHQLocationsIndex++;
 			symmetryHQLocationsIndex %= symmetryHQLocations.length;
-			Debug.tlog("Retargetting symmetry that we are exploring to " + symmetryHQLocations[symmetryHQLocationsIndex]);
+			log("Retargetting symmetry that we are exploring to " + symmetryHQLocations[symmetryHQLocationsIndex]);
 		}
 	}
 
@@ -418,7 +425,7 @@ public class Globals {
 
 	public static void loadWallInformation () throws GameActionException {
 
-		Debug.tlog("LOADING WALL INFORMATION 1");
+		log("LOADING WALL INFORMATION 1");
 
 		// determine innerDigLocations
 		int innerRingRadius = smallWallRingRadius;
@@ -443,7 +450,7 @@ public class Globals {
 
 		Globals.endTurn(true);
 		Globals.update();
-		Debug.tlog("LOADING WALL INFORMATION 2");
+		log("LOADING WALL INFORMATION 2");
 
 		// finds tiles that are on the 5x5 plot
 		smallWall = new MapLocation[49];
@@ -461,7 +468,7 @@ public class Globals {
 
 		Globals.endTurn(true);
 		Globals.update();
-		Debug.tlog("LOADING WALL INFORMATION 3");
+		log("LOADING WALL INFORMATION 3");
 
 		// determine outerDigLocations
 		/* @todo - remind Richard if he still wants this
@@ -484,7 +491,7 @@ public class Globals {
 
 		Globals.endTurn(true);
 		Globals.update();
-		Debug.tlog("LOADING WALL INFORMATION 3");
+		log("LOADING WALL INFORMATION 3");
 
 		largeWall = new MapLocation[36];
 		index = 0;
@@ -526,11 +533,11 @@ public class Globals {
 			}
 		}
 		largeWallLength = index;
-		Debug.ttlog("LARGE WALL LENGTH: " + largeWallLength);
+		tlog("LARGE WALL LENGTH: " + largeWallLength);
 
 		Globals.endTurn(true);
 		Globals.update();
-		Debug.tlog("LOADING WALL INFORMATION 4");
+		log("LOADING WALL INFORMATION 4");
 
 		hasLoadedWallInformation = true;
 	}
@@ -543,22 +550,19 @@ public class Globals {
 	public static boolean tryBuild (RobotType rt, Direction[] dir) throws GameActionException {
 		for (Direction d : dir) {
 			MapLocation loc = rc.adjacentLocation(d);
-			Debug.tlog("dir " + d);
-			Debug.tlog("loc " + loc);
 			if (!rc.senseFlooding(loc) && isFlat(loc) && rc.senseRobotAtLocation(loc) == null) {
-				Debug.ttlog("Location: " + loc);
 				if (rc.isReady()) {
 					Actions.doBuildRobot(rt, d);
 					teamSoup = rc.getTeamSoup();
-					Debug.ttlog("Success");
+					tlog("Success");
 					return true;
 				} else {
-					Debug.ttlog("But not ready");
+					tlog("But not ready");
 					return false;
 				}
 			}
 		}
-		Debug.ttlog("No open spots found");
+		tlog("No open spots found");
 		return false;
 	}
 
