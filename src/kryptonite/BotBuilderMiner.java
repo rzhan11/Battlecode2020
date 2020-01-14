@@ -65,7 +65,7 @@ public class BotBuilderMiner extends BotMiner {
 				for (Direction dir: directions) {
 					MapLocation buildLocation = rc.adjacentLocation(dir);
 					// forces it to be on 3x3 ring
-					if (maxXYDistance(HQLocation, buildLocation) != 1) {
+					if (Map.inMap(HQLocation, buildLocation) != 1) {
 						continue;
 					}
 					if(rc.canBuildRobot(RobotType.FULFILLMENT_CENTER,dir)){
@@ -104,7 +104,7 @@ public class BotBuilderMiner extends BotMiner {
 				for (Direction dir: directions) {
 					MapLocation buildLocation = rc.adjacentLocation(dir);
 					// forces it to be on 3x3 ring
-					if (maxXYDistance(HQLocation, buildLocation) != 1) {
+					if (Map.inMap(HQLocation, buildLocation) != 1) {
 						continue;
 					}
 					if(rc.canBuildRobot(RobotType.DESIGN_SCHOOL,dir)){
@@ -143,7 +143,7 @@ public class BotBuilderMiner extends BotMiner {
 				MapLocation buildLocation = new MapLocation(HQLocation.x + netGunQuadrant[k][0], HQLocation.y + netGunQuadrant[k][1]);
 				Direction dir = here.directionTo(buildLocation);
 				if (here.isAdjacentTo(buildLocation) && teamSoup >= RobotType.NET_GUN.cost + RobotType.REFINERY.cost
-						&& !rc.senseFlooding(buildLocation) && Map.checkElevation(buildLocation)
+						&& !rc.senseFlooding(buildLocation) && Map.isFlat(buildLocation)
 						&& rc.senseRobotAtLocation(buildLocation) == null) {
 					Debug.tlog("Building netgun at " + buildLocation);
 					if (rc.isReady()) {
@@ -181,7 +181,7 @@ public class BotBuilderMiner extends BotMiner {
 					}
 					Direction dir = here.directionTo(buildLocation);
 					if (here.isAdjacentTo(buildLocation) && teamSoup >= RobotType.VAPORATOR.cost + RobotType.REFINERY.cost
-							&& !rc.senseFlooding(buildLocation) && Map.checkElevation(buildLocation)
+							&& !rc.senseFlooding(buildLocation) && Map.isFlat(buildLocation)
 							&& rc.senseRobotAtLocation(buildLocation) == null) {
 						Debug.tlog("Building vaporator at " + buildLocation);
 						if (rc.isReady()) {
@@ -224,7 +224,7 @@ public class BotBuilderMiner extends BotMiner {
 				MapLocation buildLocation = new MapLocation(HQLocation.x + netGunQuadrant[k][0], HQLocation.y + netGunQuadrant[k][1]);
 				Direction dir = here.directionTo(buildLocation);
 				if (here.isAdjacentTo(buildLocation) && teamSoup >= RobotType.NET_GUN.cost + RobotType.REFINERY.cost
-						&& !rc.senseFlooding(buildLocation) && Map.checkElevation(buildLocation)
+						&& !rc.senseFlooding(buildLocation) && Map.isFlat(buildLocation)
 						&& rc.senseRobotAtLocation(buildLocation) == null) {
 					Debug.tlog("Building netgun at " + buildLocation);
 					if (rc.isReady()) {
