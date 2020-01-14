@@ -17,24 +17,6 @@ public class Nav extends Globals {
 	}
 
 	/*
-	Assumes that we can sense this tile
-	Returns true if this tile's elevation is within +/-3 of our tile's elevation
-	Returns false otherwise
-	*/
-	public static boolean checkElevation (MapLocation loc) throws GameActionException {
-		return Math.abs(rc.senseElevation(loc) - myElevation) <= GameConstants.MAX_DIRT_DIFFERENCE;
-	}
-
-	/*
-	Assumes that we can sense both tiles
-	Returns true if the two tiles' elevation are within +/-3 of each other
-	Returns false otherwise
-	*/
-	public static boolean checkElevation (MapLocation loc1, MapLocation loc2) throws GameActionException {
-		return Math.abs(rc.senseElevation(loc1) - rc.senseElevation(loc2)) <= GameConstants.MAX_DIRT_DIFFERENCE;
-	}
-
-	/*
 	Returns if we can move (without getting killed by flood) in any of the eight directions
 	Ignores if we are ready
 	Drones ignore flooding

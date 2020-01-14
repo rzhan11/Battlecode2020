@@ -301,7 +301,7 @@ public class BotDeliveryDrone extends Globals {
 						if (isBuilderMiner(ri.ID)) continue;
 						// inner transport tile
 						MapLocation wallLoc = ri.location.add(dirFromHQ);
-						if (!rc.canSenseLocation(wallLoc) || !Nav.checkElevation(ri.location, wallLoc)) {
+						if (!rc.canSenseLocation(wallLoc) || !Map.checkElevation(ri.location, wallLoc)) {
 							shouldTransport = true;
 						}
 					} else if (curRing == largeWallRingRadius && ri.type == RobotType.MINER) {
@@ -313,7 +313,7 @@ public class BotDeliveryDrone extends Globals {
 					} else if (curRing == largeWallRingRadius + 1) {
 						// outer transport tile
 						MapLocation wallLoc = ri.location.subtract(dirFromHQ);
-						if (!rc.canSenseLocation(wallLoc) || !Nav.checkElevation(ri.location, wallLoc)) {
+						if (!rc.canSenseLocation(wallLoc) || !Map.checkElevation(ri.location, wallLoc)) {
 							shouldTransport = true;
 						}
 					}
@@ -444,7 +444,7 @@ public class BotDeliveryDrone extends Globals {
 				if (isBuilderMiner(ri.ID)) return false;
 				MapLocation wallLoc = ri.location.add(dirFromHQ);
 				// if we cannot sense the wallLoc, assume it is high and pick up the robot
-				if (!rc.canSenseLocation(wallLoc) || !Nav.checkElevation(ri.location, wallLoc)) {
+				if (!rc.canSenseLocation(wallLoc) || !Map.checkElevation(ri.location, wallLoc)) {
 					Debug.tlog("Picking up robot on inner transport tile at " + ri.location);
 					if (rc.isReady()) {
 						Actions.doPickUpUnit(ri.ID);
@@ -499,7 +499,7 @@ public class BotDeliveryDrone extends Globals {
 			if (curRing == largeWallRingRadius + 1) {
 				MapLocation wallLoc = ri.location.subtract(dirFromHQ);
 				// if we cannot sense the wallLoc, assume it is high and pick up the miner
-				if (!rc.canSenseLocation(wallLoc) || !Nav.checkElevation(ri.location, wallLoc)) {
+				if (!rc.canSenseLocation(wallLoc) || !Map.checkElevation(ri.location, wallLoc)) {
 					Debug.tlog("Picking up robot on outer transport tile at " + ri.location);
 					if (rc.isReady()) {
 						Actions.doPickUpUnit(ri.ID);

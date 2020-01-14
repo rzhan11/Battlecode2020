@@ -504,7 +504,7 @@ public class BotLandscaper extends Globals {
 		if (ri != null) {
 			return;
 		}
-		if (Nav.checkElevation(loc) && !rc.senseFlooding(loc)) {
+		if (Map.checkElevation(loc) && !rc.senseFlooding(loc)) {
 			Actions.doMove(dir);
 			depositsWithoutMove = 0;
 			return;

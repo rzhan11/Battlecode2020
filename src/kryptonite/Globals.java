@@ -486,7 +486,7 @@ public class Globals {
 			MapLocation loc = rc.adjacentLocation(d);
 			Debug.tlog("dir " + d);
 			Debug.tlog("loc " + loc);
-			if (!rc.senseFlooding(loc) && Nav.checkElevation(loc) && rc.senseRobotAtLocation(loc) == null) {
+			if (!rc.senseFlooding(loc) && Map.checkElevation(loc) && rc.senseRobotAtLocation(loc) == null) {
 				Debug.ttlog("Location: " + loc);
 				if (rc.isReady()) {
 					Actions.doBuildRobot(rt, d);

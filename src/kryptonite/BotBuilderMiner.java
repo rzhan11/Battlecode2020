@@ -143,7 +143,7 @@ public class BotBuilderMiner extends BotMiner {
 				MapLocation buildLocation = new MapLocation(HQLocation.x + netGunQuadrant[k][0], HQLocation.y + netGunQuadrant[k][1]);
 				Direction dir = here.directionTo(buildLocation);
 				if (here.isAdjacentTo(buildLocation) && teamSoup >= RobotType.NET_GUN.cost + RobotType.REFINERY.cost
-						&& !rc.senseFlooding(buildLocation) && Nav.checkElevation(buildLocation)
+						&& !rc.senseFlooding(buildLocation) && Map.checkElevation(buildLocation)
 						&& rc.senseRobotAtLocation(buildLocation) == null) {
 					Debug.tlog("Building netgun at " + buildLocation);
 					if (rc.isReady()) {
@@ -181,7 +181,7 @@ public class BotBuilderMiner extends BotMiner {
 					}
 					Direction dir = here.directionTo(buildLocation);
 					if (here.isAdjacentTo(buildLocation) && teamSoup >= RobotType.VAPORATOR.cost + RobotType.REFINERY.cost
-							&& !rc.senseFlooding(buildLocation) && Nav.checkElevation(buildLocation)
+							&& !rc.senseFlooding(buildLocation) && Map.checkElevation(buildLocation)
 							&& rc.senseRobotAtLocation(buildLocation) == null) {
 						Debug.tlog("Building vaporator at " + buildLocation);
 						if (rc.isReady()) {
@@ -201,12 +201,7 @@ public class BotBuilderMiner extends BotMiner {
 			if (!built) {
 				Debug.ttlog("Vaporator Not Built");
 				if (teamSoup >= RobotType.VAPORATOR.cost + RobotType.REFINERY.cost) {
-					int dx = HQLocation.x - here.x;
-					int dy = HQLocation.y - here.y;
-					MapLocation reflectLoc = new MapLocation(HQLocation.x + dx, HQLocation.y + dy);
-
-					Debug.tlog("Going to reflection at " + reflectLoc);
-					moveLog(reflectLoc);
+					moveLog(HQLocation);
 				}
 			}
 			return;
@@ -229,7 +224,7 @@ public class BotBuilderMiner extends BotMiner {
 				MapLocation buildLocation = new MapLocation(HQLocation.x + netGunQuadrant[k][0], HQLocation.y + netGunQuadrant[k][1]);
 				Direction dir = here.directionTo(buildLocation);
 				if (here.isAdjacentTo(buildLocation) && teamSoup >= RobotType.NET_GUN.cost + RobotType.REFINERY.cost
-						&& !rc.senseFlooding(buildLocation) && Nav.checkElevation(buildLocation)
+						&& !rc.senseFlooding(buildLocation) && Map.checkElevation(buildLocation)
 						&& rc.senseRobotAtLocation(buildLocation) == null) {
 					Debug.tlog("Building netgun at " + buildLocation);
 					if (rc.isReady()) {
@@ -263,6 +258,10 @@ public class BotBuilderMiner extends BotMiner {
 			return;
 		}
 
+		if (here.isAdjacentTo(HQLocation)) {
+			return;
+		}
+		moveLog(HQLocation);
 
 		return;
 	}
