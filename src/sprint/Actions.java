@@ -1,4 +1,4 @@
-package kryptonite;
+package sprint;
 
 import battlecode.common.*;
 
@@ -13,7 +13,6 @@ public class Actions extends Globals {
 	public static int[] BLACK = {0, 0, 0}; // drone targetting HQLocation
 	// black also used for deposit dirt
 	public static int[] CYAN = {0, 255, 255}; // drone explore symmetry
-	public static int[] BROWN = {101, 67, 33}; // builderminer
 
 	private static int[] color;
 
@@ -43,21 +42,13 @@ public class Actions extends Globals {
 
 	public static void doDigDirt (Direction dir) throws GameActionException {
 		color = WHITE;
-		if (dir == Direction.CENTER) {
-			rc.setIndicatorDot(here, color[0], color[1], color[2]);
-		} else {
-			rc.setIndicatorLine(here, rc.adjacentLocation(dir), color[0], color[1], color[2]);
-		}
+		rc.setIndicatorLine(here, rc.adjacentLocation(dir), color[0], color[1], color[2]);
 		rc.digDirt(dir);
 	}
 
 	public static void doDepositDirt (Direction dir) throws GameActionException {
 		color = BLACK;
-		if (dir == Direction.CENTER) {
-			rc.setIndicatorDot(here, color[0], color[1], color[2]);
-		} else {
-			rc.setIndicatorLine(here, rc.adjacentLocation(dir), color[0], color[1], color[2]);
-		}
+		rc.setIndicatorLine(here, rc.adjacentLocation(dir), color[0], color[1], color[2]);
 		rc.depositDirt(dir);
 	}
 

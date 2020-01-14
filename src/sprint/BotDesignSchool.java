@@ -1,11 +1,11 @@
-package kryptonite;
+package sprint;
 
 import battlecode.common.*;
 
 public class BotDesignSchool extends Globals {
 
 	public static int landscapersMade = 0;
-	public static int[] landscaperCheckpoints = {16, 32, 48};
+	public static int[] landscaperCheckpoints = {31, 32, 48};
 	public static boolean[] checkpointReached = {false, false};
 
 	public static void loop() throws GameActionException {

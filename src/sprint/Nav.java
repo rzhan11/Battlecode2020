@@ -1,4 +1,4 @@
-package kryptonite;
+package sprint;
 
 import battlecode.common.*;
 
@@ -13,7 +13,25 @@ public class Nav extends Globals {
 	*/
 	public static boolean checkDirectionMoveable (Direction dir) throws GameActionException {
 		MapLocation loc = rc.adjacentLocation(dir);
-		return Map.inMap(loc) && rc.canMove(dir) && (isDrone || !rc.senseFlooding(loc));
+		return inMap(loc) && rc.canMove(dir) && (isDrone || !rc.senseFlooding(loc));
+	}
+
+	/*
+	Assumes that we can sense this tile
+	Returns true if this tile's elevation is within +/-3 of our tile's elevation
+	Returns false otherwise
+	*/
+	public static boolean checkElevation (MapLocation loc) throws GameActionException {
+		return Math.abs(rc.senseElevation(loc) - myElevation) <= GameConstants.MAX_DIRT_DIFFERENCE;
+	}
+
+	/*
+	Assumes that we can sense both tiles
+	Returns true if the two tiles' elevation are within +/-3 of each other
+	Returns false otherwise
+	*/
+	public static boolean checkElevation (MapLocation loc1, MapLocation loc2) throws GameActionException {
+		return Math.abs(rc.senseElevation(loc1) - rc.senseElevation(loc2)) <= GameConstants.MAX_DIRT_DIFFERENCE;
 	}
 
 	/*
@@ -272,7 +290,7 @@ public class Nav extends Globals {
 				curDir = curDir.rotateRight();
 			}
 			MapLocation curDest = rc.adjacentLocation(curDir);
-			if (!Map.inMap(curDest) && !recursed) {
+			if (!inMap(curDest) && !recursed) {
 				// Debug.ttlog("Hit the edge of map, reverse and recurse");
 				// if we hit the edge of the map, reverse direction and recurse
 				bugRotateLeft = !bugRotateLeft;
@@ -307,7 +325,7 @@ public class Nav extends Globals {
 		boolean danger = false;
 		for (Direction dir: directions) {
 			MapLocation loc = rc.adjacentLocation(dir);
-			if (Map.inMap(loc) && rc.senseFlooding(loc)) {
+			if (inMap(loc) && rc.senseFlooding(loc)) {
 				danger = true;
 				break;
 			}
@@ -354,7 +372,7 @@ public class Nav extends Globals {
 			int index = 0;
 			for (Direction dir: directions) {
 				MapLocation loc = rc.adjacentLocation(dir);
-				if (Map.inMap(loc)) {
+				if (inMap(loc)) {
 					elevationDirection[index] = rc.senseElevation(loc);
 				} else {
 					elevationDirection[index] = N_INF;

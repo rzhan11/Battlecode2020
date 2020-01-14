@@ -24,21 +24,14 @@ while index < len(lines):
         print(matchName)
         index += 2
         header = "none"
-        myType = "none"
-        roundNum = "none"
-        here = "none"
         while index < len(lines):
             if "Match Finished" in lines[index]:
                 break
             if isHeader(lines[index]):
-                tempEnd = lines[index].index("]") + 1
-                header = lines[index][:tempEnd]
-            if "Robot: " in lines[index]:
-                myType = lines[index][7:]
-            if "roundNum: " in lines[index]:
-                roundNum = lines[index][10:]
-            if "Location: " in lines[index]:
-                location = lines[index][10:]
+                header = lines[index][:lines[index].index("]") + 1]
+                myType = header[header.index(":") + 1:header.index("#")]
+                id = header[header.index("#") + 1:header.index("@")]
+                roundNum = header[header.index("@") + 1:header.index("]")]
             for k in keywords:
                 if k in lines[index]:
                     temp = (k, myType)
@@ -46,9 +39,9 @@ while index < len(lines):
                         continue
                     seenEvents.add(temp)
                     print("\tFound keyword", "'" + k + "' on line", index)
-                    print("\t\tHeader:", header)
+                    print("\t\theader:", header)
                     print("\t\tmyType:", myType)
+                    print("\t\tid:", id)
                     print("\t\troundNum:", roundNum)
-                    print("\t\tlocation:", location)
             index += 1
     index += 1

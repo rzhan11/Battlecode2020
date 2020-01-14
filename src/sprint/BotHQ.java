@@ -1,4 +1,4 @@
-package kryptonite;
+package sprint;
 
 import battlecode.common.*;
 
@@ -17,8 +17,6 @@ public class BotHQ extends Globals {
 	private static boolean madeBuilderMiner = false;
 
 	public static MapLocation soupLocation = null;
-
-	final private static int BLOCK_LANDSCAPER_DIST = 13;
 
 	public static void loop() throws GameActionException {
 		while (true) {

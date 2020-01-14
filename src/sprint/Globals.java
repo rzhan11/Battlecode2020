@@ -1,4 +1,4 @@
-package kryptonite;
+package sprint;
 
 import battlecode.common.*;
 
@@ -198,17 +198,15 @@ public class Globals {
 	public static void printMyInfo () {
 		if(noTurnLog) return;
 		Debug.log();
-//		Debug.log("Robot: " + myType);
-//		Debug.log("roundNum: " + roundNum);
-//		Debug.log("ID: " + myID);
-		Debug.log("*Location: " + here);
-		Debug.log("*Cooldown: " + rc.getCooldownTurns());
-		Debug.log("*actualSensorRadiusSquared: " + actualSensorRadiusSquared);
-		Debug.log("*dynamicCost: " + Communication.dynamicCost);
+		Debug.log("Robot: " + myType);
+		Debug.log("roundNum: " + roundNum);
+		Debug.log("ID: " + myID);
+		Debug.log("Location: " + here);
+		Debug.log("actualSensorRadiusSquared: " + actualSensorRadiusSquared);
+		Debug.log("Cooldown: " + rc.getCooldownTurns());
+		Debug.log("dynamicCost: " + Communication.dynamicCost);
 		Debug.log();
 		if (myID == builderMinerID) {
-			int[] color = Actions.BROWN;
-			rc.setIndicatorDot(here, color[0], color[1], color[2]);
 			Debug.log("I am the builder miner");
 		}
 	}
@@ -238,19 +236,48 @@ public class Globals {
 				}
 			}
 			if(!noTurnLog) {
-				Debug.log("----------");
+				Debug.tlog("Remaining bytecode: " + Clock.getBytecodesLeft());
+				Debug.tlog("---------------");
 				if (earlyEnd) {
-					Debug.log("-EARLY----");
+					Debug.tlog("-----EARLY-----");
 				}
-				Debug.log("-END TURN-");
-				Debug.log("----------");
-				Debug.tlog("Bytecode: " + Clock.getBytecodesLeft());
+				Debug.tlog("---END TURN----");
+				Debug.tlog("---------------");
+				Debug.log();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		Clock.yield();
 	}
+
+	/*
+	Returns true if the location is within the map boundaries
+	Returns false if not
+	*/
+	public static boolean inMap(MapLocation ml) {
+		return ml.x >= 0 && ml.x < mapWidth && ml.y >= 0 && ml.y < mapHeight;
+	}
+
+	/*
+	Useful for ring structures
+	*/
+	public static int maxXYDistance(MapLocation ml1, MapLocation ml2) {
+		return Math.max(Math.abs(ml1.x - ml2.x), Math.abs(ml1.y - ml2.y));
+	}
+
+	/*
+	Useful for ring structures
+	*/
+	public static int manhattanDistance(MapLocation ml1, MapLocation ml2) {
+		return Math.abs(ml1.x - ml2.x) + Math.abs(ml1.y - ml2.y);
+	}
+
+//	/*
+//	Assumes can sense
+//	 */
+//	public static boolean isOccupied(MapLocation loc) {
+//	}
 
 	public static boolean inArray(Object[] arr, Object item, int length) {
 		for(int i = 0; i < length; i++) if(arr[i].equals(item)) return true;
@@ -341,8 +368,8 @@ public class Globals {
 		int index = 0;
 		for(int i = 0; i < innerRingRadius + 1; i++) for(int j = 0; j < innerRingRadius + 1; j++) {
 			MapLocation newl = templ.translate(-2 * i, -2 * j);
-			if(Map.inMap(newl) && !HQLocation.equals(newl)) {
-				if (Map.inMap(HQLocation, newl) >= innerRingRadius) { // excludes holes inside the 5x5 plot
+			if(inMap(newl) && !HQLocation.equals(newl)) {
+				if (maxXYDistance(HQLocation, newl) >= innerRingRadius) { // excludes holes inside the 5x5 plot
 					// excludes corners
 //					if (HQLocation.distanceSquaredTo(newl) == 18) {
 //						continue;
@@ -364,7 +391,7 @@ public class Globals {
 		templ = HQLocation.translate(smallWallRingRadius, smallWallRingRadius);
 		for(int i = 0; i < smallWallRingSize; i++) for(int j = 0; j < smallWallRingSize; j++) {
 			MapLocation newl = templ.translate(-i, -j);
-			if (Map.inMap(newl) && !HQLocation.equals(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
+			if (inMap(newl) && !HQLocation.equals(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
 				smallWall[index] = newl;
 				index++;
 			}
@@ -386,8 +413,8 @@ public class Globals {
 		index = 0;
 		for(int i = 0; i < outerRingRadius + 1; i++) for(int j = 0; j < outerRingRadius + 1; j++) {
 			MapLocation newl = templ.translate(-2 * i, -2 * j);
-			if(Map.inMap(newl) && !HQLocation.equals(newl)) {
-				if (Map.inMap(HQLocation, newl) >= outerRingRadius) { // excludes holes inside the 9x9 plot
+			if(inMap(newl) && !HQLocation.equals(newl)) {
+				if (maxXYDistance(HQLocation, newl) >= outerRingRadius) { // excludes holes inside the 9x9 plot
 					outerDigLocations[index] = newl;
 					index++;
 				}
@@ -406,7 +433,7 @@ public class Globals {
 		templ = HQLocation.translate(largeWallRingRadius, largeWallRingRadius);
 		for(int i = 0; i < largeWallRingSize - 1; i++) {
 			MapLocation newl = templ.translate(0, -i);
-			if(Map.inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
+			if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
 				largeWall[index] = newl;
 				index++;
 			}
@@ -415,7 +442,7 @@ public class Globals {
 		templ = HQLocation.translate(largeWallRingRadius, -largeWallRingRadius);
 		for(int i = 0; i < largeWallRingSize - 1; i++) {
 			MapLocation newl = templ.translate(-i, 0);
-			if(Map.inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
+			if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
 				largeWall[index] = newl;
 				index++;
 			}
@@ -424,7 +451,7 @@ public class Globals {
 		templ = HQLocation.translate(-largeWallRingRadius, -largeWallRingRadius);
 		for(int i = 0; i < largeWallRingSize - 1; i++) {
 			MapLocation newl = templ.translate(0, i);
-			if(Map.inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
+			if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
 				largeWall[index] = newl;
 				index++;
 			}
@@ -433,7 +460,7 @@ public class Globals {
 		templ = HQLocation.translate(-largeWallRingRadius, largeWallRingRadius);
 		for(int i = 0; i < largeWallRingSize - 1; i++) {
 			MapLocation newl = templ.translate(i, 0);
-			if(Map.inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
+			if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
 				largeWall[index] = newl;
 				index++;
 			}
@@ -458,7 +485,7 @@ public class Globals {
 			MapLocation loc = rc.adjacentLocation(d);
 			Debug.tlog("dir " + d);
 			Debug.tlog("loc " + loc);
-			if (!rc.senseFlooding(loc) && Map.isFlat(loc) && rc.senseRobotAtLocation(loc) == null) {
+			if (!rc.senseFlooding(loc) && Nav.checkElevation(loc) && rc.senseRobotAtLocation(loc) == null) {
 				Debug.ttlog("Location: " + loc);
 				if (rc.isReady()) {
 					Actions.doBuildRobot(rt, d);
