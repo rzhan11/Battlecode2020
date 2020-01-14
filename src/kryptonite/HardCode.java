@@ -2,8 +2,11 @@ package kryptonite;
 
 import battlecode.common.*;
 
-public class HardCode {
+import static kryptonite.Constants.*;
+import static kryptonite.Debug.*;
+import static kryptonite.Map.*;
 
+public class HardCode {
 
 //	public static int[][][] netGunLU = new int[][][]{{{3,1},{3,2},{3,3},{2,3},{1,3}},{{-3,1},{-3,2},{-3,3},{-2,3},{-1,3}},{{-3,-1},{-3,-2},{-3,-3},{-2,-3},{-1,-3}},{{3,-1},{3,-2},{3,-3},{2,-3},{1,-3}}};
 	public static int[][][] netGunLU = new int[][][]{{{3,2},{2,3}},{{-3,2},{-2,3}},{{-3,-2},{-2,-3}},{{3,-2},{2,-3}}};

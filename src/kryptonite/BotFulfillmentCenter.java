@@ -2,6 +2,10 @@ package kryptonite;
 
 import battlecode.common.*;
 
+import static kryptonite.Constants.*;
+import static kryptonite.Debug.*;
+import static kryptonite.Map.*;
+
 public class BotFulfillmentCenter extends Globals {
 
 	public static int dronesMade = 0;

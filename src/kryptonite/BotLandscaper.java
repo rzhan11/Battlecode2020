@@ -2,6 +2,10 @@ package kryptonite;
 
 import battlecode.common.*;
 
+import static kryptonite.Constants.*;
+import static kryptonite.Debug.*;
+import static kryptonite.Map.*;
+
 public class BotLandscaper extends Globals {
 
 
@@ -40,8 +44,8 @@ public class BotLandscaper extends Globals {
 					int index = 0;
 					for(int i = 0; i < 6; i++) for(int j = 0; j < 6; j++) {
 						MapLocation newl = templ.translate(-2*i, -2*j);
-						if(Map.inMap(newl) && !HQLocation.equals(newl)) {
-							if (Map.inMap(HQLocation, newl) > 2) { // excludes holes inside the 5x5 plot
+						if(inMap(newl) && !HQLocation.equals(newl)) {
+							if (inMap(HQLocation, newl) > 2) { // excludes holes inside the 5x5 plot
 								allDigLocations[index] = newl;
 								index++;
 							}
@@ -75,7 +79,7 @@ public class BotLandscaper extends Globals {
 
 
 		// calculates the index of largeWall that we are on
-		if (Map.inMap(HQLocation, here) == 4) {
+		if (inMap(HQLocation, here) == 4) {
 			for (int i = 0; i < largeWallLength; i++) {
 				if (here.equals(largeWall[i])) {
 					currentLargeWallIndex = i;
@@ -100,12 +104,12 @@ public class BotLandscaper extends Globals {
 			}
 
 			// From Richard - added a check for if we are in the inner 3x3 ring
-			if (inArray(allDigLocations, here, allDigLocationsLength) || Map.inMap(HQLocation, here) <= 1) {
+			if (inArray(allDigLocations, here, allDigLocationsLength) || inMap(HQLocation, here) <= 1) {
 				Debug.ttlog("Trying to move out of 3x3 ring");
 				for (Direction dir : directions) {
 					MapLocation loc = rc.adjacentLocation(dir);
 					// if the target location is in the 5x5 ring and is not occupied/flooded
-					if (Map.inMap(HQLocation, loc) >= 2 && rc.senseRobotAtLocation(loc) == null) {
+					if (inMap(HQLocation, loc) >= 2 && rc.senseRobotAtLocation(loc) == null) {
 						landscaperMove(dir);
 						return;
 					}
@@ -187,14 +191,14 @@ public class BotLandscaper extends Globals {
 			// Inner Wall Complete, Just Start Building Outer Wall
 			else {
 				// If you are in the 5x5, get to the 7x7. Acceptable distances from the HQ are 9 and 13 (10, 18 are holes)
-				if (Map.inMap(HQLocation, here) == 2) {
+				if (inMap(HQLocation, here) == 2) {
 					if(largeWallFull) {
 						role = SUPPORT_ROLE;
 					}
 					if(role == WALL_ROLE || role == SUPPORT_ROLE) {
 						for (Direction d : Direction.allDirections()) {
 							MapLocation newloc = here.add(d);
-							if (Map.inMap(HQLocation, newloc) == 3) {
+							if (inMap(HQLocation, newloc) == 3) {
 								if (rc.canMove(d)) {
 									Debug.ttlog("MOVING TO 7x7 RING");
 									Actions.doMove(d);
@@ -205,14 +209,14 @@ public class BotLandscaper extends Globals {
 					}
 				}
 				// If you are in the 6x6, get to the 7x7. All distances are acceptable
-				if (Map.inMap(HQLocation, here) == 3) {
+				if (inMap(HQLocation, here) == 3) {
 					if(largeWallFull) {
 						role = SUPPORT_ROLE;
 					}
 					if(role == WALL_ROLE) {
 						for (Direction d : Direction.allDirections()) {
 							MapLocation newloc = here.add(d);
-							if (Map.inMap(HQLocation, newloc) == 4) {
+							if (inMap(HQLocation, newloc) == 4) {
 								if (rc.canMove(d)) {
 									Debug.ttlog("MOVING TO 7x7 RING");
 									currentStep = 0;
@@ -238,7 +242,7 @@ public class BotLandscaper extends Globals {
 								Direction minDir = null;
 								for (Direction d : Direction.allDirections()) {
 									MapLocation newloc = here.add(d);
-									if (Map.inMap(HQLocation, newloc) == 4) {
+									if (inMap(HQLocation, newloc) == 4) {
 										if (rc.senseElevation(newloc) < minDirt) {
 											minDirt = rc.senseElevation(newloc);
 											minDir = d;
@@ -251,13 +255,13 @@ public class BotLandscaper extends Globals {
 					}
 				}
 				// STATE == on the large wall
-				if (Map.inMap(HQLocation, here) == 4) {
+				if (inMap(HQLocation, here) == 4) {
 					Debug.ttlog("ON THE WALL");
 
 					// tries to fill in flooded tiles
 					for(Direction d : directions) {
 						MapLocation loc = rc.adjacentLocation(d);
-						if(Map.inMap(loc) && rc.senseFlooding(loc) && Map.inMap(HQLocation, loc) <= 4) {
+						if(inMap(loc) && rc.senseFlooding(loc) && inMap(HQLocation, loc) <= 4) {
 							Debug.tlog("Flooded base tile at " + loc);
 							if (rc.isReady()) {
 								if (rc.getDirtCarrying() == 0) {
@@ -392,9 +396,9 @@ public class BotLandscaper extends Globals {
 		}
 		else if(role == DEFENSE_ROLE) {
 			if(currentStep == 0) {
-				if(Map.inMap(here, HQLocation) != 2) {
+				if(inMap(here, HQLocation) != 2) {
 					for(Direction d: Direction.allDirections()) {
-						if(Map.inMap(here.add(d), HQLocation) == 2) {
+						if(inMap(here.add(d), HQLocation) == 2) {
 							if(rc.canMove(d)) {
 								rc.move(d);
 								return;
@@ -504,7 +508,7 @@ public class BotLandscaper extends Globals {
 		if (ri != null) {
 			return;
 		}
-		if (Map.isFlat(loc) && !rc.senseFlooding(loc)) {
+		if (isFlat(loc) && !rc.senseFlooding(loc)) {
 			Actions.doMove(dir);
 			depositsWithoutMove = 0;
 			return;
@@ -540,7 +544,7 @@ public class BotLandscaper extends Globals {
 		}
 		else if(where == 2) {
 			for (Direction d : Direction.allDirections()) {
-				if (Map.inMap(HQLocation, here.add(d)) == 5 && inArray(allDigLocations, here.add(d), allDigLocationsLength)) if (rc.canDigDirt(d)) Actions.doDigDirt(d);
+				if (inMap(HQLocation, here.add(d)) == 5 && inArray(allDigLocations, here.add(d), allDigLocationsLength)) if (rc.canDigDirt(d)) Actions.doDigDirt(d);
 			}
 		}
 	}
@@ -555,7 +559,7 @@ public class BotLandscaper extends Globals {
 				Direction minDir = null;
 				for (Direction d : allDirections) {
 					MapLocation newloc = here.add(d);
-					if (!Map.inMap(newloc)) {
+					if (!inMap(newloc)) {
 						continue;
 					}
 
@@ -567,14 +571,14 @@ public class BotLandscaper extends Globals {
 					// checks if inside tiles are below elevation
 					// if largeWallFull of landscapers, ignore this check
 					if(!largeWallFull) {
-						if (Map.inMap(HQLocation, newloc) == 3 && rc.senseElevation(newloc) < smallWallDepth) {
+						if (inMap(HQLocation, newloc) == 3 && rc.senseElevation(newloc) < smallWallDepth) {
 							minDir = d;
 							minDirt = -1;
 							break;
 						}
 					}
 
-					if (Map.inMap(HQLocation, newloc) == 4) {
+					if (inMap(HQLocation, newloc) == 4) {
 						if (minDirt > rc.senseElevation(newloc)) {
 							minDir = d;
 							minDirt = rc.senseElevation(newloc);

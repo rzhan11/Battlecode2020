@@ -2,6 +2,10 @@ package kryptonite;
 
 import battlecode.common.*;
 
+import static kryptonite.Constants.*;
+import static kryptonite.Debug.*;
+import static kryptonite.Map.*;
+
 public class BotHQ extends Globals {
 
 	final public static int RELAX_LARGE_WALL_FULL_ROUND_NUM = 1000;

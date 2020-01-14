@@ -2,16 +2,11 @@ package kryptonite;
 
 import battlecode.common.*;
 
+import static kryptonite.Constants.*;
+import static kryptonite.Debug.*;
+import static kryptonite.Map.*;
+
 public class Globals {
-	/*
-	Constants for general use
-	*/
-	final public static int P_INF = 1000000000;
-	final public static int N_INF = -1000000000;
-	final public static int BIG_ARRAY_SIZE = 500;
-	final public static int MAX_MAP_SIZE = 64;
-
-
 	/*
 	Constants that will never change
 	*/
@@ -32,12 +27,6 @@ public class Globals {
 	public static Direction[] allDirections = {Direction.NORTH, Direction.NORTHEAST, Direction.EAST, Direction.SOUTHEAST, Direction.SOUTH, Direction.SOUTHWEST, Direction.WEST, Direction.NORTHWEST, Direction.CENTER}; // includes center
 	public static Direction[] cardinalDirections = {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST}; // four cardinal directions
 	public static Direction[] diagonalDirections = {Direction.NORTHEAST, Direction.SOUTHEAST, Direction.SOUTHWEST, Direction.NORTHWEST}; // four diagonals
-
-	public static MapLocation HQLocation = null;
-	public static int HQElevation;
-	// MapLocations of enemy HQ if map has horizontal, vertical, or rotationally symmetry
-	public static MapLocation[] symmetryHQLocations = new MapLocation[3];
-	public static int[] isSymmetry = {-1, -1, -1}; // -1 is unknown, 0 is false, 1 is true
 
 	/*
 	Values that might change each turn
@@ -72,6 +61,15 @@ public class Globals {
 
 	public static int builderMinerID = -1;
 
+	// symmetry
+	public static MapLocation HQLocation = null;
+	public static int HQElevation;
+
+	public static MapLocation[] symmetryHQLocations = null;
+	public static int[] isSymmetryHQLocation = {-1, -1, -1}; // -1 is unknown, 0 is false, 1 is true
+	public static int symmetryHQLocationsIndex; // current symmetry that we are exploring
+	public static MapLocation enemyHQLocation = null;
+
 	/*
 	CHECKPOINTS
 	 */
@@ -91,7 +89,7 @@ public class Globals {
 		myID = rc.getID();
 		myType = rc.getType();
 		baseSensorRadiusSquared = myType.sensorRadiusSquared;
-		senseDirections = HardCode.getSenseDirections(myType); //calculateSenseDirections(baseSensorRadiusSquared);
+		senseDirections = HardCode.getSenseDirections(myType);
 
 		mapWidth = rc.getMapWidth();
 		mapHeight = rc.getMapHeight();
@@ -107,6 +105,11 @@ public class Globals {
 		spawnRound = roundNum;
 
 		lastActiveTurn = spawnRound - 1;
+
+		findHQLocation();
+
+		symmetryHQLocationsIndex = myID % symmetryHQLocations.length;
+		Debug.tlog("Initial exploreSymmetryLocation: " + symmetryHQLocations[symmetryHQLocationsIndex]);
 	}
 
 	public static void update() throws GameActionException {
@@ -151,40 +154,19 @@ public class Globals {
 			Nav.bugClosestDistanceToTarget = P_INF;
 		}
 
+		// visually checks for enemy HQ location at target explore symmetry point
+
 		Communication.calculateDynamicCost();
 
 		Debug.tlog("Reading the previous round's Transactions");
 		Communication.readTransactions(roundNum - 1);
 		Debug.tlog("Done reading the previous round's Transactions");
 
-		// tries to find our HQLocation and HQElevation by reading messages
-		// will skip turn if not found
-		if (myType == RobotType.HQ) {
-			HQLocation = here;
-			HQElevation = myElevation;
-		} else {
-			while (HQLocation == null) {
-				if (oldTransactionsIndex == spawnRound - 1) {
-					Debug.tlogi("Cannot find HQLocation");
-					Globals.endTurn(true);
-					Globals.update();
-				}
-				Communication.readTransactions(oldTransactionsIndex);
-				oldTransactionsIndex++;
-				if (HQLocation == null && isLowBytecodeLimit(myType)) {
-					Debug.tlog("Did not find HQLocation, low bytecode limit");
-					Globals.endTurn(true);
-					Globals.update();
-				}
-			}
+		if (symmetryHQLocations == null) {
+			findHQLocation();
 		}
 
-		// calculates possible enemy HQ locations
-		if (firstTurn) {
-			symmetryHQLocations[0] = new MapLocation(mapWidth - 1 - HQLocation.x, HQLocation.y);
-			symmetryHQLocations[1] = new MapLocation(HQLocation.x, mapHeight - 1 - HQLocation.y);
-			symmetryHQLocations[2] = new MapLocation(mapWidth - 1 - HQLocation.x, mapHeight - 1 - HQLocation.y);
-		}
+		updateSymmetry();
 
 		// tries to submit unsent messages from previous turns
 		Communication.submitUnsentTransactions();
@@ -207,8 +189,7 @@ public class Globals {
 		Debug.log("*dynamicCost: " + Communication.dynamicCost);
 		Debug.log();
 		if (myID == builderMinerID) {
-			int[] color = Actions.BROWN;
-			rc.setIndicatorDot(here, color[0], color[1], color[2]);
+			drawDot(here, BROWN);
 			Debug.log("I am the builder miner");
 		}
 	}
@@ -252,6 +233,38 @@ public class Globals {
 		Clock.yield();
 	}
 
+	public static void findHQLocation() throws GameActionException {
+		// tries to find our HQLocation and HQElevation by reading messages
+		// will skip turn if not found
+		if (myType == RobotType.HQ) {
+			HQLocation = here;
+			HQElevation = myElevation;
+		} else {
+			Communication.readTransactions(oldTransactionsIndex);
+			oldTransactionsIndex++;
+			while (HQLocation == null) {
+				if (oldTransactionsIndex >= spawnRound) {
+					Debug.tlogi("Cannot find HQLocation");
+					Globals.endTurn(true);
+					Globals.update();
+				}
+				if (HQLocation == null && isLowBytecodeLimit(myType)) {
+					Debug.tlog("Did not find HQLocation, low bytecode limit");
+					Globals.endTurn(true);
+					Globals.update();
+				}
+				Communication.readTransactions(oldTransactionsIndex);
+				oldTransactionsIndex++;
+			}
+		}
+
+		// calculates possible enemy HQ locations
+		symmetryHQLocations = new MapLocation[3];
+		symmetryHQLocations[0] = new MapLocation(mapWidth - 1 - HQLocation.x, HQLocation.y);
+		symmetryHQLocations[1] = new MapLocation(HQLocation.x, mapHeight - 1 - HQLocation.y);
+		symmetryHQLocations[2] = new MapLocation(mapWidth - 1 - HQLocation.x, mapHeight - 1 - HQLocation.y);
+	}
+
 	public static boolean inArray(Object[] arr, Object item, int length) {
 		for(int i = 0; i < length; i++) if(arr[i].equals(item)) return true;
 		return false;
@@ -277,7 +290,6 @@ public class Globals {
 				return true;
 			default:
 				return false;
-
 		}
 	}
 
@@ -298,6 +310,81 @@ public class Globals {
 			Debug.ttlog("But not ready");
 		}
 		return move;
+	}
+
+	public static void updateSymmetry () throws GameActionException {
+		// try to visually check unknown enemyHQLocations
+		for (int i = 0; i < symmetryHQLocations.length; i++) {
+			MapLocation loc = symmetryHQLocations[i];
+			if (isSymmetryHQLocation[i] == -1 && rc.canSenseLocation(loc)) {
+				RobotInfo ri = rc.senseRobotAtLocation(loc);
+				if (ri != null && ri.type == RobotType.HQ) {
+					//STATE == enemy FOUND
+
+					enemyHQLocation = loc;
+					isSymmetryHQLocation[i] = 1;
+
+					Debug.tlog("Found enemy HQ at " + enemyHQLocation);
+
+					Communication.writeTransactionEnemyHQLocation(i, 1);
+				} else {
+					//STATE == enemy NOT FOUND
+
+					Debug.tlog("Denied enemy HQ at " + loc);
+					isSymmetryHQLocation[i] = 0;
+
+					Communication.writeTransactionEnemyHQLocation(i, 0);
+				}
+			}
+		}
+
+		checkPossibleSymmetry();
+
+//		Debug.drawLine(here, getSymmetryLocation(), Actions.WHITE);
+	}
+
+	/*
+    Checks if we can tell what the symmetry is based on denied symmetries
+
+    Checks if the current target symmetry is possible
+    If not, iterate to a possible one
+     */
+	public static void checkPossibleSymmetry () {
+		// if two symmetries have been confirmed negatives, then the other one must be the last symmetry
+		int denyCount = 0;
+		int notDenyIndex = -1;
+		for (int i = 0; i < symmetryHQLocations.length; i++) {
+			Debug.tlog("i " + i + " " + isSymmetryHQLocation[i]);
+			if (isSymmetryHQLocation[i] == 0) {
+				denyCount++;
+			} else {
+				notDenyIndex = i;
+			}
+		}
+		if (denyCount == 2) {
+			enemyHQLocation = symmetryHQLocations[notDenyIndex];
+			isSymmetryHQLocation[notDenyIndex] = 1;
+			Debug.tlog("Determined through 2 denials that enemy HQ is at " + enemyHQLocation);
+			return;
+		}
+
+		while (isSymmetryHQLocation[symmetryHQLocationsIndex] == 0) {
+			symmetryHQLocationsIndex++;
+			symmetryHQLocationsIndex %= symmetryHQLocations.length;
+			Debug.tlog("Retargetting symmetry that we are exploring to " + symmetryHQLocations[symmetryHQLocationsIndex]);
+		}
+	}
+
+	/*
+	If found which symmetry the enemy HQ location is on, return that location
+	Else, return the current symmetry that we are exploring
+	 */
+	public static MapLocation getSymmetryLocation () {
+		if (enemyHQLocation == null) {
+			return symmetryHQLocations[symmetryHQLocationsIndex];
+		} else {
+			return enemyHQLocation;
+		}
 	}
 
 	// information about digLocations
@@ -341,8 +428,8 @@ public class Globals {
 		int index = 0;
 		for(int i = 0; i < innerRingRadius + 1; i++) for(int j = 0; j < innerRingRadius + 1; j++) {
 			MapLocation newl = templ.translate(-2 * i, -2 * j);
-			if(Map.inMap(newl) && !HQLocation.equals(newl)) {
-				if (Map.inMap(HQLocation, newl) >= innerRingRadius) { // excludes holes inside the 5x5 plot
+			if(inMap(newl) && !HQLocation.equals(newl)) {
+				if (inMap(HQLocation, newl) >= innerRingRadius) { // excludes holes inside the 5x5 plot
 					// excludes corners
 //					if (HQLocation.distanceSquaredTo(newl) == 18) {
 //						continue;
@@ -364,7 +451,7 @@ public class Globals {
 		templ = HQLocation.translate(smallWallRingRadius, smallWallRingRadius);
 		for(int i = 0; i < smallWallRingSize; i++) for(int j = 0; j < smallWallRingSize; j++) {
 			MapLocation newl = templ.translate(-i, -j);
-			if (Map.inMap(newl) && !HQLocation.equals(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
+			if (inMap(newl) && !HQLocation.equals(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
 				smallWall[index] = newl;
 				index++;
 			}
@@ -386,8 +473,8 @@ public class Globals {
 		index = 0;
 		for(int i = 0; i < outerRingRadius + 1; i++) for(int j = 0; j < outerRingRadius + 1; j++) {
 			MapLocation newl = templ.translate(-2 * i, -2 * j);
-			if(Map.inMap(newl) && !HQLocation.equals(newl)) {
-				if (Map.inMap(HQLocation, newl) >= outerRingRadius) { // excludes holes inside the 9x9 plot
+			if(inMap(newl) && !HQLocation.equals(newl)) {
+				if (inMap(HQLocation, newl) >= outerRingRadius) { // excludes holes inside the 9x9 plot
 					outerDigLocations[index] = newl;
 					index++;
 				}
@@ -406,7 +493,7 @@ public class Globals {
 		templ = HQLocation.translate(largeWallRingRadius, largeWallRingRadius);
 		for(int i = 0; i < largeWallRingSize - 1; i++) {
 			MapLocation newl = templ.translate(0, -i);
-			if(Map.inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
+			if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
 				largeWall[index] = newl;
 				index++;
 			}
@@ -415,7 +502,7 @@ public class Globals {
 		templ = HQLocation.translate(largeWallRingRadius, -largeWallRingRadius);
 		for(int i = 0; i < largeWallRingSize - 1; i++) {
 			MapLocation newl = templ.translate(-i, 0);
-			if(Map.inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
+			if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
 				largeWall[index] = newl;
 				index++;
 			}
@@ -424,7 +511,7 @@ public class Globals {
 		templ = HQLocation.translate(-largeWallRingRadius, -largeWallRingRadius);
 		for(int i = 0; i < largeWallRingSize - 1; i++) {
 			MapLocation newl = templ.translate(0, i);
-			if(Map.inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
+			if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
 				largeWall[index] = newl;
 				index++;
 			}
@@ -433,7 +520,7 @@ public class Globals {
 		templ = HQLocation.translate(-largeWallRingRadius, largeWallRingRadius);
 		for(int i = 0; i < largeWallRingSize - 1; i++) {
 			MapLocation newl = templ.translate(i, 0);
-			if(Map.inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
+			if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
 				largeWall[index] = newl;
 				index++;
 			}
@@ -458,7 +545,7 @@ public class Globals {
 			MapLocation loc = rc.adjacentLocation(d);
 			Debug.tlog("dir " + d);
 			Debug.tlog("loc " + loc);
-			if (!rc.senseFlooding(loc) && Map.isFlat(loc) && rc.senseRobotAtLocation(loc) == null) {
+			if (!rc.senseFlooding(loc) && isFlat(loc) && rc.senseRobotAtLocation(loc) == null) {
 				Debug.ttlog("Location: " + loc);
 				if (rc.isReady()) {
 					Actions.doBuildRobot(rt, d);

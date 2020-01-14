@@ -2,6 +2,10 @@ package kryptonite;
 
 import battlecode.common.*;
 
+import static kryptonite.Constants.*;
+import static kryptonite.Debug.*;
+import static kryptonite.Map.*;
+
 public class BotMiner extends Globals {
 
 	// the explorer's target location will be this far from the map edge
@@ -210,7 +214,7 @@ public class BotMiner extends Globals {
 			if (here.isAdjacentTo(buildRefineryLocation)) {
 				Direction dir = here.directionTo(buildRefineryLocation);
 				MapLocation loc = rc.adjacentLocation(dir);
-				if (!Map.isFlat(loc)) {
+				if (!isFlat(loc)) {
 					// if I cannot build a refinery here because of elevation difference
 					buildRefineryLocation = null;
 					buildRefineryVisibleSoup = -1;
@@ -248,7 +252,7 @@ public class BotMiner extends Globals {
 				Direction dirToRef = here.directionTo(buildRefineryLocation);
 				MapLocation locToRef = rc.adjacentLocation(dirToRef);
 				RobotInfo riToRef = rc.senseRobotAtLocation(locToRef);
-				if (rc.senseFlooding(locToRef) || !Map.isFlat(locToRef)
+				if (rc.senseFlooding(locToRef) || !isFlat(locToRef)
 					|| (riToRef != null && riToRef.type.isBuilding())) {
 					Debug.tlog("Trying to build refinery in adjacent tile due to blocked path.");
 					boolean result = tryBuild(RobotType.REFINERY, directions);

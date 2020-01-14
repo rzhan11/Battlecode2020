@@ -2,14 +2,13 @@ package kryptonite;
 
 import battlecode.common.*;
 
-import java.rmi.MarshalledObject;
+import static kryptonite.Constants.*;
+import static kryptonite.Debug.*;
+import static kryptonite.Map.*;
 
 public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
 
     public static boolean initialized = false;
-    public static int symmetryHQLocationsIndex;
-    public static MapLocation exploreSymmetryLocation;
-    public static MapLocation enemyHQLocation = null;
 
     // used when we pick up an ally robot so it isn't blocking us
     // it will be put back later
@@ -18,9 +17,6 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
     public static boolean crossedTemporaryRobotLocation;
 
     public static void init() throws GameActionException {
-        symmetryHQLocationsIndex = myID % symmetryHQLocations.length;
-        exploreSymmetryLocation = symmetryHQLocations[symmetryHQLocationsIndex];
-        Debug.tlog("Initial exploreSymmetryLocation: " + exploreSymmetryLocation);
 
         initialized = true;
     }
@@ -34,35 +30,6 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
 
         locateFlooding();
         Debug.tlog("floodingMemory: " + floodingMemory);
-
-        // tries to determine enemyHQLocation if not already determined
-        if (enemyHQLocation == null) {
-
-            checkPossibleSymmetry();
-
-            // try to visually check enemyHQLocation to determine symmetry
-            if (rc.canSenseLocation(exploreSymmetryLocation)) {
-                RobotInfo ri = rc.senseRobotAtLocation(exploreSymmetryLocation);
-                if (ri != null && ri.type == RobotType.HQ) {
-                    //STATE == enemy FOUND
-
-                    Debug.tlog("Found enemy HQ at " + enemyHQLocation);
-                    enemyHQLocation = exploreSymmetryLocation;
-                    isSymmetry[symmetryHQLocationsIndex] = 1;
-
-                    Communication.writeTransactionEnemyHQLocation(symmetryHQLocationsIndex, 1);
-                } else {
-                    //STATE == enemy NOT FOUND
-
-                    Debug.tlog("Did not find enemy HQ at " + exploreSymmetryLocation);
-                    isSymmetry[symmetryHQLocationsIndex] = 0;
-
-                    Communication.writeTransactionEnemyHQLocation(symmetryHQLocationsIndex, 0);
-
-                    checkPossibleSymmetry();
-                }
-            }
-        }
 
         Debug.log();
         Debug.tlog("holdingTemporaryRobot: " + holdingTemporaryRobot);
@@ -113,10 +80,9 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
         }
 
         // if enemyHQLocation not found, go to exploreSymmetryLocation
-        MapLocation targetLoc = null;
+        MapLocation targetLoc = getSymmetryLocation();
         if (enemyHQLocation == null) {
-            Debug.tlog("Moving towards exploreSymmetryLocation at " + exploreSymmetryLocation);
-            targetLoc = exploreSymmetryLocation;
+            Debug.tlog("Moving towards symmetry location at " + targetLoc);
         } else {
             // STATE == enemyHQLocation found (AKA not null)
             // chase enemies and drop them into water
@@ -130,7 +96,6 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
             }
 
             Debug.tlog("Moving towards enemyHQLocation at " + enemyHQLocation);
-            targetLoc = enemyHQLocation;
         }
 
 //            int[] color = Actions.WHITE;
@@ -150,38 +115,6 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
             }
         }
         return;
-    }
-
-    /*
-    Checks if we can tell what the symmetry is based on denied symmetries
-
-    Checks if the current target symmetry is possible
-    If not, iterate to a possible one
-     */
-    public static void checkPossibleSymmetry () {
-        // if two symmetries have been confirmed negatives, then it must be the last symmetry
-        int denyCount = 0;
-        int notDenyIndex = -1;
-        for (int i = 0; i < symmetryHQLocations.length; i++) {
-            if (isSymmetry[i] == 0) {
-                denyCount++;
-            } else {
-                notDenyIndex = i;
-            }
-        }
-        if (denyCount == 2) {
-            Debug.tlog("Determined through 2 denials that enemy HQ is at " + enemyHQLocation);
-            enemyHQLocation = symmetryHQLocations[notDenyIndex];
-            isSymmetry[notDenyIndex] = 1;
-            return;
-        }
-
-        while (isSymmetry[symmetryHQLocationsIndex] == 0) {
-            symmetryHQLocationsIndex++;
-            symmetryHQLocationsIndex %= symmetryHQLocations.length;
-            Debug.tlog("Retargetting exploreSymmetryLocation to " + exploreSymmetryLocation);
-        }
-        exploreSymmetryLocation = symmetryHQLocations[symmetryHQLocationsIndex];
     }
 
 }
