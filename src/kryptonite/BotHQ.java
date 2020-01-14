@@ -22,6 +22,8 @@ public class BotHQ extends Globals {
 
 	public static MapLocation soupLocation = null;
 
+	final private static int BLOCK_LANDSCAPER_DIST = 13;
+
 	public static void loop() throws GameActionException {
 		while (true) {
 			try {
