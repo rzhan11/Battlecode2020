@@ -17,7 +17,7 @@ public class Debug extends Globals {
 
 	/*
 	Prints message
-	Can be turned off by setting 'DISPLAY_LOGS' to true
+	Can be turned off by setting 'DISPLAY_LOGS' to false
 	*/
 	public static void log (String str) {
 		if (DISPLAY_LOGS) {
@@ -27,7 +27,7 @@ public class Debug extends Globals {
 
 	/*
 	Prints message with a single tab in front
-	Can be turned off by setting 'DISPLAY_LOGS' to true
+	Can be turned off by setting 'DISPLAY_LOGS' to false
 	*/
 	public static void tlog (String str) {
 		if (DISPLAY_LOGS) {

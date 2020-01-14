@@ -1,4 +1,4 @@
-package kryptonite;
+package sprint;
 
 import battlecode.common.*;
 

@@ -42,13 +42,21 @@ public class Actions extends Globals {
 
 	public static void doDigDirt (Direction dir) throws GameActionException {
 		color = WHITE;
-		rc.setIndicatorLine(here, rc.adjacentLocation(dir), color[0], color[1], color[2]);
+		if (dir == Direction.CENTER) {
+			rc.setIndicatorDot(here, color[0], color[1], color[2]);
+		} else {
+			rc.setIndicatorLine(here, rc.adjacentLocation(dir), color[0], color[1], color[2]);
+		}
 		rc.digDirt(dir);
 	}
 
 	public static void doDepositDirt (Direction dir) throws GameActionException {
 		color = BLACK;
-		rc.setIndicatorLine(here, rc.adjacentLocation(dir), color[0], color[1], color[2]);
+		if (dir == Direction.CENTER) {
+			rc.setIndicatorDot(here, color[0], color[1], color[2]);
+		} else {
+			rc.setIndicatorLine(here, rc.adjacentLocation(dir), color[0], color[1], color[2]);
+		}
 		rc.depositDirt(dir);
 	}
 

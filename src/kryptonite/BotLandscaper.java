@@ -2,8 +2,6 @@ package kryptonite;
 
 import battlecode.common.*;
 
-import java.util.Map;
-
 public class BotLandscaper extends Globals {
 
 
@@ -14,6 +12,10 @@ public class BotLandscaper extends Globals {
 	private static final int WALL_ROLE = 1, DEFENSE_ROLE = 2, SUPPORT_ROLE = 3;
 
 	private static boolean moveClockwise = true;
+
+	// only used when on wall
+	final private static int DEPOSITS_WITHOUT_MOVE_LIMIT = 3;
+	private static int depositsWithoutMove = 0;
 
 	// @todo: Landscapers should attack enemy buildings if in sight and not on large wall
 	// @todo: Landscapers should "heal" ally buildings if they are damaged
@@ -250,199 +252,140 @@ public class BotLandscaper extends Globals {
 				// STATE == on the large wall
 				if (maxXYDistance(HQLocation, here) == 4) {
 					Debug.ttlog("ON THE WALL");
-					boolean isFlooded = false;
-					Direction inFlood = null;
+
+					// tries to fill in flooded tiles
 					for(Direction d : directions) {
 						MapLocation loc = rc.adjacentLocation(d);
-						Debug.tlog("loc " + loc);
 						if(inMap(loc) && rc.senseFlooding(loc) && maxXYDistance(HQLocation, loc) <= 4) {
-							Debug.tlog("yo " + loc);
-							inFlood = d;
-							isFlooded = true;
-							break;
-						}
-					}
-
-					while (true) { // fake while loop, only ever runs once, used while so i can break
-						Debug.ttlog("MOVING");
-
-						int clock_index = (currentLargeWallIndex + 1 + largeWallLength) % largeWallLength;
-						int counterclock_index = (currentLargeWallIndex - 1 + largeWallLength) % largeWallLength;
-
-						Direction d_clock = getClockwiseLargeWallDirection(currentLargeWallIndex);
-						Direction d_clock2 = getClockwiseLargeWallDirection(clock_index);
-						Direction d_counterclock = getCounterClockwiseLargeWallDirection(currentLargeWallIndex);
-						Direction d_counterclock2 = getCounterClockwiseLargeWallDirection(counterclock_index);
-
-						MapLocation loc_clock = here.add(d_clock);
-						MapLocation loc_clock2 = loc_clock.add(d_clock2);
-						MapLocation loc_counterclock = here.add(d_counterclock);
-						MapLocation loc_counterclock2 = loc_counterclock.add(d_counterclock2);
-						Debug.ttlog("loc_clock");
-						Debug.ttlog("here: loc_clock");
-						Debug.ttlog("dcw: " + d_clock);
-						Debug.ttlog("dccw: " + d_counterclock);
-						Debug.ttlog("cw1 "+loc_clock);
-						Debug.ttlog("cw2 "+loc_clock2);
-						Debug.ttlog("ccw1 "+loc_counterclock);
-						Debug.ttlog("ccw2 "+loc_counterclock2);
-
-						if (rc.canSenseLocation(loc_clock)
-								&& rc.canSenseLocation(loc_clock2)
-								&& rc.canSenseLocation(loc_counterclock)
-								&& rc.canSenseLocation(loc_counterclock2)) {
-							RobotInfo ri_clock = rc.senseRobotAtLocation(loc_clock);
-							RobotInfo ri_clock2 = rc.senseRobotAtLocation(loc_clock2);
-							RobotInfo ri_counterclock = rc.senseRobotAtLocation(loc_counterclock);
-							RobotInfo ri_counterclock2 = rc.senseRobotAtLocation(loc_counterclock2);
-
-							// is there a landscaper within the clockwise direction x 2
-							boolean ls_in_clock = ri_clock != null && ri_clock.type == RobotType.LANDSCAPER;
-							boolean ls_in_clock2 = ri_clock2 != null && ri_clock2.type == RobotType.LANDSCAPER;
-							boolean ls_within_two_clock = ls_in_clock || ls_in_clock2;
-							boolean ls_in_counterclock = ri_counterclock != null && ri_counterclock.type == RobotType.LANDSCAPER;
-							boolean ls_in_counterclock2 = ri_counterclock2 != null && ri_counterclock2.type == RobotType.LANDSCAPER;
-							boolean ls_within_two_counterclock = ls_in_counterclock || ls_in_counterclock2;
-
-							Debug.tlog("ls " + ls_in_clock + " " + ls_in_clock2 + " v " + ls_in_counterclock + " " + ls_in_counterclock2);
-
-							if (ls_in_counterclock && !ls_within_two_clock) {
-								// surroundings look like __XL*
-								Direction d = getClockwiseDir(here);
-								Debug.tlog("MOVING CLOCKWISE IN " + d);
-								if (rc.isReady()) {
-									// if too steep, dig to fix heights
-									if (!Nav.checkElevation(rc.adjacentLocation(d))) {
-										Debug.ttlog("TOO STEEP: MINING MORE");
-										currentStep = 0;
-										break;
-									}
-									if (ri_clock != null) {
-										Debug.ttlog("But is occupied");
-										return;
-									} else if (rc.senseFlooding(loc_clock)) {
-										Debug.ttlog("But is flooded");
-										break; // break to try to plug hole
-									} else {
-										Actions.doMove(d);
-										Debug.ttlog("Success");
-										return;
-									}
+							Debug.tlog("Flooded base tile at " + loc);
+							if (rc.isReady()) {
+								if (rc.getDirtCarrying() == 0) {
+									Debug.ttlog("Digging dirt");
+									landscaperDig(2);
 								} else {
-									Debug.ttlog("But not ready");
+									Debug.ttlog("Depositing dirt");
+									Actions.doDepositDirt(d);
+									depositsWithoutMove++;
 								}
+							} else {
+								Debug.ttlog("But not ready");
+							}
+							return;
+						}
+					}
+
+					// STATE = no flooded tiles inside our base that is adjacent to this unit
+
+					int clock_index = (currentLargeWallIndex + 1 + largeWallLength) % largeWallLength;
+					int counterclock_index = (currentLargeWallIndex - 1 + largeWallLength) % largeWallLength;
+
+					Direction d_clock = getClockwiseLargeWallDirection(currentLargeWallIndex);
+					Direction d_clock2 = getClockwiseLargeWallDirection(clock_index);
+					Direction d_counterclock = getCounterClockwiseLargeWallDirection(currentLargeWallIndex);
+					Direction d_counterclock2 = getCounterClockwiseLargeWallDirection(counterclock_index);
+
+					MapLocation loc_clock = here.add(d_clock);
+					MapLocation loc_clock2 = loc_clock.add(d_clock2);
+					MapLocation loc_counterclock = here.add(d_counterclock);
+					MapLocation loc_counterclock2 = loc_counterclock.add(d_counterclock2);
+					Debug.ttlog("loc_clock");
+					Debug.ttlog("here: loc_clock");
+					Debug.ttlog("d_cw: " + d_clock);
+					Debug.ttlog("d_ccw: " + d_counterclock);
+					Debug.ttlog("cw1 "+loc_clock);
+					Debug.ttlog("cw2 "+loc_clock2);
+					Debug.ttlog("ccw1 "+loc_counterclock);
+					Debug.ttlog("ccw2 "+loc_counterclock2);
+
+					if (rc.canSenseLocation(loc_clock)
+							&& rc.canSenseLocation(loc_clock2)
+							&& rc.canSenseLocation(loc_counterclock)
+							&& rc.canSenseLocation(loc_counterclock2)) {
+
+						RobotInfo ri_clock = rc.senseRobotAtLocation(loc_clock);
+						RobotInfo ri_clock2 = rc.senseRobotAtLocation(loc_clock2);
+						RobotInfo ri_counterclock = rc.senseRobotAtLocation(loc_counterclock);
+						RobotInfo ri_counterclock2 = rc.senseRobotAtLocation(loc_counterclock2);
+
+						// is there a landscaper within the clockwise direction x 2
+						boolean ls_in_clock = ri_clock != null && ri_clock.type == RobotType.LANDSCAPER;
+						boolean ls_in_clock2 = ri_clock2 != null && ri_clock2.type == RobotType.LANDSCAPER;
+						boolean ls_within_two_clock = ls_in_clock || ls_in_clock2;
+						boolean ls_in_counterclock = ri_counterclock != null && ri_counterclock.type == RobotType.LANDSCAPER;
+						boolean ls_in_counterclock2 = ri_counterclock2 != null && ri_counterclock2.type == RobotType.LANDSCAPER;
+						boolean ls_within_two_counterclock = ls_in_counterclock || ls_in_counterclock2;
+
+						Debug.tlog("ls " + ls_in_clock + " " + ls_in_clock2 + " v " + ls_in_counterclock + " " + ls_in_counterclock2);
+
+						if (ls_within_two_clock && ls_within_two_counterclock) {
+							Debug.tlog("Standing still");
+							buildWall();
+							return;
+						}
+
+						if (!ls_within_two_clock && ls_within_two_counterclock) {
+							// surroundings look like (LL)X__ (top of clock)
+							// move clockwise
+							Debug.tlog("MOVING CLOCKWISE IN " + d_clock);
+							if (depositsWithoutMove < DEPOSITS_WITHOUT_MOVE_LIMIT) {
+								buildWall();
+								return;
+							}
+							moveClockwise = true;
+							if (rc.isReady()) {
+								landscaperWallMove(d_clock);
+								return;
+							} else {
+								Debug.ttlog("But not ready");
+							}
+							return;
+						}
+
+						if (ls_within_two_clock && !ls_within_two_counterclock) {
+							// surroundings look like __X(LL) (top of clock)
+							// move counterclockwise
+							Debug.tlog("MOVING COUNTERCLOCKWISE IN " + d_counterclock);;
+							if (depositsWithoutMove < DEPOSITS_WITHOUT_MOVE_LIMIT) {
+								buildWall();
+								return;
+							}
+							moveClockwise = false;
+							if (rc.isReady()) {
+								landscaperWallMove(d_counterclock);
+								return;
+							} else {
+								Debug.ttlog("But not ready");
+							}
+							return;
+						}
+
+						// STATE == no landscapers within two wall moves
+						// not adjacent to any flooded base tiles
+
+						if (!ls_within_two_clock && !ls_within_two_counterclock) {
+							if (depositsWithoutMove < DEPOSITS_WITHOUT_MOVE_LIMIT) {
+								buildWall();
 								return;
 							}
 
-							if (ls_in_clock && !ls_within_two_counterclock) {
-								// surroundings look like *LX__
-								// move counterclockwise
-								Direction d = getCounterClockwiseDir(here);
-								Debug.tlog("MOVING COUNTERCLOCKWISE IN " + d);
-								if (rc.isReady()) {
-									// if too steep, dig to fix heights
-									if (!Nav.checkElevation(rc.adjacentLocation(d))) {
-										Debug.ttlog("TOO STEEP: MINING MORE");
-										currentStep = 0;
-										break;
-									}
-									if (ri_counterclock == null) {
-										Actions.doMove(d);
-										Debug.ttlog("Success");
-										return;
-									} else {
-										Debug.ttlog("Failed");
-										return;
-									}
-								}
-								return;
+							// try to move since we have been sitting here for a while
+							Direction dir;
+							if (moveClockwise) {
+								dir = getClockwiseLargeWallDirection(currentLargeWallIndex);
+							} else {
+								dir = getCounterClockwiseLargeWallDirection(currentLargeWallIndex);
 							}
+							landscaperWallMove(dir);
 
-							// move to corner
-							Debug.tlog("trying to move to corner ");
-							int distToHQ = HQLocation.distanceSquaredTo(here);
-							for (Direction dir: directions) {
-								if (dir == d_clock && ls_within_two_clock) {
-									continue;
-								}
-								if (dir == d_counterclock && ls_within_two_counterclock) {
-									continue;
-								}
-								MapLocation loc = rc.adjacentLocation(dir);
-								if (!inMap(loc)) {
-									continue;
-								}
-								// on ring and gets farther from hq
-								if (maxXYDistance(HQLocation, loc) == 4 && HQLocation.distanceSquaredTo(loc) > distToHQ) {
-									if (!rc.senseFlooding(loc) && Nav.checkElevation(loc) && rc.senseRobotAtLocation(loc) == null) {
-										Debug.tlog("moving to corner ");
-										Actions.doMove(dir);
-										return;
-									}
-								}
-							}
-
-							Debug.tlog("Unexpected case " + ls_in_clock + " " + ls_in_clock2 + " v " + ls_in_counterclock + " " + ls_in_counterclock);
-							// do nothing
-							// do not return
+							return;
 						}
 
-						break;
+						Debug.tlog("ERROR: Sanity check failed - Unknown wall status");
 					}
 
-					Debug.tlog("hi");
 
-					// STATE == not trying to move
-					// or needs to use dirt to move
 
-					if (rc.getDirtCarrying() < 1) {
-						Debug.ttlog("DIGGING");
-						landscaperDig(2);
-						return;
-					}
-
-					// Has enough dirt to deposit
-
-					Debug.ttlog("DEPOSITING");
-					if(isFlooded) {
-						Debug.ttlog("DEPOSITING IN WATER IN DIRECTION: " + inFlood);
-						if(rc.canDepositDirt(inFlood)) {
-							Actions.doDepositDirt(inFlood);
-							Debug.tlog("Success");
-						} else {
-							Debug.tlog("Failed");
-						}
-						return;
-					}
-					else {
-						int minDirt = P_INF;
-						Direction minDir = null;
-						for (Direction d : Direction.allDirections()) {
-							MapLocation newloc = here.add(d);
-							RobotInfo ri = rc.senseRobotAtLocation(newloc);
-							if(ri != null && ri.type.isBuilding() && ri.team == rc.getTeam()) continue;
-							// checks if inside tiles are below elevation
-							// if largeWallFull of landscapers, ignore this check
-							if(!largeWallFull) {
-								if (maxXYDistance(HQLocation, newloc) == 3 && rc.senseElevation(newloc) < smallWallDepth) {
-									minDir = d;
-									minDirt = -1;
-									break;
-								}
-							}
-							if (maxXYDistance(HQLocation, newloc) == 4) {
-								if (minDirt > rc.senseElevation(newloc)) {
-									minDir = d;
-									minDirt = rc.senseElevation(newloc);
-								}
-							}
-						}
-						Debug.ttlog("DEPOSITING DIRT IN DIRECTION: " + minDir);
-						if (rc.canDepositDirt(minDir)) {
-							Actions.doDepositDirt(minDir);
-						}
-					}
-					// end of landscaper
+					// end of normal landscaper
 				}
 			}
 		}
@@ -551,6 +494,43 @@ public class BotLandscaper extends Globals {
 				if(rc.canDepositDirt(d)) Actions.doDepositDirt(d);
 	}
 
+	/*
+	Assumes isReady()
+	 */
+	private static void landscaperWallMove(Direction dir) throws GameActionException {
+		MapLocation loc = rc.adjacentLocation(dir);
+		RobotInfo ri = rc.senseRobotAtLocation(loc);
+		if (ri != null) {
+			return;
+		}
+		if (Nav.checkElevation(loc) && !rc.senseFlooding(loc)) {
+			Actions.doMove(dir);
+			depositsWithoutMove = 0;
+			return;
+		} else if (myElevation + GameConstants.MAX_DIRT_DIFFERENCE < rc.senseElevation(loc)) {
+			// STATE == we are lower than dest
+			if (rc.getDirtCarrying() == 0) {
+				landscaperDig(2);
+				return;
+			} else {
+				Actions.doDepositDirt(Direction.CENTER);
+				depositsWithoutMove++;
+				return;
+			}
+		} else {
+			// STATE == we are higher than dest or dest is flooded
+			if (rc.getDirtCarrying() == 0) {
+				landscaperDig(2);
+				return;
+			} else {
+				Actions.doDepositDirt(dir);
+				depositsWithoutMove++;
+				return;
+			}
+		}
+
+	}
+
 	private static void landscaperDig(int where) throws GameActionException {
 		if(where == 1) {
 			for (Direction d : Direction.allDirections()) {
@@ -561,6 +541,51 @@ public class BotLandscaper extends Globals {
 			for (Direction d : Direction.allDirections()) {
 				if (maxXYDistance(HQLocation, here.add(d)) == 5 && inArray(allDigLocations, here.add(d), allDigLocationsLength)) if (rc.canDigDirt(d)) Actions.doDigDirt(d);
 			}
+		}
+	}
+
+	private static void buildWall () throws GameActionException {
+		if (rc.isReady()) {
+			if (rc.getDirtCarrying() == 0) {
+				Debug.ttlog("Digging dirt");
+				landscaperDig(2);
+			} else {
+				int minDirt = P_INF;
+				Direction minDir = null;
+				for (Direction d : allDirections) {
+					MapLocation newloc = here.add(d);
+					if (!inMap(newloc)) {
+						continue;
+					}
+
+					RobotInfo ri = rc.senseRobotAtLocation(newloc);
+					if(ri != null && ri.type.isBuilding() && ri.team == rc.getTeam()) {
+						continue;
+					}
+
+					// checks if inside tiles are below elevation
+					// if largeWallFull of landscapers, ignore this check
+					if(!largeWallFull) {
+						if (maxXYDistance(HQLocation, newloc) == 3 && rc.senseElevation(newloc) < smallWallDepth) {
+							minDir = d;
+							minDirt = -1;
+							break;
+						}
+					}
+
+					if (maxXYDistance(HQLocation, newloc) == 4) {
+						if (minDirt > rc.senseElevation(newloc)) {
+							minDir = d;
+							minDirt = rc.senseElevation(newloc);
+						}
+					}
+				}
+				Debug.ttlog("Depositing dirt in direction " + minDir);
+				Actions.doDepositDirt(minDir);
+				depositsWithoutMove++;
+			}
+		} else {
+			Debug.ttlog("But not ready");
 		}
 	}
 }
