@@ -2,6 +2,10 @@ package kryptonite;
 
 import battlecode.common.*;
 
+import static kryptonite.Constants.*;
+import static kryptonite.Debug.*;
+import static kryptonite.Map.*;
+
 public class Communication extends Globals {
 
 	final public static int MAX_UNSENT_TRANSACTIONS_LENGTH = 100;
@@ -101,6 +105,8 @@ public class Communication extends Globals {
 
 	/*
 	Reads in transactions that were submitted last round
+	Returns number of transactions read
+	If we do not have enough bytecode to read all transactions,
 	*/
 	public static void readTransactions (int round) throws GameActionException {
 		if (round < 1 || round >= rc.getRoundNum()) {
@@ -590,11 +596,11 @@ message[3] = y coordinate of our HQ
 		if (message[3] == 1) {
 			BotOffenseDeliveryDrone.enemyHQLocation = symmetryHQLocations[message[2]];
 		}
-		BotOffenseDeliveryDrone.isSymmetry[message[2]] = message[3];
+		BotOffenseDeliveryDrone.isSymmetryHQLocation[message[2]] = message[3];
 		Debug.tlog("Reading transaction for 'Enemy HQ Location'");
 		Debug.tlog("Submitter ID: " + decryptID(message[0]));
 		Debug.tlog("Location: " + symmetryHQLocations[message[2]]);
-		Debug.tlog("Exists: " + BotOffenseDeliveryDrone.isSymmetry[message[2]]);
+		Debug.tlog("Exists: " + BotOffenseDeliveryDrone.isSymmetryHQLocation[message[2]]);
 		Debug.tlog("Posted round: " + round);
 	}
 
