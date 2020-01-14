@@ -201,10 +201,10 @@ public class Globals {
 //		Debug.log("Robot: " + myType);
 //		Debug.log("roundNum: " + roundNum);
 //		Debug.log("ID: " + myID);
-		Debug.log("here: " + here);
-		Debug.log("Cooldown: " + rc.getCooldownTurns());
-		Debug.log("actualSensorRadiusSquared: " + actualSensorRadiusSquared);
-		Debug.log("dynamicCost: " + Communication.dynamicCost);
+		Debug.log("*here: " + here);
+		Debug.log("*Cooldown: " + rc.getCooldownTurns());
+		Debug.log("*actualSensorRadiusSquared: " + actualSensorRadiusSquared);
+		Debug.log("*dynamicCost: " + Communication.dynamicCost);
 		Debug.log();
 		if (myID == builderMinerID) {
 			Debug.log("I am the builder miner");

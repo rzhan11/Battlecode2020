@@ -31,7 +31,7 @@ public class Debug extends Globals {
 	*/
 	public static void tlog (String str) {
 		if (DISPLAY_LOGS) {
-			System.out.println("\n-" + str);
+			System.out.println("\n- " + str);
 		}
 	}
 
@@ -41,7 +41,7 @@ public class Debug extends Globals {
 	*/
 	public static void ttlog (String str) {
 		if (DISPLAY_LOGS) {
-			System.out.println("\n--" + str);
+			System.out.println("\n-- " + str);
 		}
 	}
 
@@ -57,10 +57,10 @@ public class Debug extends Globals {
 	}
 
 	public static void tlogi (String str) {
-		System.out.println("\n-" + str);
+		System.out.println("\n- " + str);
 	}
 
 	public static void ttlogi (String str) {
-		System.out.println("\n--" + str);
+		System.out.println("\n-- " + str);
 	}
 }
