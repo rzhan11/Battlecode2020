@@ -82,6 +82,7 @@ public class Globals {
 
 
 	public static void init(RobotController theRC) throws GameActionException {
+		int startByte = Clock.getBytecodesLeft();
 		rc = theRC;
 
 		us = rc.getTeam();
@@ -108,22 +109,19 @@ public class Globals {
 
 		lastActiveTurn = spawnRound - 1;
 
-		findHQLocation();
-
-		symmetryHQLocationsIndex = myID % symmetryHQLocations.length;
-		log("Initial exploreSymmetryLocation: " + symmetryHQLocations[symmetryHQLocationsIndex]);
+		log("Init cost: " + (startByte - Clock.getBytecodesLeft()));
 	}
 
 	public static void update() throws GameActionException {
+		int startByte = Clock.getBytecodesLeft();
 		here = rc.getLocation();
 		roundNum = rc.getRoundNum();
 		teamSoup = rc.getTeamSoup();
 
 		if (firstTurn) {
-			log();
-			log("---------------");
-			log("--FIRST TURN---");
-			log("---------------");
+			log("------------------------------\n");
+			log("FIRST TURN");
+			log("------------------------------\n");
 		}
 
 		myElevation = rc.senseElevation(here);
@@ -133,7 +131,7 @@ public class Globals {
 		actualSensorRadiusSquared = rc.getCurrentSensorRadiusSquared();
 		extremePollution = actualSensorRadiusSquared < 2;
 		if (extremePollution) {
-			log("WARNING: Extreme pollution has made actualSensorRadiusSquared < 2, so errors may occur. Ask Richard.");
+			logi("WARNING: Extreme pollution has made actualSensorRadiusSquared < 2, so errors may occur. Ask Richard.");
 		}
 
 		printMyInfo();
@@ -142,9 +140,11 @@ public class Globals {
 		visibleEnemies = rc.senseNearbyRobots(-1, them);
 		visibleCows = rc.senseNearbyRobots(-1, cowTeam);
 
-		adjacentAllies = rc.senseNearbyRobots(2, us);
-		adjacentEnemies = rc.senseNearbyRobots(2, them);
-		adjacentCows = rc.senseNearbyRobots(2, cowTeam);
+		if (!isLowBytecodeLimit(myType)) {
+			adjacentAllies = rc.senseNearbyRobots(2, us);
+			adjacentEnemies = rc.senseNearbyRobots(2, them);
+			adjacentCows = rc.senseNearbyRobots(2, cowTeam);
+		}
 
 		if (roundNum == lastActiveTurn + 1) {
 			droppedLastTurn = false;
@@ -160,6 +160,14 @@ public class Globals {
 
 		calculateDynamicCost();
 
+		// find HQ location and symmetries if not already found
+		if (symmetryHQLocations == null) {
+			findHQLocation();
+			symmetryHQLocationsIndex = myID % symmetryHQLocations.length;
+			log("Initial exploreSymmetryLocation: " + symmetryHQLocations[symmetryHQLocationsIndex]);
+		}
+
+		// read previous round's transactions
 		if (roundNum > 1) {
 			log("Reading the previous round's transactions");
 			int result = readBlock(roundNum - 1, 0);
@@ -170,14 +178,13 @@ public class Globals {
 			}
 		}
 
-		if (symmetryHQLocations == null) {
-			findHQLocation();
-		}
 
 		updateSymmetry();
 
 		// tries to submit unsent messages from previous turns
 		submitUnsentTransactions();
+
+		log("Update cost: " + (startByte - Clock.getBytecodesLeft()));
 	}
 
 	/*

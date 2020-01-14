@@ -2,15 +2,13 @@ package kryptonite;
 
 import battlecode.common.*;
 
-import static kryptonite.Communication.*;
-import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
-import static kryptonite.Map.*;
 
 public class Communication extends Globals {
 
 	final public static int MAX_UNSENT_TRANSACTIONS_LENGTH = 100;
-	final public static int READ_OLD_TRANSACTIONS_COST = 1000; // how many bytecodes readOldBlocks() will leave available
+	final public static int READ_TRANSACTION_MIN_BYTECODE = 500; // how many bytecodes required to read a transaction
+	final public static int READ_BIG_TRANSACTION_MIN_BYTECODE = 1500; // how many bytecodes required to read a costly transaction
 
 	final public static int FIRST_TURN_DYNAMIC_COST = 3;
 
@@ -94,6 +92,9 @@ public class Communication extends Globals {
 		int startTransactionsIndex = oldTransactionsIndex;
 		int totalReadTransactions = 0;
 		while (oldBlocksIndex < spawnRound - 1) { // -1 is since we always read previous transactions, so spawnRound - 1 is already read
+			if (Clock.getBytecodesLeft() < READ_TRANSACTION_MIN_BYTECODE) {
+				break;
+			}
 			int res = readBlock(oldBlocksIndex, oldTransactionsIndex);
 			totalReadTransactions += Math.abs(res);
 			if (res < 0) {
@@ -117,11 +118,13 @@ public class Communication extends Globals {
 	public static int readBlock(int round, int startIndex) throws GameActionException {
 		Transaction[] block = rc.getBlock(round);
 		int index = 0;
-		for (Transaction t: block) {
+		for (Transaction t : block) {
 			if (index < startIndex) {
 				continue;
 			}
-			if (Clock.getBytecodesLeft() < READ_OLD_TRANSACTIONS_COST) {
+
+			// if this is not the previous round, and we are almost out of bytecode, skip
+			if (Clock.getBytecodesLeft() < READ_TRANSACTION_MIN_BYTECODE && round != roundNum - 1) {
 				return -(index + 1);
 			}
 
@@ -133,21 +136,27 @@ public class Communication extends Globals {
 				log("Found opponent's transaction");
 				continue; // not submitted by our team
 			} else {
-		        switch (message[1]) {
-		            case HQ_FIRST_TURN_SIGNAL:
+				switch (message[1]) {
+					case HQ_FIRST_TURN_SIGNAL:
 						readTransactionHQFirstTurn(message, round);
 						break;
-		            case SOUP_CLUSTER_SIGNAL:
+					case SOUP_CLUSTER_SIGNAL:
 						if (myType == RobotType.MINER) {
+							if (Clock.getBytecodesLeft() < READ_BIG_TRANSACTION_MIN_BYTECODE && round != roundNum - 1) {
+								return -(index + 1);
+							}
 							readTransactionSoupCluster(message, round);
 						}
 						break;
-		            case REFINERY_BUILT_SIGNAL:
+					case REFINERY_BUILT_SIGNAL:
 						if (myType == RobotType.MINER) {
+							if (Clock.getBytecodesLeft() < READ_BIG_TRANSACTION_MIN_BYTECODE && round != roundNum - 1) {
+								return -(index + 1);
+							}
 							readTransactionRefineryBuilt(message, round);
 						}
 						break;
-		            case SYMMETRY_MINER_BUILT_SIGNAL:
+					case SYMMETRY_MINER_BUILT_SIGNAL:
 						if (myType == RobotType.MINER) {
 							readTransactionSymmetryMinerBuilt(message, round);
 						}
@@ -188,7 +197,7 @@ public class Communication extends Globals {
 					case LARGE_WALL_FULL_SIGNAL:
 						readTransactionLargeWallFull(message, round);
 						break;
-		        }
+				}
 			}
 
 			index++;

@@ -102,6 +102,11 @@ public class BotMiner extends Globals {
 
 		log("soupCarrying: " + soupCarrying);
 
+//		if (!rc.isReady()) {
+//			log("Not ready");
+//			return;
+//		}
+
 		// moves away from immediate water danger
 		Nav.avoidWater();
 

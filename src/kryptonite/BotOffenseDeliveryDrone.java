@@ -104,13 +104,15 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
             crossedTemporaryRobotLocation = true;
         }
         if (!holdingTemporaryRobot && move == null && rc.isReady()) {
-            log("Trying to force a move");
-            Direction dirToEnemyHQ = here.directionTo(targetLoc);
-            move = Nav.tryForceMoveInGeneralDirection(dirToEnemyHQ);
-            if (move != null) { // STATE == picked up an ally
-                holdingTemporaryRobot = true;
-                holdingTemporaryRobotLocation = rc.adjacentLocation(move);
-                crossedTemporaryRobotLocation = false;
+            if (!rc.isCurrentlyHoldingUnit()) {
+                log("Trying to force a move");
+                Direction dirToEnemyHQ = here.directionTo(targetLoc);
+                move = Nav.tryForceMoveInGeneralDirection(dirToEnemyHQ);
+                if (move != null) { // STATE == picked up an ally
+                    holdingTemporaryRobot = true;
+                    holdingTemporaryRobotLocation = rc.adjacentLocation(move);
+                    crossedTemporaryRobotLocation = false;
+                }
             }
         }
         return;

@@ -48,4 +48,5 @@ public class BotNetGun extends Globals {
 			}
 		}
 	}
+
 }

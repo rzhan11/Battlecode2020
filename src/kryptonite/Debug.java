@@ -22,8 +22,8 @@ public class Debug extends Globals {
 		}
 		switch (myType) {
 			case DELIVERY_DRONE: return true;
-			case DESIGN_SCHOOL: return true;
-			case FULFILLMENT_CENTER: return true;
+			case DESIGN_SCHOOL: return false;
+			case FULFILLMENT_CENTER: return false;
 			case HQ: return true;
 			case LANDSCAPER: return false;
 			case MINER:
