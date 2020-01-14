@@ -22,9 +22,10 @@ public class BotDeliveryDrone extends Globals {
 	// what type of robot transport are we doing
 	public static boolean movingRobotToWater; // used to kill enemies
 
-	public static boolean movingRobotToPlot;
 	public static boolean movingRobotToWall;
 	public static MapLocation movingToWallLocation = null;
+	public static boolean foundWall = false;
+
 	public static boolean movingRobotInwards;
 	public static boolean movingRobotOutwards;
 	public static MapLocation movingOutwardsLocation = null;
@@ -215,6 +216,8 @@ public class BotDeliveryDrone extends Globals {
 							Debug.ttlog("Dropped " +  dir);
 							Actions.doDropUnit(dir);
 							movingRobotToWall = false;
+							movingToWallLocation = null;
+							foundWall = false;
 						} else {
 							Debug.ttlog("But not ready");
 						}
@@ -226,12 +229,13 @@ public class BotDeliveryDrone extends Globals {
 				if (movingToWallLocation != null && rc.canSenseLocation(movingToWallLocation)) {
 				 	if (rc.senseFlooding(movingToWallLocation) || rc.senseRobotAtLocation(movingToWallLocation) != null) {
 						movingToWallLocation = null;
+						foundWall = false;
 						Debug.tlog("movingToWallLocation is flooded/occupied, resetting it");
 					}
 				}
 
 				// looks for an wall location that is not flooded or occupied
-				if (movingToWallLocation == null) {
+				if (!foundWall) {
 					for (int[] dir: senseDirections) {
 						if (actualSensorRadiusSquared < dir[2]) {
 							break;
@@ -240,6 +244,7 @@ public class BotDeliveryDrone extends Globals {
 						if (maxXYDistance(HQLocation, loc) == largeWallRingRadius) {
 							if (rc.canSenseLocation(loc) && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
 								movingToWallLocation = loc;
+								foundWall = true;
 								Debug.tlog("Setting movingToWallLocation to " + movingToWallLocation);
 								break;
 							}
@@ -252,6 +257,7 @@ public class BotDeliveryDrone extends Globals {
 					int dx = HQLocation.x - here.x;
 					int dy = HQLocation.y - here.y;
 					movingToWallLocation = new MapLocation(HQLocation.x + dx, HQLocation.y + dy);
+					foundWall = false;
 					Debug.tlog("Reflecting movingToWallLocation across HQ to " + movingToWallLocation);
 				}
 
@@ -271,84 +277,7 @@ public class BotDeliveryDrone extends Globals {
 				return;
 			}
 
-			if (movingRobotToPlot) { // moving a robot from the dig spot to the plot
-
-				// drop robot onto a 5x5 plot tile that is not occupied/flooded
-				for (Direction dir : directions) {
-					MapLocation loc = rc.adjacentLocation(dir);
-					if (inMap(loc) && maxXYDistance(HQLocation, loc) <= 2 && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
-						Debug.tlog("Dropped robot on the 5x5 plot at " +  loc);
-						if (rc.isReady()) {
-							Debug.ttlog("Dropped " +  dir);
-							Actions.doDropUnit(dir);
-							movingRobotToPlot = false;
-						} else {
-							Debug.ttlog("But not ready");
-						}
-						return;
-					}
-				}
-
-				// go towards HQLocation
-				Debug.tlog("Moving to drop in 5x5 plot");
-				if (rc.isReady()) {
-					Direction move = Nav.bugNavigate(HQLocation);
-					if (move != null) {
-						Debug.ttlog("Moved " + move);
-					} else {
-						Debug.ttlog("But no move found");
-					}
-				} else {
-					Debug.ttlog("But not ready");
-				}
-			}
-
 		} else { // STATE == not holding a unit
-
-			// find closest ally robot that is pick-up-able and is stuck in a digLocation
-			/*
-			int closestAllyDist = P_INF;
-			RobotInfo closestAllyInfo = null;
-			for (RobotInfo ri: visibleAllies) {
-				if (isBuilderMiner(ri.ID)) continue;
-				if (canPickUpType(ri.type) && inArray(campLocations, ri.location, campLocationsLength)) {
-					int dist = here.distanceSquaredTo(ri.location);
-					if (dist < closestAllyDist) {
-						closestAllyDist = dist;
-						closestAllyInfo = ri;
-					}
-				}
-			}
-
-			if (closestAllyInfo != null) { // STATE == ally is stuck in a dig location
-				movingRobotToPlot = true;
-				// if we are adjacent to ally, pull him out
-				if (here.distanceSquaredTo(closestAllyInfo.location) <= 2) {
-					Debug.tlog("Picking up ally at digLocation " + closestAllyInfo.location);
-					if (rc.isReady()) {
-						Actions.doPickUpUnit(closestAllyInfo.ID);
-						Debug.ttlog("Success");
-					} else {
-						Debug.ttlog("But not ready");
-					}
-				} else {
-					// go to ally that is stuck
-					Debug.tlog("Moving to pick up ally at digLocation " + closestAllyInfo.location);
-					if (rc.isReady()) {
-						Direction move = Nav.bugNavigate(closestAllyInfo.location);
-						if (move != null) {
-							Debug.ttlog("Moved " + move);
-						} else {
-							Debug.ttlog("But no move found");
-						}
-					} else {
-						Debug.ttlog("But not ready");
-					}
-				}
-
-				return;
-			}
-			*/
 
 			// check if adjacent robots are on transport tiles/wall
 			for (RobotInfo ri: adjacentAllies) {

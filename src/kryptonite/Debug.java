@@ -4,13 +4,32 @@ import battlecode.common.*;
 
 public class Debug extends Globals {
 
-	final private static boolean DISPLAY_LOGS = true;
+	public static boolean isDisplayLogs() {
+		switch (myType) {
+			case DELIVERY_DRONE: return true;
+			case DESIGN_SCHOOL: return true;
+			case FULFILLMENT_CENTER: return true;
+			case HQ: return true;
+			case LANDSCAPER: return false;
+			case MINER:
+				if (isBuilderMiner(myID)) {
+					return true;
+				}
+				return false;
+			case NET_GUN: return false;
+			case REFINERY: return false;
+			case VAPORATOR: return false;
+			default:
+				Debug.tlogi("ERROR: Sanity check failed - unknown class " + myType);
+				return false;
+		}
+	}
 
 	/*
 	Prints a separator line, currently a single dash
 	*/
 	public static void log () {
-		if (DISPLAY_LOGS) {
+		if (isDisplayLogs()) {
 			System.out.println("\n");
 		}
 	}
@@ -20,7 +39,7 @@ public class Debug extends Globals {
 	Can be turned off by setting 'DISPLAY_LOGS' to false
 	*/
 	public static void log (String str) {
-		if (DISPLAY_LOGS) {
+		if (isDisplayLogs()) {
 			System.out.println("\n" + str);
 		}
 	}
@@ -30,7 +49,7 @@ public class Debug extends Globals {
 	Can be turned off by setting 'DISPLAY_LOGS' to false
 	*/
 	public static void tlog (String str) {
-		if (DISPLAY_LOGS) {
+		if (isDisplayLogs()) {
 			System.out.println("\n- " + str);
 		}
 	}
@@ -40,7 +59,7 @@ public class Debug extends Globals {
 	Can be turned off by setting 'DISPLAY_LOGS' to true
 	*/
 	public static void ttlog (String str) {
-		if (DISPLAY_LOGS) {
+		if (isDisplayLogs()) {
 			System.out.println("\n-- " + str);
 		}
 	}

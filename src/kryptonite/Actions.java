@@ -13,6 +13,7 @@ public class Actions extends Globals {
 	public static int[] BLACK = {0, 0, 0}; // drone targetting HQLocation
 	// black also used for deposit dirt
 	public static int[] CYAN = {0, 255, 255}; // drone explore symmetry
+	public static int[] BROWN = {101, 67, 33}; // builderminer
 
 	private static int[] color;
 

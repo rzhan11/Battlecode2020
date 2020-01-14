@@ -201,12 +201,14 @@ public class Globals {
 //		Debug.log("Robot: " + myType);
 //		Debug.log("roundNum: " + roundNum);
 //		Debug.log("ID: " + myID);
-		Debug.log("*here: " + here);
+		Debug.log("*Location: " + here);
 		Debug.log("*Cooldown: " + rc.getCooldownTurns());
 		Debug.log("*actualSensorRadiusSquared: " + actualSensorRadiusSquared);
 		Debug.log("*dynamicCost: " + Communication.dynamicCost);
 		Debug.log();
 		if (myID == builderMinerID) {
+			int[] color = Actions.BROWN;
+			rc.setIndicatorDot(here, color[0], color[1], color[2]);
 			Debug.log("I am the builder miner");
 		}
 	}

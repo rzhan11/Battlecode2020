@@ -107,6 +107,7 @@ public class BotLandscaper extends Globals {
 					// if the target location is in the 5x5 ring and is not occupied/flooded
 					if (maxXYDistance(HQLocation, loc) >= 2 && rc.senseRobotAtLocation(loc) == null) {
 						landscaperMove(dir);
+						return;
 					}
 				}
 			}
@@ -114,7 +115,7 @@ public class BotLandscaper extends Globals {
 			// If the First Wall isn't Complete and you can do stuff in your current position, do it
 			if (!smallWallFinished) {
 				// Update smallWallCompleted Array
-				for (Direction d : Direction.allDirections()) {
+				for (Direction d : allDirections) {
 					MapLocation tempLoc = here.add(d);
 					if (inArray(smallWall, tempLoc, smallWallLength) && !inArray(smallWallCompleted, tempLoc, smallWallCompletedLength)) {
 						if (rc.canSenseLocation(tempLoc)) {
