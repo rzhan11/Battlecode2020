@@ -5,7 +5,7 @@ import battlecode.common.*;
 public class BotHQ extends Globals {
 
 	final public static int RELAX_LARGE_WALL_FULL_ROUND_NUM = 1000;
-	final public static int RELAX_LARGE_WALL_FULL_AMOUNT = 3;
+	final public static int RELAX_LARGE_WALL_FULL_AMOUNT = 4;
 
 	private static boolean[] exploredDirections = new boolean[8]; // whether or not a Miner has been sent in this direction
 	private static int explorerMinerCount = 0;
