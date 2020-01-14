@@ -2,6 +2,7 @@ package kryptonite;
 
 import battlecode.common.*;
 
+import static kryptonite.Communication.*;
 import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
@@ -50,18 +51,18 @@ public class BotBuilderMiner extends BotMiner {
 			init();
 		}
 
-		Debug.tlog("checkpoints: ");
-		Debug.ttlog("drone " + reachedDroneCheckpoint);
-		Debug.ttlog("landscaper " + reachedLandscaperCheckpoint);
-		Debug.ttlog("netgun " + reachedNetgunCheckpoint);
-		Debug.ttlog("vaporator " + reachedVaporatorCheckpoint);
+		log("checkpoints: ");
+		tlog("drone " + reachedDroneCheckpoint);
+		tlog("landscaper " + reachedLandscaperCheckpoint);
+		tlog("netgun " + reachedNetgunCheckpoint);
+		tlog("vaporator " + reachedVaporatorCheckpoint);
 
 		// first step is to build the fulfillment center
 		// This fragment of code checks to build the center if the cost of the refinery, sending that signal and the fufillment center are all
 		// less than teamSoup
 
 		if (!fulfillmentCenterBuilt) {
-			Debug.tlog("Trying for fulfillmentCenter");
+			log("Trying for fulfillmentCenter");
 			if (teamSoup >= RobotType.FULFILLMENT_CENTER.cost + RobotType.REFINERY.cost) {
 
 				//find a spot in the 5x5 where it can build fulfillment center
@@ -77,30 +78,30 @@ public class BotBuilderMiner extends BotMiner {
 						built = true;
 						teamSoup = rc.getTeamSoup();
 						fulfillmentCenterBuilt = true;
-						Debug.ttlog("Fulfillment Center Built");
+						tlog("Fulfillment Center Built");
 						return;
 					}
 				}
 				if(!built){
-					Debug.ttlog("Fulfillment Center Not Built");
+					tlog("Fulfillment Center Not Built");
 					moveLog(HQLocation);
 				}
 			} else {
-				Debug.tlog("Not enough soup for Fulfillment Center + Refinery");
+				log("Not enough soup for Fulfillment Center + Refinery");
 			}
 			return;
 		}
 
 		if (reachedDroneCheckpoint >= 0) {
-			Debug.tlog("Continuing: Drone checkpoint 0 reached");
+			log("Continuing: Drone checkpoint 0 reached");
 		} else {
-			Debug.tlog("Returning: Drone checkpoint 0 not reached");
+			log("Returning: Drone checkpoint 0 not reached");
 			return;
 		}
 
 		// after the drone checkpoint has been reached, this fragment then builds the designSchool with the same cost requirements as the fulfillment center
 		if (!designSchoolBuilt) {
-			Debug.tlog("Trying for designSchool");
+			log("Trying for designSchool");
 			if (teamSoup >= RobotType.DESIGN_SCHOOL.cost + RobotType.REFINERY.cost) {
 				// potential bug - what if we are already on the designSchoolLocation?
 				//find a spot in the 5x5 where it can build fulfillment center
@@ -116,30 +117,30 @@ public class BotBuilderMiner extends BotMiner {
 						built = true;
 						teamSoup = rc.getTeamSoup();
 						designSchoolBuilt = true;
-						Debug.ttlog("Design School Built");
+						tlog("Design School Built");
 						return;
 					}
 				}
 				if(!built){
-					Debug.ttlog("Design School Not Built");
+					tlog("Design School Not Built");
 					moveLog(HQLocation);
 				}
 			} else {
-				Debug.tlog("Not enough soup for Design School + Refinery");
+				log("Not enough soup for Design School + Refinery");
 			}
 			return;
 		}
 
 		if (reachedLandscaperCheckpoint >= 0) {
-			Debug.tlog("Continuing: Landscaper checkpoint 0 reached");
+			log("Continuing: Landscaper checkpoint 0 reached");
 		} else {
-			Debug.tlog("Returning: Landscaper checkpoint 0 not reached");
+			log("Returning: Landscaper checkpoint 0 not reached");
 			return;
 		}
 
 		// now building the 4 net guns
 		if (netGunsBuilt < maxNetGuns[0]) {
-			Debug.tlog("Attempting net guns phase 0");
+			log("Attempting net guns phase 0");
 			int[][] netGunQuadrant = HardCode.netGunLU[netGunsBuilt % 4];
 			//loop through
 			boolean built = false;
@@ -149,23 +150,23 @@ public class BotBuilderMiner extends BotMiner {
 				if (here.isAdjacentTo(buildLocation) && teamSoup >= RobotType.NET_GUN.cost + RobotType.REFINERY.cost
 						&& !rc.senseFlooding(buildLocation) && isFlat(buildLocation)
 						&& rc.senseRobotAtLocation(buildLocation) == null) {
-					Debug.tlog("Building netgun at " + buildLocation);
+					log("Building netgun at " + buildLocation);
 					if (rc.isReady()) {
 						Actions.doBuildRobot(RobotType.NET_GUN, dir);
 						teamSoup = rc.getTeamSoup();
 						netGunsBuilt++;
 						built = true;
-						Debug.ttlog("Success");
+						tlog("Success");
 						return;
 					} else {
-						Debug.ttlog("But not ready");
+						tlog("But not ready");
 					}
 				}
 			}
 
 			if (!built) {
 				MapLocation loc = new MapLocation(HQLocation.x + HardCode.netGunBuildLocations[netGunsBuilt % 4][0], HQLocation.y + HardCode.netGunBuildLocations[netGunsBuilt % 4][1]);
-				Debug.ttlog("Moving to " + loc);
+				tlog("Moving to " + loc);
 				moveLog(loc);
 			}
 			return;
@@ -173,7 +174,7 @@ public class BotBuilderMiner extends BotMiner {
 
 		// now building the vaporators
 		if (vaporatorsBuilt < maxVaporators) {
-			Debug.tlog("Attempting vaporators");
+			log("Attempting vaporators");
 			//find a spot in the 5x5 where it can build fulfillment center
 			boolean built = false;
 			for (int dx = -2; dx <= 2; dx++) {
@@ -187,15 +188,15 @@ public class BotBuilderMiner extends BotMiner {
 					if (here.isAdjacentTo(buildLocation) && teamSoup >= RobotType.VAPORATOR.cost + RobotType.REFINERY.cost
 							&& !rc.senseFlooding(buildLocation) && isFlat(buildLocation)
 							&& rc.senseRobotAtLocation(buildLocation) == null) {
-						Debug.tlog("Building vaporator at " + buildLocation);
+						log("Building vaporator at " + buildLocation);
 						if (rc.isReady()) {
 							Actions.doBuildRobot(RobotType.VAPORATOR, dir);
 							built = true;
 							teamSoup = rc.getTeamSoup();
 							vaporatorsBuilt++;
-							Debug.ttlog("VAPORATOR Built");
+							tlog("VAPORATOR Built");
 							if (vaporatorsBuilt >= maxVaporators) {
-								Communication.writeTransactionVaporatorCheckpoint();
+								writeTransactionVaporatorCheckpoint();
 							}
 							return;
 						}
@@ -203,7 +204,7 @@ public class BotBuilderMiner extends BotMiner {
 				}
 			}
 			if (!built) {
-				Debug.ttlog("Vaporator Not Built");
+				tlog("Vaporator Not Built");
 				if (teamSoup >= RobotType.VAPORATOR.cost + RobotType.REFINERY.cost) {
 					moveLog(HQLocation);
 				}
@@ -212,15 +213,15 @@ public class BotBuilderMiner extends BotMiner {
 		}
 
 		if (reachedDroneCheckpoint >= 1) {
-			Debug.tlog("Continuing: Drone checkpoint 1 reached");
+			log("Continuing: Drone checkpoint 1 reached");
 		} else {
-			Debug.tlog("Returning: Drone checkpoint 1 not reached");
+			log("Returning: Drone checkpoint 1 not reached");
 			return;
 		}
 
 		// now build 8 netguns
 		if (netGunsBuilt < maxNetGuns[1]) {
-			Debug.tlog("Attempting net guns phase 1");
+			log("Attempting net guns phase 1");
 			int[][] netGunQuadrant = HardCode.netGunLU[netGunsBuilt % 4];
 			//loop through
 			boolean built = false;
@@ -230,35 +231,35 @@ public class BotBuilderMiner extends BotMiner {
 				if (here.isAdjacentTo(buildLocation) && teamSoup >= RobotType.NET_GUN.cost + RobotType.REFINERY.cost
 						&& !rc.senseFlooding(buildLocation) && isFlat(buildLocation)
 						&& rc.senseRobotAtLocation(buildLocation) == null) {
-					Debug.tlog("Building netgun at " + buildLocation);
+					log("Building netgun at " + buildLocation);
 					if (rc.isReady()) {
 						Actions.doBuildRobot(RobotType.NET_GUN, dir);
 						teamSoup = rc.getTeamSoup();
 						netGunsBuilt++;
 						built = true;
 						if (netGunsBuilt >= maxNetGuns[1]) {
-							Communication.writeTransactionNetgunCheckpoint();
+							writeTransactionNetgunCheckpoint();
 						}
-						Debug.ttlog("Success");
+						tlog("Success");
 						return;
 					} else {
-						Debug.ttlog("But not ready");
+						tlog("But not ready");
 					}
 				}
 			}
 
 			if (!built) {
 				MapLocation loc = new MapLocation(HQLocation.x + HardCode.netGunBuildLocations[netGunsBuilt % 4][0], HQLocation.y + HardCode.netGunBuildLocations[netGunsBuilt % 4][1]);
-				Debug.ttlog("Moving to " + loc);
+				tlog("Moving to " + loc);
 				moveLog(loc);
 			}
 			return;
 		}
 
 		if (reachedLandscaperCheckpoint >= 1) {
-			Debug.tlog("Continuing: Landscaper checkpoint 1 reached");
+			log("Continuing: Landscaper checkpoint 1 reached");
 		} else {
-			Debug.tlog("Returning: Landscaper checkpoint 1 not reached");
+			log("Returning: Landscaper checkpoint 1 not reached");
 			return;
 		}
 

@@ -2,6 +2,7 @@ package kryptonite;
 
 import battlecode.common.*;
 
+import static kryptonite.Communication.*;
 import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
@@ -22,59 +23,59 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
     }
 
     public static void turn() throws GameActionException {
-        Debug.tlog("OFFENSE DRONE");
+        log("OFFENSE DRONE");
 
         if (!initialized) {
             init();
         }
 
         locateFlooding();
-        Debug.tlog("floodingMemory: " + floodingMemory);
+        log("floodingMemory: " + floodingMemory);
 
-        Debug.log();
-        Debug.tlog("holdingTemporaryRobot: " + holdingTemporaryRobot);
-        Debug.tlog("holdingTemporaryRobotLocation: " + holdingTemporaryRobotLocation);
-        Debug.tlog("crossedTemporaryRobotLocation: " + crossedTemporaryRobotLocation);
+        log();
+        log("holdingTemporaryRobot: " + holdingTemporaryRobot);
+        log("holdingTemporaryRobotLocation: " + holdingTemporaryRobotLocation);
+        log("crossedTemporaryRobotLocation: " + crossedTemporaryRobotLocation);
         // if we are temporarily holding a robot, try to put it back
         if (holdingTemporaryRobot) {
             // if we are on the holdingTemporaryRobotLocation
             // let the turn continue and use the default pathing
             if (here.equals(holdingTemporaryRobotLocation)) {
-                Debug.tlog("Trying to get off of the holdingTemporaryRobotLocation at " + holdingTemporaryRobotLocation);
+                log("Trying to get off of the holdingTemporaryRobotLocation at " + holdingTemporaryRobotLocation);
                 // do not return
             } else if (!crossedTemporaryRobotLocation) {
                 // STATE == we have not moved since we picked up the robot
                 // if we haven't crossed holdingTemporaryRobotLocation, try to get onto it
                 Direction dir = here.directionTo(holdingTemporaryRobotLocation);
-                Debug.tlog("Moving to holdingTemporaryRobotLocation at " + holdingTemporaryRobotLocation);
+                log("Moving to holdingTemporaryRobotLocation at " + holdingTemporaryRobotLocation);
                 if (rc.canSenseLocation(holdingTemporaryRobotLocation) && rc.senseRobotAtLocation(holdingTemporaryRobotLocation) == null) {
                     if (rc.isReady()) {
                         Actions.doMove(here.directionTo(holdingTemporaryRobotLocation));
-                        Debug.ttlog("Success");
+                        tlog("Success");
                     } else {
-                        Debug.ttlog("But not ready");
+                        tlog("But not ready");
                     }
                     return;
                 }
-                Debug.ttlog("Waiting for it to open up");
+                tlog("Waiting for it to open up");
                 return;
             } else {
                 // STATE == crossedTemporaryRobotLocation
                 // should be adjacent to but not on the holdingTemporaryRobotLocation
-                Debug.tlog("Putting temporary robot back to " + holdingTemporaryRobotLocation);
+                log("Putting temporary robot back to " + holdingTemporaryRobotLocation);
                 if (rc.canSenseLocation(holdingTemporaryRobotLocation) && rc.senseRobotAtLocation(holdingTemporaryRobotLocation) == null) {
                     if (rc.isReady()) {
                         Actions.doDropUnit(here.directionTo(holdingTemporaryRobotLocation));
-                        Debug.ttlog("Success");
+                        tlog("Success");
                         holdingTemporaryRobot = false;
                         holdingTemporaryRobotLocation = null;
                         crossedTemporaryRobotLocation = false;
                     } else {
-                        Debug.ttlog("But not ready");
+                        tlog("But not ready");
                     }
                     return;
                 }
-                Debug.ttlog("Waiting for it to open up");
+                tlog("Waiting for it to open up");
                 return;
             }
         }
@@ -82,7 +83,7 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
         // if enemyHQLocation not found, go to exploreSymmetryLocation
         MapLocation targetLoc = getSymmetryLocation();
         if (enemyHQLocation == null) {
-            Debug.tlog("Moving towards symmetry location at " + targetLoc);
+            log("Moving towards symmetry location at " + targetLoc);
         } else {
             // STATE == enemyHQLocation found (AKA not null)
             // chase enemies and drop them into water
@@ -95,23 +96,23 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
                 return;
             }
 
-            Debug.tlog("Moving towards enemyHQLocation at " + enemyHQLocation);
+            log("Moving towards enemyHQLocation at " + enemyHQLocation);
         }
 
-//            int[] color = Actions.WHITE;
-//            rc.setIndicatorLine(here, targetLoc, color[0], color[1], color[2]);
         Direction move = moveLog(targetLoc);
         if (holdingTemporaryRobot && move != null) {
             crossedTemporaryRobotLocation = true;
         }
         if (!holdingTemporaryRobot && move == null && rc.isReady()) {
-            Debug.tlog("Trying to force a move");
-            Direction dirToEnemyHQ = here.directionTo(targetLoc);
-            move = Nav.tryForceMoveInGeneralDirection(dirToEnemyHQ);
-            if (move != null) { // STATE == picked up an ally
-                holdingTemporaryRobot = true;
-                holdingTemporaryRobotLocation = rc.adjacentLocation(move);
-                crossedTemporaryRobotLocation = false;
+            if (!rc.isCurrentlyHoldingUnit()) {
+                log("Trying to force a move");
+                Direction dirToEnemyHQ = here.directionTo(targetLoc);
+                move = Nav.tryForceMoveInGeneralDirection(dirToEnemyHQ);
+                if (move != null) { // STATE == picked up an ally
+                    holdingTemporaryRobot = true;
+                    holdingTemporaryRobotLocation = rc.adjacentLocation(move);
+                    crossedTemporaryRobotLocation = false;
+                }
             }
         }
         return;

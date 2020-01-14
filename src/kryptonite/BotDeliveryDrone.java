@@ -2,6 +2,7 @@ package kryptonite;
 
 import battlecode.common.*;
 
+import static kryptonite.Communication.*;
 import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
@@ -48,7 +49,7 @@ public class BotDeliveryDrone extends Globals {
 
 					Nav.isDrone = true;
 
-					Debug.tlog("LOADING CAMP LOCATIONS");
+					log("LOADING CAMP LOCATIONS");
 
 					// determine campLocations
 					int innerRingRadius = smallWallRingRadius;
@@ -106,7 +107,7 @@ public class BotDeliveryDrone extends Globals {
 		*/
 
 		locateFlooding();
-		Debug.tlog("floodingMemory: " + floodingMemory);
+		log("floodingMemory: " + floodingMemory);
 
 		insideWall = largeWallRingRadius > inMap(HQLocation, here);
 		onWall = largeWallRingRadius == inMap(HQLocation, here);
@@ -140,29 +141,29 @@ public class BotDeliveryDrone extends Globals {
 				for (Direction dir : directions) {
 					MapLocation loc = rc.adjacentLocation(dir);
 					if (inMap(loc) && inMap(HQLocation, loc) <= 2 && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
-						Debug.tlog("Dropped robot inside the wall at " +  loc);
+						log("Dropped robot inside the wall at " +  loc);
 						if (rc.isReady()) {
-							Debug.ttlog("Dropped " +  dir);
+							tlog("Dropped " +  dir);
 							Actions.doDropUnit(dir);
 							movingRobotInwards = false;
 						} else {
-							Debug.ttlog("But not ready");
+							tlog("But not ready");
 						}
 						return;
 					}
 				}
 
 				// go towards HQLocation
-				Debug.tlog("Moving to drop inwards");
+				log("Moving to drop inwards");
 				if (rc.isReady()) {
 					Direction move = Nav.bugNavigate(HQLocation);
 					if (move != null) {
-						Debug.ttlog("Moved " + move);
+						tlog("Moved " + move);
 					} else {
-						Debug.ttlog("But no move found");
+						tlog("But no move found");
 					}
 				} else {
-					Debug.ttlog("But not ready");
+					tlog("But not ready");
 				}
 
 				return;
@@ -174,14 +175,14 @@ public class BotDeliveryDrone extends Globals {
 				for (Direction dir : directions) {
 					MapLocation loc = rc.adjacentLocation(dir);
 					if (inMap(loc) && inMap(HQLocation, loc) > (largeWallRingRadius + 1) && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
-						Debug.tlog("Dropped robot outside the wall at " +  loc);
+						log("Dropped robot outside the wall at " +  loc);
 						if (rc.isReady()) {
-							Debug.ttlog("Dropped " +  dir);
+							tlog("Dropped " +  dir);
 							Actions.doDropUnit(dir);
 							movingRobotOutwards = false;
 							movingOutwardsLocation = null;
 						} else {
-							Debug.ttlog("But not ready");
+							tlog("But not ready");
 						}
 						return;
 					}
@@ -190,21 +191,21 @@ public class BotDeliveryDrone extends Globals {
 				// if movingOutwardsLocation is flooded or not in map, revert to symmetry
 				if (rc.canSenseLocation(movingOutwardsLocation) &&
 						(rc.senseFlooding(movingOutwardsLocation))) {
-					Debug.tlog("movingOutwardsLocation is flooded, reverting to symmetry");
+					log("movingOutwardsLocation is flooded, reverting to symmetry");
 					movingOutwardsLocation = symmetryHQLocations[0];
 				}
 
 				// go towards movingOutwardsLocation
-				Debug.tlog("Moving to drop outwards at " + movingOutwardsLocation);
+				log("Moving to drop outwards at " + movingOutwardsLocation);
 				if (rc.isReady()) {
 					Direction move = Nav.bugNavigate(movingOutwardsLocation);
 					if (move != null) {
-						Debug.ttlog("Moved " + move);
+						tlog("Moved " + move);
 					} else {
-						Debug.ttlog("But no move found");
+						tlog("But no move found");
 					}
 				} else {
-					Debug.ttlog("But not ready");
+					tlog("But not ready");
 				}
 
 				return;
@@ -215,15 +216,15 @@ public class BotDeliveryDrone extends Globals {
 				for (Direction dir : directions) {
 					MapLocation loc = rc.adjacentLocation(dir);
 					if (inMap(loc) && inMap(HQLocation, loc) == largeWallRingRadius && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
-						Debug.tlog("Dropped robot on the wall at " +  loc);
+						log("Dropped robot on the wall at " +  loc);
 						if (rc.isReady()) {
-							Debug.ttlog("Dropped " +  dir);
+							tlog("Dropped " +  dir);
 							Actions.doDropUnit(dir);
 							movingRobotToWall = false;
 							movingToWallLocation = null;
 							foundWall = false;
 						} else {
-							Debug.ttlog("But not ready");
+							tlog("But not ready");
 						}
 						return;
 					}
@@ -234,7 +235,7 @@ public class BotDeliveryDrone extends Globals {
 				 	if (rc.senseFlooding(movingToWallLocation) || rc.senseRobotAtLocation(movingToWallLocation) != null) {
 						movingToWallLocation = null;
 						foundWall = false;
-						Debug.tlog("movingToWallLocation is flooded/occupied, resetting it");
+						log("movingToWallLocation is flooded/occupied, resetting it");
 					}
 				}
 
@@ -249,7 +250,7 @@ public class BotDeliveryDrone extends Globals {
 							if (rc.canSenseLocation(loc) && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
 								movingToWallLocation = loc;
 								foundWall = true;
-								Debug.tlog("Setting movingToWallLocation to " + movingToWallLocation);
+								log("Setting movingToWallLocation to " + movingToWallLocation);
 								break;
 							}
 						}
@@ -262,20 +263,20 @@ public class BotDeliveryDrone extends Globals {
 					int dy = HQLocation.y - here.y;
 					movingToWallLocation = new MapLocation(HQLocation.x + dx, HQLocation.y + dy);
 					foundWall = false;
-					Debug.tlog("Reflecting movingToWallLocation across HQ to " + movingToWallLocation);
+					log("Reflecting movingToWallLocation across HQ to " + movingToWallLocation);
 				}
 
 				// moves towards movingToWallLocation
-				Debug.tlog("Moving to movingToWallLocation at " + movingToWallLocation);
+				log("Moving to movingToWallLocation at " + movingToWallLocation);
 				if (rc.isReady()) {
 					Direction move = Nav.bugNavigate(movingToWallLocation);
 					if (move != null) {
-						Debug.ttlog("Moved " + move);
+						tlog("Moved " + move);
 					} else {
-						Debug.ttlog("But no move found");
+						tlog("But no move found");
 					}
 				} else {
-					Debug.ttlog("But not ready");
+					tlog("But not ready");
 				}
 
 				return;
@@ -323,16 +324,16 @@ public class BotDeliveryDrone extends Globals {
 					}
 
 					if (shouldTransport) {
-						Debug.tlog("Moving to pick up ally at " + ri.location);
+						log("Moving to pick up ally at " + ri.location);
 						if (rc.isReady()) {
 							Direction move = Nav.bugNavigate(ri.location);
 							if (move != null) {
-								Debug.ttlog("Moved " + move);
+								tlog("Moved " + move);
 							} else {
-								Debug.ttlog("But no move found");
+								tlog("But no move found");
 							}
 						} else {
-							Debug.ttlog("But not ready");
+							tlog("But not ready");
 						}
 						return;
 					}
@@ -344,7 +345,7 @@ public class BotDeliveryDrone extends Globals {
 			// checks if we are already in an campLocation
 
 			if (inArray(campLocations, here, campLocationsLength)) {
-				Debug.tlog("Already in an campLocation, just chilling here.");
+				log("Already in an campLocation, just chilling here.");
 				return;
 			}
 
@@ -352,7 +353,7 @@ public class BotDeliveryDrone extends Globals {
 			// checks if we are already in an outerDigLocation
 			/*
 			if (inArray(outerDigLocations, here, outerDigLocationsLength)) {
-				Debug.tlog("Already in an outerDigLocation, just chilling here.");
+				log("Already in an outerDigLocation, just chilling here.");
 				return;
 			}
 			 */
@@ -361,16 +362,16 @@ public class BotDeliveryDrone extends Globals {
 			MapLocation closestcampLocation = findClosestOpenLocation(campLocations, campLocationsOccupiedMemory, campLocationsLength);
 			if (closestcampLocation != null) {
 				// go to dig location
-				Debug.tlog("Moving to closestcampLocation at " + closestcampLocation);
+				log("Moving to closestcampLocation at " + closestcampLocation);
 				if (rc.isReady()) {
 					Direction move = Nav.bugNavigate(closestcampLocation);
 					if (move != null) {
-						Debug.ttlog("Moved " + move);
+						tlog("Moved " + move);
 					} else {
-						Debug.ttlog("But no move found");
+						tlog("But no move found");
 					}
 				} else {
-					Debug.ttlog("But not ready");
+					tlog("But not ready");
 				}
 				return;
 			}
@@ -382,22 +383,22 @@ public class BotDeliveryDrone extends Globals {
 			MapLocation closestOuterDigLocation = findClosestOpenLocation(outerDigLocations, outerDigLocationsOccupiedMemory, outerDigLocationsLength);
 			if (closestOuterDigLocation != null) {
 				// go to dig location
-				Debug.tlog("Moving to closestOuterDigLocation at " + closestOuterDigLocation);
+				log("Moving to closestOuterDigLocation at " + closestOuterDigLocation);
 				if (rc.isReady()) {
 					Direction move = Nav.bugNavigate(closestOuterDigLocation);
 					if (move != null) {
-						Debug.ttlog("Moved " + move);
+						tlog("Moved " + move);
 					} else {
-						Debug.ttlog("But no move found");
+						tlog("But no move found");
 					}
 				} else {
-					Debug.ttlog("But not ready");
+					tlog("But not ready");
 				}
 				return;
 			}
 			 */
 
-			Debug.tlog("Inner and outer dig locations are visibly occupied or occupied in memory");
+			log("Inner and outer dig locations are visibly occupied or occupied in memory");
 		}
 	}
 
@@ -449,24 +450,24 @@ public class BotDeliveryDrone extends Globals {
 				MapLocation wallLoc = ri.location.add(dirFromHQ);
 				// if we cannot sense the wallLoc, assume it is high and pick up the robot
 				if (!rc.canSenseLocation(wallLoc) || !checkElevation(ri.location, wallLoc)) {
-					Debug.tlog("Picking up robot on inner transport tile at " + ri.location);
+					log("Picking up robot on inner transport tile at " + ri.location);
 					if (rc.isReady()) {
 						Actions.doPickUpUnit(ri.ID);
 						if (ri.type == RobotType.LANDSCAPER) {
 							// move landscapers to wall
 							movingRobotToWall = true;
-							Debug.ttlog("Moving landscaper from inner to wall");
+							tlog("Moving landscaper from inner to wall");
 						} else {
 							movingRobotOutwards = true;
 							movingOutwardsLocation = ri.location.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
-							Debug.ttlog("Moving robot outwards to " + movingOutwardsLocation);
+							tlog("Moving robot outwards to " + movingOutwardsLocation);
 							if (!inMap(movingOutwardsLocation)) {
-								Debug.ttlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
+								tlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
 								movingOutwardsLocation = symmetryHQLocations[0];
 							}
 						}
 					} else {
-						Debug.ttlog("But not ready");
+						tlog("But not ready");
 					}
 					return true;
 				}
@@ -476,23 +477,23 @@ public class BotDeliveryDrone extends Globals {
 			if (curRing == largeWallRingRadius && ri.type == RobotType.MINER) {
 				MapLocation outerLoc = ri.location.add(dirFromHQ);
 				if (!rc.canSenseLocation(outerLoc) || rc.senseElevation(ri.location) > smallWallDepth + 3) {
-					Debug.tlog("Picking up miner on wall at " + ri.location);
+					log("Picking up miner on wall at " + ri.location);
 					if (rc.isReady()) {
 						Actions.doPickUpUnit(ri.ID);
 						if (isBuilderMiner(ri.ID)) {
 							movingRobotInwards = true;
-							Debug.ttlog("Moving builder miner inwards from wall");
+							tlog("Moving builder miner inwards from wall");
 						} else {
 							movingRobotOutwards = true;
 							movingOutwardsLocation = ri.location.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
-							Debug.ttlog("Moving robot outwards to " + movingOutwardsLocation);
+							tlog("Moving robot outwards to " + movingOutwardsLocation);
 							if (!inMap(movingOutwardsLocation)) {
-								Debug.ttlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
+								tlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
 								movingOutwardsLocation = symmetryHQLocations[0];
 							}
 						}
 					} else {
-						Debug.ttlog("But not ready");
+						tlog("But not ready");
 					}
 					return true;
 				}
@@ -504,20 +505,20 @@ public class BotDeliveryDrone extends Globals {
 				MapLocation wallLoc = ri.location.subtract(dirFromHQ);
 				// if we cannot sense the wallLoc, assume it is high and pick up the miner
 				if (!rc.canSenseLocation(wallLoc) || !checkElevation(ri.location, wallLoc)) {
-					Debug.tlog("Picking up robot on outer transport tile at " + ri.location);
+					log("Picking up robot on outer transport tile at " + ri.location);
 					if (rc.isReady()) {
 						Actions.doPickUpUnit(ri.ID);
 						if (ri.type == RobotType.LANDSCAPER) {
 							// move landscapers to wall
 							movingRobotToWall = true;
-							Debug.ttlog("Moving landscaper from outer to wall");
+							tlog("Moving landscaper from outer to wall");
 						} else {
 							// move miners inside
 							movingRobotInwards = true;
-							Debug.ttlog("Moving miner inwards");
+							tlog("Moving miner inwards");
 						}
 					} else {
-						Debug.ttlog("But not ready");
+						tlog("But not ready");
 					}
 					return true;
 				}
@@ -539,13 +540,13 @@ public class BotDeliveryDrone extends Globals {
 				for (Direction dir: directions) {
 					MapLocation loc = rc.adjacentLocation(dir);
 					if (inMap(loc) && rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
-						Debug.tlog("Dropped unit into water at " + loc);
+						log("Dropped unit into water at " + loc);
 						if (rc.isReady()) {
 							Actions.doDropUnit(dir);
 							movingRobotToWater = false;
-							Debug.ttlog("Success");
+							tlog("Success");
 						} else {
-							Debug.ttlog("But not ready");
+							tlog("But not ready");
 						}
 						return true;
 					}
@@ -555,48 +556,48 @@ public class BotDeliveryDrone extends Globals {
 				if (floodingMemory != null) {
 					// if on the flooded tile, tries to move off of it
 					if (here.equals(floodingMemory)) {
-						Debug.tlog("Moving to get off of floodingMemory");
+						log("Moving to get off of floodingMemory");
 						if (rc.isReady()) {
 							for (Direction dir: directions) {
 								Direction move = Nav.tryMoveInDirection(dir);
 								if (move != null) {
-									Debug.ttlog("Moved " + move);
+									tlog("Moved " + move);
 								} else {
-									Debug.ttlog("But no move found");
+									tlog("But no move found");
 								}
 							}
 						} else {
-							Debug.ttlog("But not ready");
+							tlog("But not ready");
 						}
 						return true;
 					}
 
-					Debug.tlog("Moving to drop into water " + floodingMemory);
+					log("Moving to drop into water " + floodingMemory);
 					if (rc.isReady()) {
 						Direction move = Nav.bugNavigate(floodingMemory);
 						if (move != null) {
-							Debug.ttlog("Moved " + move);
+							tlog("Moved " + move);
 						} else {
-							Debug.ttlog("But no move found");
+							tlog("But no move found");
 						}
 					} else {
-						Debug.ttlog("But not ready");
+						tlog("But not ready");
 					}
 					return true;
 				}
 
 				// move away from hq
-				Debug.tlog("Moving away from HQ to look for water");
+				log("Moving away from HQ to look for water");
 				if (rc.isReady()) {
 					Direction dirFromHQ = HQLocation.directionTo(here);
 					Direction move = Nav.tryMoveInGeneralDirection(dirFromHQ);
 					if (move != null) {
-						Debug.ttlog("Moved " + move);
+						tlog("Moved " + move);
 					} else {
-						Debug.ttlog("But no move found");
+						tlog("But no move found");
 					}
 				} else {
-					Debug.ttlog("But not ready");
+					tlog("But not ready");
 				}
 				return true;
 
@@ -610,7 +611,7 @@ public class BotDeliveryDrone extends Globals {
 					if (ri != null && ri.team == killTeam && rc.canPickUpUnit(ri.ID)) {
 						Actions.doPickUpUnit(ri.ID);
 						movingRobotToWater = true;
-						Debug.tlog("Picked up unit at " + loc);
+						log("Picked up unit at " + loc);
 						return true;
 					}
 				}
@@ -633,16 +634,16 @@ public class BotDeliveryDrone extends Globals {
 			// if there is a nearby enemy that can be picked up, try to chase it
 			if (closestEnemyIndex != -1) {
 				MapLocation loc = targetRobots[closestEnemyIndex].location;
-				Debug.tlog("Moving to enemy at " + loc);
+				log("Moving to enemy at " + loc);
 				if (rc.isReady()) {
 					Direction move = Nav.bugNavigate(loc);
 					if (move != null) {
-						Debug.ttlog("Moved " + move);
+						tlog("Moved " + move);
 					} else {
-						Debug.ttlog("But no move found");
+						tlog("But no move found");
 					}
 				} else {
-					Debug.ttlog("But not ready");
+					tlog("But not ready");
 				}
 				return true;
 			}
@@ -659,15 +660,15 @@ public class BotDeliveryDrone extends Globals {
 		// checks if floodingMemory still exists
 		if (floodingMemory != null && rc.canSenseLocation(floodingMemory)) {
 			if (rc.senseFlooding(floodingMemory)) {
-				Debug.tlog("Confirmed that floodingMemory at " + floodingMemory + " is flooded");
+				log("Confirmed that floodingMemory at " + floodingMemory + " is flooded");
 				return;
 			} else {
-				Debug.tlog("Resetting floodingMemory at " + floodingMemory + " since it is dry");
+				log("Resetting floodingMemory at " + floodingMemory + " since it is dry");
 				floodingMemory = null;
 			}
 		}
 
-		Debug.tlog("Cannot confirm floodingMemory, searching for visible flooded tile");
+		log("Cannot confirm floodingMemory, searching for visible flooded tile");
 
 		// runs if floodingMemory is not visible or is null
 		// searches for a flooded tile that is empty
@@ -679,11 +680,11 @@ public class BotDeliveryDrone extends Globals {
 			if (inMap(loc) && rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
 				// floodingMemory[loc.x][loc.y] = rc.senseFlooding(loc);
 
-				Debug.tlog("Found visible flooded tile at " + loc);
+				log("Found visible flooded tile at " + loc);
 
 				// if floodingMemory is null, write a Transaction
 				if (floodingMemory == null) {
-					Communication.writeTransactionFloodingFound(loc);
+					writeTransactionFloodingFound(loc);
 				}
 
 				floodingMemory = loc;

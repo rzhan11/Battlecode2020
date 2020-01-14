@@ -2,6 +2,7 @@ package kryptonite;
 
 import battlecode.common.*;
 
+import static kryptonite.Communication.*;
 import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
@@ -29,17 +30,17 @@ public class BotDesignSchool extends Globals {
 
 	public static void turn() throws GameActionException {
 		if (visibleEnemies.length > 0) {
-			Debug.tlog("Enemies detected");
+			log("Enemies detected");
 			if (teamSoup >= RobotType.LANDSCAPER.cost) {
-				Debug.tlog("Trying to build protection landscapers");
+				log("Trying to build protection landscapers");
 				boolean didBuild = tryBuild(RobotType.LANDSCAPER, directions);
 				if (didBuild) {
 					landscapersMade++;
 					if (landscapersMade >= landscaperCheckpoints[0] && !checkpointReached[0]) {
-						Communication.writeTransactionLandscaperCheckpoint(0);
+						writeTransactionLandscaperCheckpoint(0);
 						checkpointReached[0] = true;
 					} else if (landscapersMade >= landscaperCheckpoints[1] && !checkpointReached[1]) {
-						Communication.writeTransactionLandscaperCheckpoint(1);
+						writeTransactionLandscaperCheckpoint(1);
 						checkpointReached[1] = true;
 					}
 				}
@@ -48,54 +49,54 @@ public class BotDesignSchool extends Globals {
 		}
 		//initial 31 landscapers
 		if (landscapersMade < landscaperCheckpoints[0]) {
-			Debug.tlog("Landscaper checkpoint 0 not reached");
-			Debug.tlog("soup " + teamSoup);
+			log("Landscaper checkpoint 0 not reached");
+			log("soup " + teamSoup);
 			// leave enough to build a refinery
 			if (teamSoup >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost) {
-				Debug.tlog("Trying to build landscaper");
+				log("Trying to build landscaper");
 				boolean didBuild = tryBuild(RobotType.LANDSCAPER, directions);
 				if (didBuild) {
 					landscapersMade++;
 					if (landscapersMade >= landscaperCheckpoints[0] && !checkpointReached[0]) {
-						Communication.writeTransactionLandscaperCheckpoint(0);
+						writeTransactionLandscaperCheckpoint(0);
 						checkpointReached[0] = true;
 					}
 				}
 			}
 			return;
 		} else {
-			Debug.tlog("Landscaper checkpoint 0 reached");
+			log("Landscaper checkpoint 0 reached");
 		}
 
 		if (reachedNetgunCheckpoint) {
-			Debug.tlog("Continuing: Netgun checkpoint reached");
+			log("Continuing: Netgun checkpoint reached");
 		} else {
-			Debug.tlog("Returning: Netgun checkpoint not reached");
+			log("Returning: Netgun checkpoint not reached");
 			return;
 		}
 
 		// 32 landscapers built after the 8 net guns 12 drones and 4 vaporators built
 		if (landscapersMade < landscaperCheckpoints[1]) {
 			if (teamSoup >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost) {
-				Debug.tlog("Trying to build landscaper");
+				log("Trying to build landscaper");
 				boolean didBuild = tryBuild(RobotType.LANDSCAPER, directions);
 				if (didBuild) {
 					landscapersMade++;
 				}
 				if (landscapersMade >= landscaperCheckpoints[1] && !checkpointReached[1]) {
-					Communication.writeTransactionLandscaperCheckpoint(1);
+					writeTransactionLandscaperCheckpoint(1);
 					checkpointReached[1] = true;
 				}
 			}
-			Debug.tlog("Can't afford landscaper");
+			log("Can't afford landscaper");
 		} else {
-			Debug.tlog("Landscaper checkpoint 1 reached");
+			log("Landscaper checkpoint 1 reached");
 		}
 
 		if (largeWallFull) {
-			Debug.tlog("Continuing: largeWallFull checkpoint reached");
+			log("Continuing: largeWallFull checkpoint reached");
 		} else {
-			Debug.tlog("Returning: largeWallFull checkpoint not reached");
+			log("Returning: largeWallFull checkpoint not reached");
 			return;
 		}
 
@@ -103,19 +104,19 @@ public class BotDesignSchool extends Globals {
 		// next 16 landscapers built after largeWallFull
 //		if (landscapersMade < landscaperCheckpoints[2]) {
 //			if (teamSoup >= RobotType.LANDSCAPER.cost) {
-//				Debug.tlog("Trying to build landscaper");
+//				log("Trying to build landscaper");
 //				boolean didBuild = tryBuild(RobotType.LANDSCAPER, directions);
 //				if (didBuild) {
 //					landscapersMade++;
 //				}
 //				if (landscapersMade >= landscaperCheckpoints[2] && !checkpointReached[1]) {
-//					Communication.writeTransactionLandscaperCheckpoint(2);
+//					writeTransactionLandscaperCheckpoint(2);
 //					checkpointReached[2] = true;
 //				}
 //			}
-//			Debug.tlog("Can't afford landscaper");
+//			log("Can't afford landscaper");
 //		} else {
-//			Debug.tlog("Landscaper checkpoint 2 reached");
+//			log("Landscaper checkpoint 2 reached");
 //		}
 		// to here
 

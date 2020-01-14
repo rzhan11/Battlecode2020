@@ -50,9 +50,9 @@ public class Nav extends Globals {
 			RobotInfo ri = rc.senseRobotAtLocation(loc);
 			if (ri != null && canPickUpType(ri.type)) {
 				if (ri.ID == builderMinerID) {
-					Debug.ttlog("Cannot force through builder miner");
+					tlog("Cannot force through builder miner");
 				} else {
-					Debug.ttlog("Picking up ally at " + loc);
+					tlog("Picking up ally at " + loc);
 					Actions.doPickUpUnit(ri.ID);
 					move = dir;
 				}
@@ -166,11 +166,11 @@ public class Nav extends Globals {
 
 		Direction destDir = here.directionTo(bugTarget);
 
-		// Debug.tlog("BUG_NAVIGATE");
-		// Debug.ttlog("bugTarget: " + bugTarget);
-		// Debug.ttlog("bugClosestDistanceToTarget: " + bugClosestDistanceToTarget);
-		// Debug.ttlog("destDir: " + destDir);
-		// Debug.ttlog("bugTracing: " + bugTracing);
+		// log("BUG_NAVIGATE");
+		// tlog("bugTarget: " + bugTarget);
+		// tlog("bugClosestDistanceToTarget: " + bugClosestDistanceToTarget);
+		// tlog("destDir: " + destDir);
+		// tlog("bugTracing: " + bugTracing);
 
 		if (!bugTracing) { // try to go directly towards the target
 			Direction tryMoveResult = tryMoveInDirection(destDir);
@@ -247,9 +247,9 @@ public class Nav extends Globals {
 			bugRotateLeft = false;
 			bugLastWall = rc.adjacentLocation(rightDir.rotateLeft());
 		}
-		// Debug.tlog("START_TRACING");
-		// Debug.ttlog("bugRotateLeft: " + bugRotateLeft);
-		// Debug.ttlog("bugLastWall: " + bugLastWall);
+		// log("START_TRACING");
+		// tlog("bugRotateLeft: " + bugRotateLeft);
+		// tlog("bugLastWall: " + bugLastWall);
 	}
 
 	/*
@@ -265,9 +265,9 @@ public class Nav extends Globals {
 		} else {
 			bugTurnsWithoutWall = 0;
 		}
-		// Debug.tlog("TRACING");
-		// Debug.ttlog("bugRotateLeft: " + bugRotateLeft);
-		// Debug.ttlog("bugLastWall: " + bugLastWall);
+		// log("TRACING");
+		// tlog("bugRotateLeft: " + bugRotateLeft);
+		// tlog("bugLastWall: " + bugLastWall);
 
 		for (int i = 0; i < 8; ++i) {
 			if (bugRotateLeft) {
@@ -277,7 +277,7 @@ public class Nav extends Globals {
 			}
 			MapLocation curDest = rc.adjacentLocation(curDir);
 			if (!inMap(curDest) && !recursed) {
-				// Debug.ttlog("Hit the edge of map, reverse and recurse");
+				// tlog("Hit the edge of map, reverse and recurse");
 				// if we hit the edge of the map, reverse direction and recurse
 				bugRotateLeft = !bugRotateLeft;
 				return bugTraceMove(true);
@@ -285,7 +285,7 @@ public class Nav extends Globals {
 			if (checkDirectionMoveable(curDir)) {
 				Actions.doMove(curDir);
 				if (bugVisitedLocations[curDest.x][curDest.y]) {
-					// Debug.tlog("Resetting bugTracing");
+					// log("Resetting bugTracing");
 					bugTracing = false;
 				}
 				return curDir;
@@ -320,9 +320,9 @@ public class Nav extends Globals {
 			return false;
 		}
 
-		Debug.tlog("This tile will be flooded next turn");
+		log("This tile will be flooded next turn");
 		if (!rc.isReady()) {
-			Debug.tlog("Cooldown is not ready. I am dying to water! :(");
+			log("Cooldown is not ready. I am dying to water! :(");
 			return false;
 		}
 
@@ -392,7 +392,7 @@ public class Nav extends Globals {
 			int bestIndex = -1;
 			for (Direction dir: directions) {
 				MapLocation loc = rc.adjacentLocation(dir);
-				// Debug.tlogi("dir " + dir);
+				// logi("dir " + dir);
 				if (rc.canMove(dir) && !dangerDirection[index]) {
 					if (bestIndex == -1 || elevationDirection[index] > elevationDirection[bestIndex]) {
 						bestIndex = index;
@@ -401,7 +401,7 @@ public class Nav extends Globals {
 				index++;
 			}
 			if (bestIndex == -1) {
-				Debug.tlog("No safe directions. I am dying to water! :(");
+				log("No safe directions. I am dying to water! :(");
 			} else {
 				Actions.doMove(directions[bestIndex]);
 				return true;

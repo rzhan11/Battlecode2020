@@ -2,14 +2,13 @@ package kryptonite;
 
 import battlecode.common.*;
 
-import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
-import static kryptonite.Map.*;
 
 public class Communication extends Globals {
 
 	final public static int MAX_UNSENT_TRANSACTIONS_LENGTH = 100;
-	final public static int READ_OLD_TRANSACTIONS_COST = 2500; // how many bytecodes readOldTransactions() will leave available
+	final public static int READ_TRANSACTION_MIN_BYTECODE = 500; // how many bytecodes required to read a transaction
+	final public static int READ_BIG_TRANSACTION_MIN_BYTECODE = 1500; // how many bytecodes required to read a costly transaction
 
 	final public static int FIRST_TURN_DYNAMIC_COST = 3;
 
@@ -82,62 +81,82 @@ public class Communication extends Globals {
 		}
 	}
 
-	public static void readOldTransactions () throws GameActionException {
-		if (oldTransactionsIndex >= spawnRound - 1) {
-			Debug.tlog("No old transactions to be read");
+	public static void readOldBlocks() throws GameActionException {
+		if (oldBlocksIndex >= spawnRound - 1) {
+			log("No old blocks");
 			return;
 		} else {
-			Debug.tlog("Trying to read old transactions");
+			log("Has old blocks");
 		}
+		int startBlockIndex = oldBlocksIndex;
 		int startTransactionsIndex = oldTransactionsIndex;
-//		Debug.tlog("b " + Clock.getBytecodesLeft());
-		while (Clock.getBytecodesLeft() >= READ_OLD_TRANSACTIONS_COST && oldTransactionsIndex < spawnRound - 1) {
-			readTransactions(oldTransactionsIndex);
-			oldTransactionsIndex++;
-//			Debug.tlog("b " + Clock.getBytecodesLeft());
+		int totalReadTransactions = 0;
+		while (oldBlocksIndex < spawnRound - 1) { // -1 is since we always read previous transactions, so spawnRound - 1 is already read
+			if (Clock.getBytecodesLeft() < READ_TRANSACTION_MIN_BYTECODE) {
+				break;
+			}
+			int res = readBlock(oldBlocksIndex, oldTransactionsIndex);
+			totalReadTransactions += Math.abs(res);
+			if (res < 0) {
+				oldTransactionsIndex = -res - 1;
+				break;
+			} else {
+				oldBlocksIndex++;
+				oldTransactionsIndex = 0;
+			}
 		}
-		if (oldTransactionsIndex > startTransactionsIndex) {
-			Debug.tlog("Read old transactions " + startTransactionsIndex + " to " + (oldTransactionsIndex - 1));
-		} else {
-			Debug.tlog("Unable to read old transactions due to bytecode limit");
-		}
+		log("Read old blocks from " + startBlockIndex + "-" + startTransactionsIndex + " to " +
+				oldBlocksIndex + "-" + oldTransactionsIndex);
+		tlog("Read " + totalReadTransactions + " transactions");
 	}
 
 	/*
 	Reads in transactions that were submitted last round
 	Returns number of transactions read
-	If we do not have enough bytecode to read all transactions,
+	If we do not have enough bytecode to read all transactions, returns -1 * # of transactions read
 	*/
-	public static void readTransactions (int round) throws GameActionException {
-		if (round < 1 || round >= rc.getRoundNum()) {
-			Debug.tlog("Tried to read Transactions of round " + round + " but not possible");
-			return;
-		}
+	public static int readBlock(int round, int startIndex) throws GameActionException {
 		Transaction[] block = rc.getBlock(round);
-		for (Transaction t: block) {
+		int index = 0;
+		for (Transaction t : block) {
+			if (index < startIndex) {
+				continue;
+			}
+
+			// if this is not the previous round, and we are almost out of bytecode, skip
+			if (Clock.getBytecodesLeft() < READ_TRANSACTION_MIN_BYTECODE && round != roundNum - 1) {
+				return -(index + 1);
+			}
+
 			int[] message = t.getMessage();
 			xorMessage(message);
 
 			int submitterID = decryptID(message[0]);
 			if (submitterID == -1) {
-				Debug.tlog("Found opponent Transactions");
+				log("Found opponent's transaction");
 				continue; // not submitted by our team
 			} else {
-		        switch (message[1]) {
-		            case HQ_FIRST_TURN_SIGNAL:
+				switch (message[1]) {
+					case HQ_FIRST_TURN_SIGNAL:
 						readTransactionHQFirstTurn(message, round);
 						break;
-		            case SOUP_CLUSTER_SIGNAL:
+					case SOUP_CLUSTER_SIGNAL:
 						if (myType == RobotType.MINER) {
+							if (Clock.getBytecodesLeft() < READ_BIG_TRANSACTION_MIN_BYTECODE && round != roundNum - 1) {
+								return -(index + 1);
+							}
 							readTransactionSoupCluster(message, round);
 						}
 						break;
-		            case REFINERY_BUILT_SIGNAL:
+					case REFINERY_BUILT_SIGNAL:
 						if (myType == RobotType.MINER) {
+							if (Clock.getBytecodesLeft() < READ_BIG_TRANSACTION_MIN_BYTECODE && round != roundNum - 1) {
+								return -(index + 1);
+							}
 							readTransactionRefineryBuilt(message, round);
 						}
 						break;
-		            case SYMMETRY_MINER_BUILT_SIGNAL:
+					case SYMMETRY_MINER_BUILT_SIGNAL:
 						if (myType == RobotType.MINER) {
 							readTransactionSymmetryMinerBuilt(message, round);
 						}
@@ -178,9 +197,13 @@ public class Communication extends Globals {
 					case LARGE_WALL_FULL_SIGNAL:
 						readTransactionLargeWallFull(message, round);
 						break;
-		        }
+				}
 			}
+
+			index++;
 		}
+
+		return index;
 	}
 
 	/*
@@ -205,7 +228,7 @@ public class Communication extends Globals {
 	*/
 	public static void saveUnsentTransaction (int[] message, int cost) {
 		if (unsentTransactionsLength == MAX_UNSENT_TRANSACTIONS_LENGTH) {
-			Debug.tlogi("ERROR: unsentTransactionsLength reached MAX_UNSENT_TRANSACTIONS_LENGTH limit");
+			logi("ERROR: unsentTransactionsLength reached MAX_UNSENT_TRANSACTIONS_LENGTH limit");
 			return;
 		}
 		unsentMessages[unsentTransactionsLength] = message;
@@ -221,7 +244,7 @@ public class Communication extends Globals {
 				unsentTransactionsIndex++;
 
 				xorMessage(message);
-				Debug.tlog("Submitted unsent transaction with signal of " + message[1]);
+				log("Submitted unsent transaction with signal of " + message[1]);
 			} else {
 				break;
 			}
@@ -234,7 +257,7 @@ public class Communication extends Globals {
 	message[4] = elevation of our HQ
 	*/
 	public static void writeTransactionHQFirstTurn (MapLocation myHQLocation) throws GameActionException {
-		Debug.tlog("Writing transaction for 'HQ First Turn' at " + myHQLocation);
+		log("Writing transaction for 'HQ First Turn' at " + myHQLocation);
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = HQ_FIRST_TURN_SIGNAL;
@@ -247,19 +270,19 @@ public class Communication extends Globals {
 			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
-			Debug.tlog("Could not afford transaction");
+			log("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
 	public static void readTransactionHQFirstTurn (int[] message, int round) {
-		Debug.tlog("Reading 'HQ First Turn' transaction");
+		log("Reading 'HQ First Turn' transaction");
 		HQLocation = new MapLocation(message[2], message[3]);
 		HQElevation = message[4];
-		Debug.ttlog("Submitter ID: " + decryptID(message[0]));
-		Debug.ttlog("Location: " + HQLocation);
-		Debug.ttlog("Elevation: " + HQElevation);
-		Debug.ttlog("Posted round: " + round);
+		tlog("Submitter ID: " + decryptID(message[0]));
+		tlog("Location: " + HQLocation);
+		tlog("Elevation: " + HQElevation);
+		tlog("Posted round: " + round);
 	}
 
 	/*
@@ -268,7 +291,7 @@ message[3] = y coordinate of our HQ
 
 */
 	public static void writeTransactionSmallWallComplete () throws GameActionException {
-		Debug.tlog("Writing transaction for 'Small Wall Complete'");
+		log("Writing transaction for 'Small Wall Complete'");
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = SMALL_WALL_BUILD_SIGNAL;
@@ -278,16 +301,16 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
-			Debug.tlog("Could not afford transaction");
+			log("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
 	public static void readTransactionSmallWallComplete (int[] message, int round) {
-		Debug.tlog("Reading 'Small Wall Complete' transaction");
+		log("Reading 'Small Wall Complete' transaction");
 		smallWallFinished = true;
-		Debug.ttlog("Submitter ID: " + decryptID(message[0]));
-		Debug.ttlog("Posted round: " + round);
+		tlog("Submitter ID: " + decryptID(message[0]));
+		tlog("Posted round: " + round);
 	}
 
 	/*
@@ -296,7 +319,7 @@ message[3] = y coordinate of our HQ
 
 	*/
 	public static void writeTransactionSoupCluster (MapLocation soupClusterLocation) throws GameActionException {
-		Debug.tlog("Writing transaction for 'Soup Cluster' at " + soupClusterLocation);
+		log("Writing transaction for 'Soup Cluster' at " + soupClusterLocation);
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = SOUP_CLUSTER_SIGNAL;
@@ -308,17 +331,17 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
-			Debug.tlog("Could not afford transaction");
+			log("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
 	public static void readTransactionSoupCluster (int[] message, int round) {
 		MapLocation loc = new MapLocation(message[2], message[3]);
-		Debug.tlog("Reading 'Soup Cluster' transaction");
-		Debug.ttlog("Submitter ID: " + decryptID(message[0]));
-		Debug.ttlog("Location: " + loc);
-		Debug.ttlog("Posted round: " + round);
+		log("Reading 'Soup Cluster' transaction");
+		tlog("Submitter ID: " + decryptID(message[0]));
+		tlog("Location: " + loc);
+		tlog("Posted round: " + round);
 		BotMiner.addToSoupClusters(new MapLocation(message[2], message[3]));
 	}
 
@@ -329,7 +352,7 @@ message[3] = y coordinate of our HQ
 	*/
 	public static void writeTransactionRefineryBuilt (MapLocation refineryLocation) throws GameActionException {
 		// check money
-		Debug.tlog("Writing transaction for 'Refinery Built' at " + refineryLocation);
+		log("Writing transaction for 'Refinery Built' at " + refineryLocation);
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = REFINERY_BUILT_SIGNAL;
@@ -341,17 +364,17 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
-			Debug.tlog("Could not afford transaction");
+			log("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
 	public static void readTransactionRefineryBuilt (int[] message, int round) {
 		MapLocation loc = new MapLocation(message[2], message[3]);
-		Debug.tlog("Reading 'Refinery Built' transaction");
-		Debug.ttlog("Submitter ID: " + decryptID(message[0]));
-		Debug.ttlog("Location: " + loc);
-		Debug.ttlog("Posted round: " + round);
+		log("Reading 'Refinery Built' transaction");
+		tlog("Submitter ID: " + decryptID(message[0]));
+		tlog("Location: " + loc);
+		tlog("Posted round: " + round);
 		BotMiner.addToRefineries(loc);
 	}
 
@@ -363,7 +386,7 @@ message[3] = y coordinate of our HQ
 	*/
 	public static void writeTransactionSymmetryMinerBuilt(int symmetryMinerID, MapLocation symmetryLocation) throws GameActionException {
 		// check money
-		Debug.tlog("Writing transaction for 'Symmetry Miner Built' with ID " + symmetryMinerID + " finding " + symmetryLocation);
+		log("Writing transaction for 'Symmetry Miner Built' with ID " + symmetryMinerID + " finding " + symmetryLocation);
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = SYMMETRY_MINER_BUILT_SIGNAL;
@@ -376,23 +399,23 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
-			Debug.tlog("Could not afford transaction");
+			log("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
 	public static void readTransactionSymmetryMinerBuilt (int[] message, int round) {
-		Debug.tlog("Reading 'Symmetry Miner Built' transaction");
+		log("Reading 'Symmetry Miner Built' transaction");
 		int symmetryMinerID = message[2];
 		MapLocation loc = new MapLocation(message[3], message[4]);
-		Debug.ttlog("Submitter ID: " + decryptID(message[0]));
-		Debug.ttlog("symmetryMinerID: " + symmetryMinerID);
-		Debug.ttlog("symmetryLocation: " + loc);
-		Debug.ttlog("Posted round: " + round);
+		tlog("Submitter ID: " + decryptID(message[0]));
+		tlog("symmetryMinerID: " + symmetryMinerID);
+		tlog("symmetryLocation: " + loc);
+		tlog("Posted round: " + round);
 		if (myID == symmetryMinerID) {
 			BotMiner.isSymmetryMiner = true;
 			BotMiner.symmetryLocation = loc;
-			Debug.ttlog("I am the symmetry miner");
+			tlog("I am the symmetry miner");
 		}
 	}
 
@@ -401,7 +424,7 @@ message[3] = y coordinate of our HQ
 	 */
 
 	public static void writeTransactionBuilderMinerBuilt(int id) throws GameActionException{
-		Debug.tlog("Writing transaction for Builder Miner of ID: " + id);
+		log("Writing transaction for Builder Miner of ID: " + id);
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = BUILDER_MINER_BUILT_SIGNAL;
@@ -412,17 +435,17 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
-			Debug.tlog("Could not afford transaction");
+			log("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
 	public static void readTransactionBuilderMinerBuilt(int[] message, int round) {
 		BotMiner.builderMinerID = message[2];
-		Debug.tlog("Reading 'Builder Miner Built' transaction");
-		Debug.ttlog("Submitter ID: " + decryptID(message[0]));
-		Debug.ttlog("builderMinerID: " + BotMiner.builderMinerID);
-		Debug.ttlog("Posted round: " + round);
+		log("Reading 'Builder Miner Built' transaction");
+		tlog("Submitter ID: " + decryptID(message[0]));
+		tlog("builderMinerID: " + BotMiner.builderMinerID);
+		tlog("Posted round: " + round);
 	}
 
 	/*
@@ -430,7 +453,7 @@ message[3] = y coordinate of our HQ
 	 */
 
 	public static void writeTransactionDroneCheckpoint(int checkpoint) throws GameActionException{
-		Debug.tlog("Writing transaction for drone checkpoint " + checkpoint );
+		log("Writing transaction for drone checkpoint " + checkpoint );
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = DRONE_CHECKPOINT_SIGNAL;
@@ -441,7 +464,7 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
-			Debug.tlog("Could not afford transaction");
+			log("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 
@@ -449,10 +472,10 @@ message[3] = y coordinate of our HQ
 
 	public static void readTransactionDroneCheckpoint(int[] message, int round) {
 		int checkpoint_number = message[2];
-		Debug.tlog("Reading 'Drone checkpoint'");
-		Debug.tlog("Submitter ID: " + decryptID(message[0]));
-		Debug.tlog("Checkpoint Number " + checkpoint_number);
-		Debug.tlog("Posted round: " + round);
+		log("Reading 'Drone checkpoint'");
+		log("Submitter ID: " + decryptID(message[0]));
+		log("Checkpoint Number " + checkpoint_number);
+		log("Posted round: " + round);
 		BotBuilderMiner.reachedDroneCheckpoint = checkpoint_number;
 	}
 
@@ -461,7 +484,7 @@ message[3] = y coordinate of our HQ
 	 */
 
 	public static void writeTransactionLandscaperCheckpoint(int checkpoint) throws GameActionException{
-		Debug.tlog("Writing transaction for landscaper checkpoint " + checkpoint);
+		log("Writing transaction for landscaper checkpoint " + checkpoint);
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = LANDSCAPER_CHECKPOINT_SIGNAL;
@@ -471,7 +494,7 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
-			Debug.tlog("Could not afford transaction");
+			log("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 
@@ -479,10 +502,10 @@ message[3] = y coordinate of our HQ
 
 	public static void readTransactionLandscaperCheckpoint(int[] message, int round) {
 		int checkpoint_number = message[2];
-		Debug.tlog("Reading 'Landscaper checkpoint'");
-		Debug.tlog("Submitter ID: " + decryptID(message[0]));
-		Debug.tlog("Posted round: " + round);
-		Debug.tlog("Checkpoint Number " + checkpoint_number);
+		log("Reading 'Landscaper checkpoint'");
+		log("Submitter ID: " + decryptID(message[0]));
+		log("Posted round: " + round);
+		log("Checkpoint Number " + checkpoint_number);
 		BotBuilderMiner.reachedLandscaperCheckpoint = checkpoint_number;
 	}
 
@@ -491,7 +514,7 @@ message[3] = y coordinate of our HQ
 	 */
 
 	public static void writeTransactionVaporatorCheckpoint() throws GameActionException{
-		Debug.tlog("Writing transaction for vaporator checkpoint");
+		log("Writing transaction for vaporator checkpoint");
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = VAPORATOR_CHECKPOINT_SIGNAL;
@@ -500,15 +523,15 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
-			Debug.tlog("Could not afford transaction");
+			log("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
 	public static void readTransactionVaporatorCheckpoint(int[] message, int round) {
-		Debug.tlog("Reading 'Vaporator checkpoint'");
-		Debug.tlog("Submitter ID: " + decryptID(message[0]));
-		Debug.tlog("Posted round: " + round);
+		log("Reading 'Vaporator checkpoint'");
+		log("Submitter ID: " + decryptID(message[0]));
+		log("Posted round: " + round);
 		BotFulfillmentCenter.reachedVaporatorCheckpoint = true;
 	}
 
@@ -517,7 +540,7 @@ message[3] = y coordinate of our HQ
 	 */
 
 	public static void writeTransactionNetgunCheckpoint() throws GameActionException{
-		Debug.tlog("Writing transaction for netgun checkpoint");
+		log("Writing transaction for netgun checkpoint");
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = NETGUN_CHECKPOINT_SIGNAL;
@@ -526,15 +549,15 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
-			Debug.tlog("Could not afford transaction");
+			log("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
 	public static void readTransactionNetgunCheckpoint(int[] message, int round) {
-		Debug.tlog("Reading 'Netgun checkpoint'");
-		Debug.tlog("Submitter ID: " + decryptID(message[0]));
-		Debug.tlog("Posted round: " + round);
+		log("Reading 'Netgun checkpoint'");
+		log("Submitter ID: " + decryptID(message[0]));
+		log("Posted round: " + round);
 		BotDesignSchool.reachedNetgunCheckpoint = true;
 	}
 
@@ -544,7 +567,7 @@ message[3] = y coordinate of our HQ
 	 */
 
 	public static void writeTransactionFloodingFound (MapLocation loc) throws GameActionException{
-		Debug.tlog("Writing transaction for 'Flooding Found'");
+		log("Writing transaction for 'Flooding Found'");
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = FLOODING_FOUND_SIGNAL;
@@ -556,17 +579,17 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
-			Debug.tlog("Could not afford transaction");
+			log("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
 	public static void readTransactionFloodingFound (int[] message, int round) throws GameActionException {
 		BotDeliveryDrone.floodingMemory = new MapLocation(message[2], message[3]);
-		Debug.tlog("Reading transaction for 'Flooding Found'");
-		Debug.tlog("Submitter ID: " + decryptID(message[0]));
-		Debug.tlog("Location: " + BotDeliveryDrone.floodingMemory);
-		Debug.tlog("Posted round: " + round);
+		log("Reading transaction for 'Flooding Found'");
+		log("Submitter ID: " + decryptID(message[0]));
+		log("Location: " + BotDeliveryDrone.floodingMemory);
+		log("Posted round: " + round);
 	}
 
 	/*
@@ -575,7 +598,7 @@ message[3] = y coordinate of our HQ
 
 	 */
 	public static void writeTransactionEnemyHQLocation (int symmetryIndex, int exists) throws GameActionException{
-		Debug.tlog("Writing transaction for 'Enemy HQ Location'");
+		log("Writing transaction for 'Enemy HQ Location'");
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = ENEMY_HQ_LOCATION_SIGNAL;
@@ -587,7 +610,7 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
-			Debug.tlog("Could not afford transaction");
+			log("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
@@ -597,11 +620,11 @@ message[3] = y coordinate of our HQ
 			BotOffenseDeliveryDrone.enemyHQLocation = symmetryHQLocations[message[2]];
 		}
 		BotOffenseDeliveryDrone.isSymmetryHQLocation[message[2]] = message[3];
-		Debug.tlog("Reading transaction for 'Enemy HQ Location'");
-		Debug.tlog("Submitter ID: " + decryptID(message[0]));
-		Debug.tlog("Location: " + symmetryHQLocations[message[2]]);
-		Debug.tlog("Exists: " + BotOffenseDeliveryDrone.isSymmetryHQLocation[message[2]]);
-		Debug.tlog("Posted round: " + round);
+		log("Reading transaction for 'Enemy HQ Location'");
+		log("Submitter ID: " + decryptID(message[0]));
+		log("Location: " + symmetryHQLocations[message[2]]);
+		log("Exists: " + BotOffenseDeliveryDrone.isSymmetryHQLocation[message[2]]);
+		log("Posted round: " + round);
 	}
 
 	/*
@@ -609,7 +632,7 @@ message[3] = y coordinate of our HQ
 
 	 */
 	public static void writeTransactionLargeWallFull () throws GameActionException{
-		Debug.tlog("Writing transaction for 'Large Wall Full'");
+		log("Writing transaction for 'Large Wall Full'");
 		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = LARGE_WALL_FULL_SIGNAL;
@@ -619,15 +642,15 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 			teamSoup = rc.getTeamSoup();
 		} else {
-			Debug.tlog("Could not afford transaction");
+			log("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
 	public static void readTransactionLargeWallFull (int[] message, int round) throws GameActionException {
 		largeWallFull = true;
-		Debug.tlog("Reading transaction for 'Large Wall Full'");
-		Debug.tlog("Submitter ID: " + decryptID(message[0]));
-		Debug.tlog("Posted round: " + round);
+		log("Reading transaction for 'Large Wall Full'");
+		log("Submitter ID: " + decryptID(message[0]));
+		log("Posted round: " + round);
 	}
 }
