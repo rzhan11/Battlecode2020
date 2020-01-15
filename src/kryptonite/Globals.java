@@ -55,6 +55,7 @@ public class Globals {
 	public static RobotInfo[] adjacentCows = null;
 
 	public static boolean[] isDirMoveable = new boolean[8];
+	public static boolean[] isDirDanger = new boolean[8];
 
 	// checks if drones picked up and dropped this unit
 	public static boolean droppedLastTurn = false;
@@ -323,15 +324,11 @@ public class Globals {
 
 	public static Direction moveLog(MapLocation loc) throws GameActionException {
 		Direction move = null;
-		if (rc.isReady()) {
-			move = Nav.bugNavigate(loc);
-			if (move != null) {
-				tlog("Moved " + move);
-			} else {
-				tlog("But no move found");
-			}
+		move = Nav.bugNavigate(loc);
+		if (move != null) {
+			tlog("Moved " + move);
 		} else {
-			tlog("But not ready");
+			tlog("But no move found");
 		}
 		return move;
 	}
@@ -582,15 +579,10 @@ public class Globals {
 		for (Direction d : dir) {
 			MapLocation loc = rc.adjacentLocation(d);
 			if (!rc.senseFlooding(loc) && isLocFlat(loc) && rc.senseRobotAtLocation(loc) == null) {
-				if (rc.isReady()) {
-					Actions.doBuildRobot(rt, d);
-					teamSoup = rc.getTeamSoup();
-					tlog("Success");
-					return true;
-				} else {
-					tlog("But not ready");
-					return false;
-				}
+				Actions.doBuildRobot(rt, d);
+				teamSoup = rc.getTeamSoup();
+				tlog("Success");
+				return true;
 			}
 		}
 		tlog("No open spots found");

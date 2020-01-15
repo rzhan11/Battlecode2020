@@ -115,17 +115,14 @@ public class Map extends Globals {
                             if (canShootType(ri.type)) {
                                 if (adjLoc.distanceSquaredTo(ri.location) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
                                     isDirMoveable[i] = false;
+                                    isDirDanger[i] = true;
                                     continue outer;
                                 }
                             }
                         }
                     }
-                } else if (myType == RobotType.LANDSCAPER) {
-                    if (!isDirDryFlatEmpty(directions[i])) {
-                        isDirMoveable[i] = false;
-                        continue;
-                    }
-                } else if (myType == RobotType.MINER) {
+                } else {
+                    // STATE == I am a miner/landscaper
                     if (!isDirDryFlatEmpty(directions[i])) {
                         isDirMoveable[i] = false;
                         continue;
@@ -135,14 +132,13 @@ public class Map extends Globals {
                         if (ri.type == RobotType.DELIVERY_DRONE) {
                             if (ri.location.isAdjacentTo(adjLoc)) {
                                 isDirMoveable[i] = false;
+                                isDirDanger[i] = true;
                                 continue outer;
                             }
                         }
                     }
-                } else {
-                    tlogi("ERROR: Sanity check failed - unknown type");
                 }
-
+                isDirDanger[i] = false;
                 isDirMoveable[i] = true;
             }
         }
