@@ -128,35 +128,35 @@ public class BotHQ extends Globals {
 		// 4. If I can't move onto the next one
 		Direction[] enemy = new Direction[3];
 		int distance = 150;
-		if (!isBuilderMiner(rc.getID())) {
-			if (visibleEnemies.length > 0) {
-				for (RobotInfo ri : visibleEnemies) {
-					if (ri.type == RobotType.LANDSCAPER && here.distanceSquaredTo(ri.location) < distance) {
-						Direction temp = here.directionTo(ri.location);
-						if (isDirDryFlatEmpty(temp) || isDirDryFlatEmpty(temp.rotateLeft()) || isDirDryFlatEmpty(temp.rotateRight())) {
-							enemy[0] = temp;
-							enemy[1] = temp.rotateLeft();
-							enemy[2] = temp.rotateRight();
-							distance = here.distanceSquaredTo(ri.location);
-						}
+		if (visibleEnemies.length > 0) {
+			for (RobotInfo ri : visibleEnemies) {
+				if (ri.type == RobotType.LANDSCAPER && here.distanceSquaredTo(ri.location) < distance) {
+					Direction temp = here.directionTo(ri.location);
+					if (isDirDryFlatEmpty(temp) || isDirDryFlatEmpty(temp.rotateLeft()) || isDirDryFlatEmpty(temp.rotateRight())) {
+						enemy[0] = temp;
+						enemy[1] = temp.rotateLeft();
+						enemy[2] = temp.rotateRight();
+						distance = here.distanceSquaredTo(ri.location);
 					}
 				}
 			}
+			if (teamSoup >= RobotType.MINER.cost) {
+				if (isDirDryFlatEmpty(enemy[0])) {
+					rc.buildRobot(RobotType.MINER, enemy[0]);
+					explorerMinerCount++;
+				}
+				if (isDirDryFlatEmpty(enemy[1])) {
+					rc.buildRobot(RobotType.MINER, enemy[1]);
+					explorerMinerCount++;
+				}
+				if (isDirDryFlatEmpty(enemy[2])) {
+					rc.buildRobot(RobotType.MINER, enemy[2]);
+					explorerMinerCount++;
+				}
+			}
 		}
-		if (teamSoup >= RobotType.MINER.cost) {
-			if (isDirDryFlatEmpty(enemy[0])) {
-				rc.buildRobot(RobotType.MINER, enemy[0]);
-				explorerMinerCount++;
-			}
-			if (isDirDryFlatEmpty(enemy[1])) {
-				rc.buildRobot(RobotType.MINER, enemy[1]);
-				explorerMinerCount++;
-			}
-			if (isDirDryFlatEmpty(enemy[2])) {
-				rc.buildRobot(RobotType.MINER, enemy[2]);
-				explorerMinerCount++;
-			}
- 		}
+
+
 
 		// try to shoot the closest visible enemy units
 		int closestDist = P_INF;
