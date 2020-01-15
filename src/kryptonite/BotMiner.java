@@ -92,14 +92,15 @@ public class BotMiner extends Globals {
 			log("Not ready");
 			return;
 		}
-
-		if (visibleEnemies.length > 0) {
-			for (RobotInfo ri : visibleEnemies) {
-				if (ri.type == RobotType.LANDSCAPER) {
-					for (Direction dir : directions) {
-						RobotInfo adjRobot = rc.senseRobotAtLocation(rc.adjacentLocation(dir));
-						if (adjRobot != null && adjRobot.team == us && adjRobot.type == RobotType.HQ)
-							return;
+		if (!isBuilderMiner(rc.getID())) {
+			if (visibleEnemies.length > 0) {
+				for (RobotInfo ri : visibleEnemies) {
+					if (ri.type == RobotType.LANDSCAPER) {
+						for (Direction dir : directions) {
+							RobotInfo adjRobot = rc.senseRobotAtLocation(rc.adjacentLocation(dir));
+							if (adjRobot != null && adjRobot.team == us && adjRobot.type == RobotType.HQ)
+								return;
+						}
 					}
 				}
 			}
