@@ -3,7 +3,6 @@ package kryptonite;
 import battlecode.common.*;
 
 import static kryptonite.Communication.*;
-import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
 
@@ -148,7 +147,7 @@ public class BotBuilderMiner extends BotMiner {
 				MapLocation buildLocation = new MapLocation(HQLocation.x + netGunQuadrant[k][0], HQLocation.y + netGunQuadrant[k][1]);
 				Direction dir = here.directionTo(buildLocation);
 				if (here.isAdjacentTo(buildLocation) && teamSoup >= RobotType.NET_GUN.cost + RobotType.REFINERY.cost
-						&& !rc.senseFlooding(buildLocation) && isFlat(buildLocation)
+						&& !rc.senseFlooding(buildLocation) && isLocFlat(buildLocation)
 						&& rc.senseRobotAtLocation(buildLocation) == null) {
 					log("Building netgun at " + buildLocation);
 					if (rc.isReady()) {
@@ -186,7 +185,7 @@ public class BotBuilderMiner extends BotMiner {
 					}
 					Direction dir = here.directionTo(buildLocation);
 					if (here.isAdjacentTo(buildLocation) && teamSoup >= RobotType.VAPORATOR.cost + RobotType.REFINERY.cost
-							&& !rc.senseFlooding(buildLocation) && isFlat(buildLocation)
+							&& !rc.senseFlooding(buildLocation) && isLocFlat(buildLocation)
 							&& rc.senseRobotAtLocation(buildLocation) == null) {
 						log("Building vaporator at " + buildLocation);
 						if (rc.isReady()) {
@@ -229,7 +228,7 @@ public class BotBuilderMiner extends BotMiner {
 				MapLocation buildLocation = new MapLocation(HQLocation.x + netGunQuadrant[k][0], HQLocation.y + netGunQuadrant[k][1]);
 				Direction dir = here.directionTo(buildLocation);
 				if (here.isAdjacentTo(buildLocation) && teamSoup >= RobotType.NET_GUN.cost + RobotType.REFINERY.cost
-						&& !rc.senseFlooding(buildLocation) && isFlat(buildLocation)
+						&& !rc.senseFlooding(buildLocation) && isLocFlat(buildLocation)
 						&& rc.senseRobotAtLocation(buildLocation) == null) {
 					log("Building netgun at " + buildLocation);
 					if (rc.isReady()) {

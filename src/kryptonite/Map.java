@@ -37,8 +37,7 @@ public class Map extends Globals {
     }
 
     public static boolean isDirEmpty (Direction dir) throws GameActionException {
-        MapLocation loc = rc.adjacentLocation(dir);
-        return rc.senseRobotAtLocation(loc) == null;
+        return rc.senseRobotAtLocation(rc.adjacentLocation(dir)) == null;
     }
 
 
@@ -65,11 +64,19 @@ public class Map extends Globals {
     }
 
     /*
+    Returns true if this direction's elevation is within +/-3 of our tile's elevation
+    Returns false otherwise
+    */
+    public static boolean isDirFlat(Direction dir) throws GameActionException {
+        return Math.abs(rc.senseElevation(rc.adjacentLocation(dir)) - myElevation) <= GameConstants.MAX_DIRT_DIFFERENCE;
+    }
+
+    /*
     Assumes that we can sense this tile
     Returns true if this tile's elevation is within +/-3 of our tile's elevation
     Returns false otherwise
     */
-    public static boolean isFlat(MapLocation loc) throws GameActionException {
+    public static boolean isLocFlat(MapLocation loc) throws GameActionException {
         return Math.abs(rc.senseElevation(loc) - myElevation) <= GameConstants.MAX_DIRT_DIFFERENCE;
     }
 
@@ -80,5 +87,62 @@ public class Map extends Globals {
     */
     public static boolean checkElevation(MapLocation loc1, MapLocation loc2) throws GameActionException {
         return Math.abs(rc.senseElevation(loc1) - rc.senseElevation(loc2)) <= GameConstants.MAX_DIRT_DIFFERENCE;
+    }
+
+    public static void updateIsDirMoveable() throws GameActionException {
+        if (!myType.isBuilding()) {
+            RobotInfo[] nearbyEnemies = null;
+            if (myType == RobotType.MINER) {
+                nearbyEnemies = rc.senseNearbyRobots(8, them);;
+            }
+            outer: for (int i = 0; i < directions.length; i++) {
+                MapLocation adjLoc = rc.adjacentLocation(directions[i]);
+
+                if (!inMap(adjLoc)) {
+                    isDirMoveable[i] = false;
+                    continue;
+                }
+
+                if (myType == RobotType.DELIVERY_DRONE) {
+                    if (!isDirEmpty(directions[i])) {
+                        isDirMoveable[i] = false;
+                        continue;
+                    }
+                    // checks for dangerous netguns
+                    // add check for if we are ignoring netguns
+                    for (RobotInfo ri : visibleEnemies) {
+                        if (canShootType(ri.type)) {
+                            if (adjLoc.distanceSquaredTo(ri.location) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
+                                isDirMoveable[i] = false;
+                                continue outer;
+                            }
+                        }
+                    }
+                } else if (myType == RobotType.LANDSCAPER) {
+                    if (!isDirDryFlatEmpty(directions[i])) {
+                        isDirMoveable[i] = false;
+                        continue;
+                    }
+                } else if (myType == RobotType.MINER) {
+                    if (!isDirDryFlatEmpty(directions[i])) {
+                        isDirMoveable[i] = false;
+                        continue;
+                    }
+                    // checks for dangerous drones
+                    for (RobotInfo ri : nearbyEnemies) {
+                        if (ri.type == RobotType.DELIVERY_DRONE) {
+                            if (ri.location.isAdjacentTo(adjLoc)) {
+                                isDirMoveable[i] = false;
+                                continue outer;
+                            }
+                        }
+                    }
+                } else {
+                    tlogi("ERROR: Sanity check failed - unknown type");
+                }
+
+                isDirMoveable[i] = true;
+            }
+        }
     }
 }

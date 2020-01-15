@@ -116,7 +116,7 @@ public class BotDeliveryDrone extends Globals {
 		allyMoveableRobots = new RobotInfo[69]; // for sensorRadiusSquared = 24
 		int index = 0;
 		for (RobotInfo ri: visibleAllies) {
-			if (canPickUpType(ri.type)) {
+			if (canBePickedUpType(ri.type)) {
 				allyMoveableRobots[index] = ri;
 				index++;
 			}
@@ -296,7 +296,7 @@ public class BotDeliveryDrone extends Globals {
 
 			// try to move towards the closest visible robot that is on transport tiles/wall
 			for (RobotInfo ri: visibleAllies) {
-				if (canPickUpType(ri.type)) {
+				if (canBePickedUpType(ri.type)) {
 					boolean shouldTransport = false;
 
 					int curRing = inMap(HQLocation, ri.location);
@@ -439,7 +439,7 @@ public class BotDeliveryDrone extends Globals {
 	Returns false otherwise
 	*/
 	public static boolean tryPickUpTransport (RobotInfo ri) throws GameActionException {
-		if (canPickUpType(ri.type)) {
+		if (canBePickedUpType(ri.type)) {
 			int curRing = inMap(HQLocation, ri.location);
 			Direction dirFromHQ = HQLocation.directionTo(ri.location);
 
@@ -622,7 +622,7 @@ public class BotDeliveryDrone extends Globals {
 			int closestEnemyIndex = -1;
 			int index = 0;
 			for (RobotInfo ri: targetRobots) {
-				if (canPickUpType(ri.type)) {
+				if (canBePickedUpType(ri.type)) {
 					int dist = here.distanceSquaredTo(ri.location);
 					if (dist < closestEnemyDist) {
 						closestEnemyDist = dist;

@@ -10,7 +10,7 @@ import static kryptonite.Map.*;
 public class Debug extends Globals {
 
 	public static boolean SILENCE_LOGS = true;
-	public static boolean SILENCE_INDICATORS = true;
+	public static boolean SILENCE_INDICATORS = false;
 
 	/*
 	Selectively turn off print logs for certain units

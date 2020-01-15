@@ -2,7 +2,6 @@ package kryptonite;
 
 import battlecode.common.*;
 
-import static kryptonite.Communication.*;
 import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
@@ -386,7 +385,7 @@ public class BotLandscaper extends Globals {
 							return;
 						}
 
-						log("ERROR: Sanity check failed - Unknown wall status");
+						logi("ERROR: Sanity check failed - Unknown wall status");
 					}
 
 
@@ -509,7 +508,7 @@ public class BotLandscaper extends Globals {
 		if (ri != null) {
 			return;
 		}
-		if (isFlat(loc) && !rc.senseFlooding(loc)) {
+		if (isLocFlat(loc) && !rc.senseFlooding(loc)) {
 			Actions.doMove(dir);
 			depositsWithoutMove = 0;
 			return;

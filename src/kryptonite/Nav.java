@@ -48,7 +48,7 @@ public class Nav extends Globals {
 		if (move == null) {
 			MapLocation loc = rc.adjacentLocation(dir);
 			RobotInfo ri = rc.senseRobotAtLocation(loc);
-			if (ri != null && canPickUpType(ri.type)) {
+			if (ri != null && canBePickedUpType(ri.type)) {
 				if (ri.ID == builderMinerID) {
 					tlog("Cannot force through builder miner");
 				} else {

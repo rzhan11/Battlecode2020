@@ -54,6 +54,8 @@ public class Globals {
 	public static RobotInfo[] adjacentEnemies = null;
 	public static RobotInfo[] adjacentCows = null;
 
+	public static boolean[] isDirMoveable = new boolean[8];
+
 	// checks if drones picked up and dropped this unit
 	public static boolean droppedLastTurn = false;
 	public static int lastActiveTurn = 0;
@@ -145,6 +147,9 @@ public class Globals {
 			adjacentEnemies = rc.senseNearbyRobots(2, them);
 			adjacentCows = rc.senseNearbyRobots(2, cowTeam);
 		}
+
+		// update moveable directions
+		updateIsDirMoveable();
 
 		if (roundNum == lastActiveTurn + 1) {
 			droppedLastTurn = false;
@@ -308,8 +313,12 @@ public class Globals {
 		}
 	}
 
-	public static boolean canPickUpType (RobotType rt) {
+	public static boolean canBePickedUpType(RobotType rt) {
 		return rt == RobotType.MINER || rt == RobotType.LANDSCAPER || rt == RobotType.COW;
+	}
+
+	public static boolean canShootType (RobotType rt) {
+		return rt == RobotType.NET_GUN || rt == RobotType.HQ;
 	}
 
 	public static Direction moveLog(MapLocation loc) throws GameActionException {
@@ -557,7 +566,7 @@ public class Globals {
 	public static boolean tryBuild (RobotType rt, Direction[] dir) throws GameActionException {
 		for (Direction d : dir) {
 			MapLocation loc = rc.adjacentLocation(d);
-			if (!rc.senseFlooding(loc) && isFlat(loc) && rc.senseRobotAtLocation(loc) == null) {
+			if (!rc.senseFlooding(loc) && isLocFlat(loc) && rc.senseRobotAtLocation(loc) == null) {
 				if (rc.isReady()) {
 					Actions.doBuildRobot(rt, d);
 					teamSoup = rc.getTeamSoup();
