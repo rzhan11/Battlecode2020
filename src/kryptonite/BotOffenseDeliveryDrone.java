@@ -66,12 +66,7 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
                 Direction dir = here.directionTo(holdingTemporaryRobotLocation);
                 log("Moving to holdingTemporaryRobotLocation at " + holdingTemporaryRobotLocation);
                 if (rc.canSenseLocation(holdingTemporaryRobotLocation) && rc.senseRobotAtLocation(holdingTemporaryRobotLocation) == null) {
-                    if (rc.isReady()) {
-                        Actions.doMove(here.directionTo(holdingTemporaryRobotLocation));
-                        tlog("Success");
-                    } else {
-                        tlog("But not ready");
-                    }
+                    Actions.doMove(here.directionTo(holdingTemporaryRobotLocation));
                     return;
                 }
                 tlog("Waiting for it to open up");
@@ -81,15 +76,10 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
                 // should be adjacent to but not on the holdingTemporaryRobotLocation
                 log("Putting temporary robot back to " + holdingTemporaryRobotLocation);
                 if (rc.canSenseLocation(holdingTemporaryRobotLocation) && rc.senseRobotAtLocation(holdingTemporaryRobotLocation) == null) {
-                    if (rc.isReady()) {
-                        Actions.doDropUnit(here.directionTo(holdingTemporaryRobotLocation));
-                        tlog("Success");
-                        holdingTemporaryRobot = false;
-                        holdingTemporaryRobotLocation = null;
-                        crossedTemporaryRobotLocation = false;
-                    } else {
-                        tlog("But not ready");
-                    }
+                    Actions.doDropUnit(here.directionTo(holdingTemporaryRobotLocation));
+                    holdingTemporaryRobot = false;
+                    holdingTemporaryRobotLocation = null;
+                    crossedTemporaryRobotLocation = false;
                     return;
                 }
                 tlog("Waiting for it to open up");
@@ -122,7 +112,7 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
         if (holdingTemporaryRobot && move != null) {
             crossedTemporaryRobotLocation = true;
         }
-//        if (!holdingTemporaryRobot && move == null && rc.isReady()) {
+//        if (!holdingTemporaryRobot && move == null) {
 //            if (!rc.isCurrentlyHoldingUnit()) {
 //                log("Trying to force a move");
 //                Direction dirToEnemyHQ = here.directionTo(targetLoc);

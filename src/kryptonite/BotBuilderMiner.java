@@ -155,16 +155,11 @@ public class BotBuilderMiner extends BotMiner {
 						&& !rc.senseFlooding(buildLocation) && isLocFlat(buildLocation)
 						&& rc.senseRobotAtLocation(buildLocation) == null) {
 					log("Building netgun at " + buildLocation);
-					if (rc.isReady()) {
-						Actions.doBuildRobot(RobotType.NET_GUN, dir);
-						teamSoup = rc.getTeamSoup();
-						netGunsBuilt++;
-						built = true;
-						tlog("Success");
-						return;
-					} else {
-						tlog("But not ready");
-					}
+					Actions.doBuildRobot(RobotType.NET_GUN, dir);
+					teamSoup = rc.getTeamSoup();
+					netGunsBuilt++;
+					built = true;
+					return;
 				}
 			}
 
@@ -193,17 +188,15 @@ public class BotBuilderMiner extends BotMiner {
 							&& !rc.senseFlooding(buildLocation) && isLocFlat(buildLocation)
 							&& rc.senseRobotAtLocation(buildLocation) == null) {
 						log("Building vaporator at " + buildLocation);
-						if (rc.isReady()) {
-							Actions.doBuildRobot(RobotType.VAPORATOR, dir);
-							built = true;
-							teamSoup = rc.getTeamSoup();
-							vaporatorsBuilt++;
-							tlog("VAPORATOR Built");
-							if (vaporatorsBuilt >= maxVaporators) {
-								writeTransactionVaporatorCheckpoint();
-							}
-							return;
+						Actions.doBuildRobot(RobotType.VAPORATOR, dir);
+						built = true;
+						teamSoup = rc.getTeamSoup();
+						vaporatorsBuilt++;
+						tlog("VAPORATOR Built");
+						if (vaporatorsBuilt >= maxVaporators) {
+							writeTransactionVaporatorCheckpoint();
 						}
+						return;
 					}
 				}
 			}
@@ -236,19 +229,14 @@ public class BotBuilderMiner extends BotMiner {
 						&& !rc.senseFlooding(buildLocation) && isLocFlat(buildLocation)
 						&& rc.senseRobotAtLocation(buildLocation) == null) {
 					log("Building netgun at " + buildLocation);
-					if (rc.isReady()) {
-						Actions.doBuildRobot(RobotType.NET_GUN, dir);
-						teamSoup = rc.getTeamSoup();
-						netGunsBuilt++;
-						built = true;
-						if (netGunsBuilt >= maxNetGuns[1]) {
-							writeTransactionNetgunCheckpoint();
-						}
-						tlog("Success");
-						return;
-					} else {
-						tlog("But not ready");
+					Actions.doBuildRobot(RobotType.NET_GUN, dir);
+					teamSoup = rc.getTeamSoup();
+					netGunsBuilt++;
+					built = true;
+					if (netGunsBuilt >= maxNetGuns[1]) {
+						writeTransactionNetgunCheckpoint();
 					}
+					return;
 				}
 			}
 

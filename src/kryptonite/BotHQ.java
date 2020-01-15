@@ -138,30 +138,27 @@ public class BotHQ extends Globals {
 		}
 
 		// try to shoot the closest visible enemy units
-		if (rc.isReady()) {
-			int closestDist = P_INF;
-			int id = -1;
-			//MapLocation here = rc.getLocation();
+		int closestDist = P_INF;
+		int id = -1;
+		//MapLocation here = rc.getLocation();
 
-			for (RobotInfo ri: visibleEnemies) {
-				if (ri.type == RobotType.DELIVERY_DRONE) {
-					int dist = here.distanceSquaredTo(ri.location);
-					if(dist < closestDist){
-						closestDist = dist;
-						id = ri.ID;
-					}
+		for (RobotInfo ri: visibleEnemies) {
+			if (ri.type == RobotType.DELIVERY_DRONE) {
+				int dist = here.distanceSquaredTo(ri.location);
+				if(dist < closestDist){
+					closestDist = dist;
+					id = ri.ID;
 				}
 			}
-
-			// shoot radius less than sensor radius
-			if(id != -1 && closestDist <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
-				Actions.doShootUnit(id);
-			}
+		}
+		// shoot radius less than sensor radius
+		if(id != -1 && closestDist <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
+			Actions.doShootUnit(id);
 		}
 
 		//if explorer miners have been build and have enough money, build a BuilderMiner
 		if(true) {
-			if (explorerMinerCount >= 8 && !madeBuilderMiner && teamSoup >= (RobotType.MINER.cost + 1) && rc.isReady()) {
+			if (explorerMinerCount >= 8 && !madeBuilderMiner && teamSoup >= (RobotType.MINER.cost + 1)) {
 				//try building
 				for (int k = 0; k < 8; k++) {
 					if (rc.canBuildRobot(RobotType.MINER, directions[k])) {
@@ -184,7 +181,7 @@ public class BotHQ extends Globals {
 		build three Miners to explore symmetries
 		EDIT: DRONES SHOULD EXPLORE SYMMETRIES
 		*/
-		if (teamSoup >= RobotType.MINER.cost && rc.isReady()) {
+		if (teamSoup >= RobotType.MINER.cost) {
 			buildMiner();
 			// if (symmetryMinerCount < 3) {
 			// 	buildSymmetryMiner();

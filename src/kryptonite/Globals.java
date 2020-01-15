@@ -560,7 +560,7 @@ public class Globals {
 
 
 	/*
-	Assumes cost and isReady are already checked
+	Assumes cost is already checked
 	Tries to build a given robot type in any direction
 	 */
 	public static boolean tryBuild (RobotType rt, Direction[] dir) throws GameActionException {
