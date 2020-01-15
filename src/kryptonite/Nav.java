@@ -12,26 +12,45 @@ public class Nav extends Globals {
 	public static boolean isDrone = false;
 
 	/*
-	Returns true if we can move in a direction to a tile that is not occupied and not flooded
+	Returns true if we can move in a direction to a tile that is not dangerous to our type
 	Returns false otherwise
 	*/
-	public static boolean checkDirectionMoveable (Direction dir) throws GameActionException {
-		MapLocation loc = rc.adjacentLocation(dir);
-		return inMap(loc) && rc.canMove(dir) && (isDrone || !rc.senseFlooding(loc));
+	public static boolean checkDirMoveable(Direction dir) throws GameActionException {
+//		MapLocation loc = rc.adjacentLocation(dir);
+//		return inMap(loc) && rc.canMove(dir) && (isDrone || !rc.senseFlooding(loc));
+		switch (dir) {
+			case NORTH:
+				return isDirMoveable[0];
+			case NORTHEAST:
+				return isDirMoveable[1];
+			case EAST:
+				return isDirMoveable[2];
+			case SOUTHEAST:
+				return isDirMoveable[3];
+			case SOUTH:
+				return isDirMoveable[4];
+			case SOUTHWEST:
+				return isDirMoveable[5];
+			case WEST:
+				return isDirMoveable[6];
+			case NORTHWEST:
+				return isDirMoveable[7];
+		}
+		return false;
 	}
 
 	/*
-	Returns if we can move (without getting killed by flood) in any of the eight directions
+	Returns true if we cannot move (without being in danger) in any of the eight directions
 	Ignores if we are ready
 	Drones ignore flooding
 	*/
-	public static boolean canMove () throws GameActionException {
+	public static boolean isTrapped () throws GameActionException {
 		for (Direction dir: directions) {
-			if (checkDirectionMoveable(dir)) {
-				return true;
+			if (checkDirMoveable(dir)) {
+				return false;
 			}
 		}
-		return false;
+		return true;
 	}
 
 	/*
@@ -91,7 +110,7 @@ public class Nav extends Globals {
 	Returns null if did not move
 	*/
 	public static Direction tryMoveInDirection (Direction dir) throws GameActionException {
-		if (checkDirectionMoveable(dir)) {
+		if (checkDirMoveable(dir)) {
 			Actions.doMove(dir);
 			return dir;
 		}
@@ -105,17 +124,17 @@ public class Nav extends Globals {
 	Returns null if did not move
 	*/
 	public static Direction tryMoveInGeneralDirection (Direction dir) throws GameActionException {
-		if (checkDirectionMoveable(dir)) {
+		if (checkDirMoveable(dir)) {
 			Actions.doMove(dir);
 			return dir;
 		}
 		Direction leftDir = dir.rotateLeft();
-		if (checkDirectionMoveable(leftDir)) {
+		if (checkDirMoveable(leftDir)) {
 			Actions.doMove(leftDir);
 			return leftDir;
 		}
 		Direction rightDir = dir.rotateRight();
-		if (checkDirectionMoveable(rightDir)) {
+		if (checkDirMoveable(rightDir)) {
 			Actions.doMove(rightDir);
 			return rightDir;
 		}
@@ -147,7 +166,7 @@ public class Nav extends Globals {
 	public static boolean[][] bugVisitedLocations;
 
 	public static Direction bugNavigate (MapLocation target) throws GameActionException {
-		if (!canMove()) {
+		if (isTrapped()) {
 			return null;
 		}
 
@@ -221,7 +240,7 @@ public class Nav extends Globals {
 		for (int i = 0; i < 8; ++i) {
 			leftDir = leftDir.rotateLeft();
 			leftDest = rc.adjacentLocation(leftDir);
-			if (checkDirectionMoveable(leftDir)) {
+			if (checkDirMoveable(leftDir)) {
 				leftDist = leftDest.distanceSquaredTo(bugTarget);
 				break;
 			}
@@ -233,7 +252,7 @@ public class Nav extends Globals {
 		for (int i = 0; i < 8; ++i) {
 			rightDir = rightDir.rotateRight();
 			rightDest = rc.adjacentLocation(rightDir);
-			if (checkDirectionMoveable(rightDir)) {
+			if (checkDirMoveable(rightDir)) {
 				rightDist = rightDest.distanceSquaredTo(bugTarget);
 				break;
 			}
@@ -282,7 +301,7 @@ public class Nav extends Globals {
 				bugRotateLeft = !bugRotateLeft;
 				return bugTraceMove(true);
 			}
-			if (checkDirectionMoveable(curDir)) {
+			if (checkDirMoveable(curDir)) {
 				Actions.doMove(curDir);
 				if (bugVisitedLocations[curDest.x][curDest.y]) {
 					// log("Resetting bugTracing");
@@ -370,7 +389,7 @@ public class Nav extends Globals {
 			index = 0;
 			for (Direction dir: directions) {
 				MapLocation loc = rc.adjacentLocation(dir);
-				if (checkDirectionMoveable(dir)) {
+				if (checkDirMoveable(dir)) {
 					int ii = index;
 					dangerDirection[ii] |= elevationDirection[ii] <= waterLevel;
 					ii = (index + size - 1) % size;

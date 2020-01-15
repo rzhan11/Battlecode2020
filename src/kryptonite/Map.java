@@ -110,11 +110,13 @@ public class Map extends Globals {
                     }
                     // checks for dangerous netguns
                     // add check for if we are ignoring netguns
-                    for (RobotInfo ri : visibleEnemies) {
-                        if (canShootType(ri.type)) {
-                            if (adjLoc.distanceSquaredTo(ri.location) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
-                                isDirMoveable[i] = false;
-                                continue outer;
+                    if (!BotDeliveryDrone.isDroneSwarming) {
+                        for (RobotInfo ri : visibleEnemies) {
+                            if (canShootType(ri.type)) {
+                                if (adjLoc.distanceSquaredTo(ri.location) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
+                                    isDirMoveable[i] = false;
+                                    continue outer;
+                                }
                             }
                         }
                     }

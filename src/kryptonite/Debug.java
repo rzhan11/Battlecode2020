@@ -21,14 +21,14 @@ public class Debug extends Globals {
 			return false;
 		}
 		switch (myType) {
-			case DELIVERY_DRONE: return true;
+			case DELIVERY_DRONE: return false;
 			case DESIGN_SCHOOL: return false;
 			case FULFILLMENT_CENTER: return false;
-			case HQ: return true;
+			case HQ: return false;
 			case LANDSCAPER: return false;
 			case MINER:
 				if (isBuilderMiner(myID)) {
-					return true;
+					return false;
 				}
 				return false;
 			case NET_GUN: return false;
@@ -48,7 +48,7 @@ public class Debug extends Globals {
 			return false;
 		}
 		switch (myType) {
-			case DELIVERY_DRONE: return false;
+			case DELIVERY_DRONE: return true;
 			case DESIGN_SCHOOL: return false;
 			case FULFILLMENT_CENTER: return false;
 			case HQ: return true;
@@ -58,7 +58,7 @@ public class Debug extends Globals {
 					return true;
 				}
 				return true;
-			case NET_GUN: return false;
+			case NET_GUN: return true;
 			case REFINERY: return false;
 			case VAPORATOR: return false;
 			default:

@@ -25,6 +25,17 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
     public static void turn() throws GameActionException {
         log("OFFENSE DRONE");
 
+        if (roundNum % 500 == 0) {
+            isDroneSwarming = true;
+        }
+
+        // only move in cardinal directions
+        if (!isDroneSwarming) {
+            for (int i = 1; i < isDirMoveable.length; i+=2) {
+                isDirMoveable[i] = false;
+            }
+        }
+
         if (!initialized) {
             init();
         }
@@ -87,13 +98,15 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
         } else {
             // STATE == enemyHQLocation found (AKA not null)
             // chase enemies and drop them into water
-            boolean sawEnemy = tryKillRobots(visibleEnemies, them);
-            if (sawEnemy) {
-                return;
-            }
-            boolean sawCow = tryKillRobots(visibleCows, cowTeam);
-            if (sawCow) {
-                return;
+            if (isDroneSwarming) {
+                boolean sawEnemy = tryKillRobots(visibleEnemies, them);
+                if (sawEnemy) {
+                    return;
+                }
+                boolean sawCow = tryKillRobots(visibleCows, cowTeam);
+                if (sawCow) {
+                    return;
+                }
             }
 
             log("Moving towards enemyHQLocation at " + enemyHQLocation);
@@ -103,18 +116,18 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
         if (holdingTemporaryRobot && move != null) {
             crossedTemporaryRobotLocation = true;
         }
-        if (!holdingTemporaryRobot && move == null && rc.isReady()) {
-            if (!rc.isCurrentlyHoldingUnit()) {
-                log("Trying to force a move");
-                Direction dirToEnemyHQ = here.directionTo(targetLoc);
-                move = Nav.tryForceMoveInGeneralDirection(dirToEnemyHQ);
-                if (move != null) { // STATE == picked up an ally
-                    holdingTemporaryRobot = true;
-                    holdingTemporaryRobotLocation = rc.adjacentLocation(move);
-                    crossedTemporaryRobotLocation = false;
-                }
-            }
-        }
+//        if (!holdingTemporaryRobot && move == null && rc.isReady()) {
+//            if (!rc.isCurrentlyHoldingUnit()) {
+//                log("Trying to force a move");
+//                Direction dirToEnemyHQ = here.directionTo(targetLoc);
+//                move = Nav.tryForceMoveInGeneralDirection(dirToEnemyHQ);
+//                if (move != null) { // STATE == picked up an ally
+//                    holdingTemporaryRobot = true;
+//                    holdingTemporaryRobotLocation = rc.adjacentLocation(move);
+//                    crossedTemporaryRobotLocation = false;
+//                }
+//            }
+//        }
         return;
     }
 

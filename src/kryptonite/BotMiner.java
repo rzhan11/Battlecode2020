@@ -13,7 +13,7 @@ public class BotMiner extends Globals {
 	final private static int EXPLORER_EDGE_DISTANCE = 4;
 
 	// distance at which we try to use refineries
-	final private static int REFINERY_DISTANCE_LIMIT = 25;
+	final private static int REFINERY_DISTANCE_LIMIT = 18;
 	final private static int MIN_SOUP_WRITE_SOUP_CLUSTER = 500;
 	final private static int MIN_SOUP_BUILD_REFINERY = 1000;
 
@@ -88,7 +88,8 @@ public class BotMiner extends Globals {
 			for (RobotInfo ri : visibleEnemies) {
 				if (ri.type == RobotType.LANDSCAPER) {
 					for (Direction dir : directions) {
-						if (rc.senseRobotAtLocation(rc.adjacentLocation(dir)).type == RobotType.HQ)
+						RobotInfo adjRobot = rc.senseRobotAtLocation(rc.adjacentLocation(dir));
+						if (adjRobot != null && adjRobot.team == us && adjRobot.type == RobotType.HQ)
 							return;
 					}
 				}

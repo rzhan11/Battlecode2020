@@ -25,7 +25,7 @@ public class Actions extends Globals {
 	}
 
 	public static void doShootUnit (int id) throws GameActionException {
-		drawLine(here, rc.senseRobot(id).location, PURPLE);
+		drawLine(here, rc.senseRobot(id).location, ORANGE);
 		rc.shootUnit(id);
 	}
 

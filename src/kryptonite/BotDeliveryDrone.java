@@ -40,6 +40,7 @@ public class BotDeliveryDrone extends Globals {
 	public static int campLocationsLength;
 
 	public static boolean isOffenseDrone = false;
+	public static boolean isDroneSwarming = false;
 
 	public static void loop() throws GameActionException {
 		while (true) {
