@@ -241,7 +241,7 @@ public class BotHQ extends Globals {
 	public static boolean buildMiner() throws GameActionException {
 		Direction[] orderedDirections;
 		if (soupLocation == null) {
-			orderedDirections = getCloseDirections(here.directionTo(symmetryHQLocations[2]));
+			orderedDirections = getCloseDirections(here.directionTo(getSymmetryLocation()));
 		} else
 		orderedDirections = getCloseDirections(here.directionTo(soupLocation));
 

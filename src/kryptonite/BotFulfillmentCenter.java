@@ -35,7 +35,7 @@ public class BotFulfillmentCenter extends Globals {
 			return;
 		}
 
-		Direction[] dirToEnemyHQ = getCloseDirections(here.directionTo(symmetryHQLocations[2]));
+		Direction[] dirToEnemyHQ = getCloseDirections(here.directionTo(getSymmetryLocation()));
 
 		if (visibleEnemies.length > 0) {
 			for (RobotInfo ri : visibleEnemies) {
