@@ -61,7 +61,7 @@ public class BotDeliveryDrone extends Globals {
 					for(int i = 0; i < innerRingRadius + 1; i++) for(int j = 0; j < innerRingRadius + 1; j++) {
 						MapLocation newl = templ.translate(-2 * i, -2 * j);
 						if(inMap(newl) && !HQLocation.equals(newl)) {
-							if (inMap(HQLocation, newl) >= innerRingRadius) { // excludes holes inside the 5x5 plot
+							if (maxXYDistance(HQLocation, newl) >= innerRingRadius) { // excludes holes inside the 5x5 plot
 								// excludes corners
 								if (HQLocation.distanceSquaredTo(newl) == 18) {
 									continue;
@@ -115,9 +115,9 @@ public class BotDeliveryDrone extends Globals {
 			return;
 		}
 
-		insideWall = largeWallRingRadius > inMap(HQLocation, here);
-		onWall = largeWallRingRadius == inMap(HQLocation, here);
-		outsideWall = largeWallRingRadius < inMap(HQLocation, here);
+		insideWall = largeWallRingRadius > maxXYDistance(HQLocation, here);
+		onWall = largeWallRingRadius == maxXYDistance(HQLocation, here);
+		outsideWall = largeWallRingRadius < maxXYDistance(HQLocation, here);
 
 		allyMoveableRobots = new RobotInfo[69]; // for sensorRadiusSquared = 24
 		int index = 0;
@@ -146,7 +146,7 @@ public class BotDeliveryDrone extends Globals {
 				// check adjacent tiles for a 5x5 plot tile that is not occupied/flooded
 				for (Direction dir : directions) {
 					MapLocation loc = rc.adjacentLocation(dir);
-					if (inMap(loc) && inMap(HQLocation, loc) <= 2 && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
+					if (inMap(loc) && maxXYDistance(HQLocation, loc) <= 2 && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
 						log("Dropped robot inside the wall at " +  loc);
 						tlog("Dropped " +  dir);
 						Actions.doDropUnit(dir);
@@ -172,7 +172,7 @@ public class BotDeliveryDrone extends Globals {
 				// check adjacent tiles for a tile outside the wall that is not occupied/flooded
 				for (Direction dir : directions) {
 					MapLocation loc = rc.adjacentLocation(dir);
-					if (inMap(loc) && inMap(HQLocation, loc) > (largeWallRingRadius + 1) && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
+					if (inMap(loc) && maxXYDistance(HQLocation, loc) > (largeWallRingRadius + 1) && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
 						log("Dropped robot outside the wall at " +  loc);
 						tlog("Dropped " +  dir);
 						Actions.doDropUnit(dir);
@@ -205,7 +205,7 @@ public class BotDeliveryDrone extends Globals {
 				// drop robot onto a wall tile that isn't occupied/flooded
 				for (Direction dir : directions) {
 					MapLocation loc = rc.adjacentLocation(dir);
-					if (inMap(loc) && inMap(HQLocation, loc) == largeWallRingRadius && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
+					if (inMap(loc) && maxXYDistance(HQLocation, loc) == largeWallRingRadius && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
 						log("Dropped robot on the wall at " +  loc);
 							tlog("Dropped " +  dir);
 							Actions.doDropUnit(dir);
@@ -232,7 +232,7 @@ public class BotDeliveryDrone extends Globals {
 							break;
 						}
 						MapLocation loc = here.translate(dir[0], dir[1]);
-						if (inMap(HQLocation, loc) == largeWallRingRadius) {
+						if (maxXYDistance(HQLocation, loc) == largeWallRingRadius) {
 							if (rc.canSenseLocation(loc) && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
 								movingToWallLocation = loc;
 								foundWall = true;
@@ -281,7 +281,7 @@ public class BotDeliveryDrone extends Globals {
 				if (canBePickedUpType(ri.type)) {
 					boolean shouldTransport = false;
 
-					int curRing = inMap(HQLocation, ri.location);
+					int curRing = maxXYDistance(HQLocation, ri.location);
 					Direction dirFromHQ = HQLocation.directionTo(ri.location);
 
 					if (curRing == largeWallRingRadius - 1) {
@@ -410,7 +410,7 @@ public class BotDeliveryDrone extends Globals {
 	*/
 	public static boolean tryPickUpTransport (RobotInfo ri) throws GameActionException {
 		if (canBePickedUpType(ri.type)) {
-			int curRing = inMap(HQLocation, ri.location);
+			int curRing = maxXYDistance(HQLocation, ri.location);
 			Direction dirFromHQ = HQLocation.directionTo(ri.location);
 
 			// if miner is on inner transport tile and is blocked by high elevation wall, move him outwards

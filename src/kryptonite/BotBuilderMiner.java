@@ -74,7 +74,7 @@ public class BotBuilderMiner extends BotMiner {
 				for (Direction dir: directions) {
 					MapLocation buildLocation = rc.adjacentLocation(dir);
 					// forces it to be on 3x3 ring
-					if (inMap(HQLocation, buildLocation) != 1) {
+					if (maxXYDistance(HQLocation, buildLocation) != 1) {
 						continue;
 					}
 					if(rc.canBuildRobot(RobotType.FULFILLMENT_CENTER,dir)){
@@ -113,7 +113,7 @@ public class BotBuilderMiner extends BotMiner {
 				for (Direction dir: directions) {
 					MapLocation buildLocation = rc.adjacentLocation(dir);
 					// forces it to be on 3x3 ring
-					if (inMap(HQLocation, buildLocation) != 1) {
+					if (maxXYDistance(HQLocation, buildLocation) != 1) {
 						continue;
 					}
 					if(rc.canBuildRobot(RobotType.DESIGN_SCHOOL,dir)){

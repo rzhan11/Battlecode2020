@@ -20,7 +20,7 @@ public class Map extends Globals {
     /*
     Useful for ring structures
     */
-    public static int inMap(MapLocation ml1, MapLocation ml2) {
+    public static int maxXYDistance(MapLocation ml1, MapLocation ml2) {
         return Math.max(Math.abs(ml1.x - ml2.x), Math.abs(ml1.y - ml2.y));
     }
 

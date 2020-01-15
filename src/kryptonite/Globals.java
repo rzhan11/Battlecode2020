@@ -452,7 +452,7 @@ public class Globals {
 		for(int i = 0; i < innerRingRadius + 1; i++) for(int j = 0; j < innerRingRadius + 1; j++) {
 			MapLocation newl = templ.translate(-2 * i, -2 * j);
 			if(inMap(newl) && !HQLocation.equals(newl)) {
-				if (inMap(HQLocation, newl) >= innerRingRadius) { // excludes holes inside the 5x5 plot
+				if (maxXYDistance(HQLocation, newl) >= innerRingRadius) { // excludes holes inside the 5x5 plot
 					// excludes corners
 //					if (HQLocation.distanceSquaredTo(newl) == 18) {
 //						continue;
@@ -497,7 +497,7 @@ public class Globals {
 		for(int i = 0; i < outerRingRadius + 1; i++) for(int j = 0; j < outerRingRadius + 1; j++) {
 			MapLocation newl = templ.translate(-2 * i, -2 * j);
 			if(inMap(newl) && !HQLocation.equals(newl)) {
-				if (inMap(HQLocation, newl) >= outerRingRadius) { // excludes holes inside the 9x9 plot
+				if (maxXYDistance(HQLocation, newl) >= outerRingRadius) { // excludes holes inside the 9x9 plot
 					outerDigLocations[index] = newl;
 					index++;
 				}
