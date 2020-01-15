@@ -75,8 +75,10 @@ public class BotLandscaper extends Globals {
 		log("smallWallFinished " + smallWallFinished);
 		log("largeWallFull " + largeWallFull);
 
-		if(!rc.isReady()) return;
-
+		if (!rc.isReady()) {
+			log("Not ready");
+			return;
+		}
 
 		// calculates the index of largeWall that we are on
 		if (inMap(HQLocation, here) == 4) {

@@ -110,6 +110,11 @@ public class BotDeliveryDrone extends Globals {
 		locateFlooding();
 		log("floodingMemory: " + floodingMemory);
 
+		if (!rc.isReady()) {
+			log("Not ready");
+			return;
+		}
+
 		insideWall = largeWallRingRadius > inMap(HQLocation, here);
 		onWall = largeWallRingRadius == inMap(HQLocation, here);
 		outsideWall = largeWallRingRadius < inMap(HQLocation, here);

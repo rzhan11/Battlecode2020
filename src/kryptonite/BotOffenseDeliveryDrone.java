@@ -25,6 +25,12 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
     public static void turn() throws GameActionException {
         log("OFFENSE DRONE");
 
+        if (!rc.isReady()) {
+            log("Not ready");
+            return;
+        }
+
+
         if (roundNum % 500 == 0) {
             isDroneSwarming = true;
         }

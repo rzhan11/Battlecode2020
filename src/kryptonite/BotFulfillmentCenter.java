@@ -30,6 +30,11 @@ public class BotFulfillmentCenter extends Globals {
 
 	public static void turn() throws GameActionException {
 
+		if (!rc.isReady()) {
+			log("Not ready");
+			return;
+		}
+
 		Direction[] dirToEnemyHQ = getCloseDirections(here.directionTo(symmetryHQLocations[2]));
 
 		if (visibleEnemies.length > 0) {

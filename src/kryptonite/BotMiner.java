@@ -84,6 +84,15 @@ public class BotMiner extends Globals {
 
 	public static void turn() throws GameActionException {
 
+		locateSoup();
+		// updates known refineries based on what we can sense this turn
+		locateRefineries();
+
+		if (!rc.isReady()) {
+			log("Not ready");
+			return;
+		}
+
 		if (visibleEnemies.length > 0) {
 			for (RobotInfo ri : visibleEnemies) {
 				if (ri.type == RobotType.LANDSCAPER) {
@@ -95,18 +104,10 @@ public class BotMiner extends Globals {
 				}
 			}
 		}
-		locateSoup();
-		// updates known refineries based on what we can sense this turn
-		locateRefineries();
 
 		soupCarrying = rc.getSoupCarrying();
 
 		log("soupCarrying: " + soupCarrying);
-
-//		if (!rc.isReady()) {
-//			log("Not ready");
-//			return;
-//		}
 
 		// moves away from immediate water danger
 		Nav.avoidWater();

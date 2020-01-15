@@ -50,6 +50,11 @@ public class BotBuilderMiner extends BotMiner {
 			init();
 		}
 
+		if (!rc.isReady()) {
+			log("Not ready");
+			return;
+		}
+
 		log("checkpoints: ");
 		tlog("drone " + reachedDroneCheckpoint);
 		tlog("landscaper " + reachedLandscaperCheckpoint);

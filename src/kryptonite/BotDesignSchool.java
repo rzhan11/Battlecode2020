@@ -29,6 +29,12 @@ public class BotDesignSchool extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
+
+		if (!rc.isReady()) {
+			log("Not ready");
+			return;
+		}
+
 		if (visibleEnemies.length > 0) {
 			log("Enemies detected");
 			if (teamSoup >= RobotType.LANDSCAPER.cost) {

@@ -53,21 +53,6 @@ public class BotHQ extends Globals {
 		if (!hasLoadedWallInformation && madeBuilderMiner) {
 			loadWallInformation();
 		}
-
-		if (visibleEnemies.length > 0) {
-			for (RobotInfo ri : visibleEnemies) {
-				if (ri.type == RobotType.LANDSCAPER && here.distanceSquaredTo(ri.location) < RobotType.MINER.sensorRadiusSquared) {
-					log("Enemy Landscaper detected");
-					if (teamSoup >= RobotType.MINER.cost) {
-						log("Trying to build protection miner");
-						boolean didBuild = tryBuild(RobotType.MINER, directions);
-						if (didBuild) {
-							explorerMinerCount++;
-						}
-					}
-				}
-			}
-		}
 		if (hasLoadedWallInformation) {
 			if(!smallWallFinished) {
 				boolean canSeeAll = true;
@@ -127,6 +112,26 @@ public class BotHQ extends Globals {
 						tlog("LARGE WALL IS ABOUT FULL");
 						largeWallFull = true;
 						writeTransactionLargeWallFull();
+					}
+				}
+			}
+		}
+
+		if (!rc.isReady()) {
+			log("Not ready");
+			return;
+		}
+
+		if (visibleEnemies.length > 0) {
+			for (RobotInfo ri : visibleEnemies) {
+				if (ri.type == RobotType.LANDSCAPER && here.distanceSquaredTo(ri.location) < RobotType.MINER.sensorRadiusSquared) {
+					log("Enemy Landscaper detected");
+					if (teamSoup >= RobotType.MINER.cost) {
+						log("Trying to build protection miner");
+						boolean didBuild = tryBuild(RobotType.MINER, directions);
+						if (didBuild) {
+							explorerMinerCount++;
+						}
 					}
 				}
 			}

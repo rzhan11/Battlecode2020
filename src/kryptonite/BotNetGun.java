@@ -26,6 +26,12 @@ public class BotNetGun extends Globals {
 
 	public static void turn() throws GameActionException {
 
+		if (!rc.isReady()) {
+			log("Not ready");
+			return;
+		}
+
+
 		// try to shoot the closest visible enemy units
 		if (rc.isReady()) {
 			int closestDist = P_INF;
