@@ -21,12 +21,14 @@ public class BotLandscaper extends Globals {
 	// only used when on wall
 	final private static int DEPOSITS_WITHOUT_MOVE_LIMIT = 3;
 	private static int depositsWithoutMove = 0;
+	public static boolean checkSelfDestructed = false;
 
 	// @todo: Landscapers should attack enemy buildings if in sight and not on large wall
 	// @todo: Landscapers should "heal" ally buildings if they are damaged
 	public static void loop() throws GameActionException {
 		while (true) {
-			if (largeWallFull) { // self destruct
+			if (largeWallFull && !checkSelfDestructed) { // self destruct
+				checkSelfDestructed = true;
 				Direction dir = here.directionTo(getSymmetryLocation());
 				if (maxXYDistance(HQLocation, here) == 4 && manhattanDistance(HQLocation, here) == 4) {
 					int[] array = new int[1];

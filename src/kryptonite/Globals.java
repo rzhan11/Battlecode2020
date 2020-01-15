@@ -337,6 +337,21 @@ public class Globals {
 	}
 
 	public static void updateSymmetry () throws GameActionException {
+
+		if (enemyHQLocation != null) {
+			return;
+		}
+
+		// if the HQ is on a horizontal/vertical/rotational symmetry that generates the same symmetryHQLOcations
+		if ((mapWidth % 2 == 1 && mapWidth / 2 == HQLocation.x) ||
+				(mapHeight % 2 == 1 && mapHeight / 2 == HQLocation.y)) {
+			isSymmetryHQLocation[0] = 1;
+			isSymmetryHQLocation[1] = -1;
+			isSymmetryHQLocation[2] = -1;
+			enemyHQLocation = symmetryHQLocations[0];
+			return;
+		}
+
 		// try to visually check unknown enemyHQLocations
 		for (int i = 0; i < symmetryHQLocations.length; i++) {
 			MapLocation loc = symmetryHQLocations[i];
