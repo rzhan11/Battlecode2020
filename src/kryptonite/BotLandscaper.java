@@ -265,17 +265,13 @@ public class BotLandscaper extends Globals {
 						MapLocation loc = rc.adjacentLocation(d);
 						if(inMap(loc) && rc.senseFlooding(loc) && inMap(HQLocation, loc) <= 4) {
 							log("Flooded base tile at " + loc);
-							if (rc.isReady()) {
-								if (rc.getDirtCarrying() == 0) {
-									tlog("Digging dirt");
-									landscaperDig(2);
-								} else {
-									tlog("Depositing dirt");
-									Actions.doDepositDirt(d);
-									depositsWithoutMove++;
-								}
+							if (rc.getDirtCarrying() == 0) {
+								tlog("Digging dirt");
+								landscaperDig(2);
 							} else {
-								tlog("But not ready");
+								tlog("Depositing dirt");
+								Actions.doDepositDirt(d);
+								depositsWithoutMove++;
 							}
 							return;
 						}
@@ -339,12 +335,7 @@ public class BotLandscaper extends Globals {
 								return;
 							}
 							moveClockwise = true;
-							if (rc.isReady()) {
-								landscaperWallMove(d_clock);
-								return;
-							} else {
-								tlog("But not ready");
-							}
+							landscaperWallMove(d_clock);
 							return;
 						}
 
@@ -357,12 +348,7 @@ public class BotLandscaper extends Globals {
 								return;
 							}
 							moveClockwise = false;
-							if (rc.isReady()) {
-								landscaperWallMove(d_counterclock);
-								return;
-							} else {
-								tlog("But not ready");
-							}
+							landscaperWallMove(d_counterclock);
 							return;
 						}
 
@@ -501,9 +487,6 @@ public class BotLandscaper extends Globals {
 				if(rc.canDepositDirt(d)) Actions.doDepositDirt(d);
 	}
 
-	/*
-	Assumes isReady()
-	 */
 	private static void landscaperWallMove(Direction dir) throws GameActionException {
 		MapLocation loc = rc.adjacentLocation(dir);
 		RobotInfo ri = rc.senseRobotAtLocation(loc);
@@ -552,47 +535,43 @@ public class BotLandscaper extends Globals {
 	}
 
 	private static void buildWall () throws GameActionException {
-		if (rc.isReady()) {
-			if (rc.getDirtCarrying() == 0) {
-				tlog("Digging dirt");
-				landscaperDig(2);
-			} else {
-				int minDirt = P_INF;
-				Direction minDir = null;
-				for (Direction d : allDirections) {
-					MapLocation newloc = here.add(d);
-					if (!inMap(newloc)) {
-						continue;
-					}
+		if (rc.getDirtCarrying() == 0) {
+			tlog("Digging dirt");
+			landscaperDig(2);
+		} else {
+			int minDirt = P_INF;
+			Direction minDir = null;
+			for (Direction d : allDirections) {
+				MapLocation newloc = here.add(d);
+				if (!inMap(newloc)) {
+					continue;
+				}
 
-					RobotInfo ri = rc.senseRobotAtLocation(newloc);
-					if(ri != null && ri.type.isBuilding() && ri.team == rc.getTeam()) {
-						continue;
-					}
+				RobotInfo ri = rc.senseRobotAtLocation(newloc);
+				if(ri != null && ri.type.isBuilding() && ri.team == rc.getTeam()) {
+					continue;
+				}
 
-					// checks if inside tiles are below elevation
-					// if largeWallFull of landscapers, ignore this check
-					if(!largeWallFull) {
-						if (inMap(HQLocation, newloc) == 3 && rc.senseElevation(newloc) < smallWallDepth) {
-							minDir = d;
-							minDirt = -1;
-							break;
-						}
-					}
-
-					if (inMap(HQLocation, newloc) == 4) {
-						if (minDirt > rc.senseElevation(newloc)) {
-							minDir = d;
-							minDirt = rc.senseElevation(newloc);
-						}
+				// checks if inside tiles are below elevation
+				// if largeWallFull of landscapers, ignore this check
+				if(!largeWallFull) {
+					if (inMap(HQLocation, newloc) == 3 && rc.senseElevation(newloc) < smallWallDepth) {
+						minDir = d;
+						minDirt = -1;
+						break;
 					}
 				}
-				tlog("Depositing dirt in direction " + minDir);
-				Actions.doDepositDirt(minDir);
-				depositsWithoutMove++;
+
+				if (inMap(HQLocation, newloc) == 4) {
+					if (minDirt > rc.senseElevation(newloc)) {
+						minDir = d;
+						minDirt = rc.senseElevation(newloc);
+					}
+				}
 			}
-		} else {
-			tlog("But not ready");
+			tlog("Depositing dirt in direction " + minDir);
+			Actions.doDepositDirt(minDir);
+			depositsWithoutMove++;
 		}
 	}
 }

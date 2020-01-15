@@ -181,7 +181,7 @@ public class BotHQ extends Globals {
 
 		//if explorer miners have been build and have enough money, build a BuilderMiner
 		if(true) {
-			if (explorerMinerCount >= 8 && !madeBuilderMiner && teamSoup >= (RobotType.MINER.cost + 1) && rc.isReady()) {
+			if (explorerMinerCount >= 8 && !madeBuilderMiner && teamSoup >= (RobotType.MINER.cost + 1)) {
 				//try building
 				for (int k = 0; k < 8; k++) {
 					if (rc.canBuildRobot(RobotType.MINER, directions[k])) {
@@ -204,7 +204,7 @@ public class BotHQ extends Globals {
 		build three Miners to explore symmetries
 		EDIT: DRONES SHOULD EXPLORE SYMMETRIES
 		*/
-		if (teamSoup >= RobotType.MINER.cost && rc.isReady()) {
+		if (teamSoup >= RobotType.MINER.cost) {
 			buildMiner();
 			// if (symmetryMinerCount < 3) {
 			// 	buildSymmetryMiner();

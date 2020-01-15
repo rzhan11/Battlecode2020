@@ -33,25 +33,23 @@ public class BotNetGun extends Globals {
 
 
 		// try to shoot the closest visible enemy units
-		if (rc.isReady()) {
-			int closestDist = P_INF;
-			int id = -1;
-			//MapLocation here = rc.getLocation();
+		int closestDist = P_INF;
+		int id = -1;
+		//MapLocation here = rc.getLocation();
 
-			for (RobotInfo ri: visibleEnemies) {
-				if (ri.type == RobotType.DELIVERY_DRONE) {
-					int dist = here.distanceSquaredTo(ri.location);
-					if(dist < closestDist){
-						closestDist = dist;
-						id = ri.ID;
-					}
+		for (RobotInfo ri: visibleEnemies) {
+			if (ri.type == RobotType.DELIVERY_DRONE) {
+				int dist = here.distanceSquaredTo(ri.location);
+				if(dist < closestDist){
+					closestDist = dist;
+					id = ri.ID;
 				}
 			}
+		}
 
-			// shoot radius less than sensor radius
-			if(id != -1 && closestDist <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
-				Actions.doShootUnit(id);
-			}
+		// shoot radius less than sensor radius
+		if(id != -1 && closestDist <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
+			Actions.doShootUnit(id);
 		}
 	}
 

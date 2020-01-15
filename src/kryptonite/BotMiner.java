@@ -179,19 +179,17 @@ public class BotMiner extends Globals {
 				buildRefineryVisibleSoup = -1;
 				log("Refinery build location at " + buildRefineryLocation + " is flooded/occupied.");
 
-				if (rc.isReady()) {
-					log("Trying to build refinery in adjacent tile.");
-					boolean result = tryBuild(RobotType.REFINERY, directions);
-					if (result) {
-						tlog("Success");
+				log("Trying to build refinery in adjacent tile.");
+				boolean result = tryBuild(RobotType.REFINERY, directions);
+				if (result) {
+					tlog("Success");
 
-						writeTransactionRefineryBuilt(buildRefineryLocation);
-						addToRefineries(buildRefineryLocation);
+					writeTransactionRefineryBuilt(buildRefineryLocation);
+					addToRefineries(buildRefineryLocation);
 
-						buildRefineryLocation = null;
-						buildRefineryVisibleSoup = -1;
-						return;
-					}
+					buildRefineryLocation = null;
+					buildRefineryVisibleSoup = -1;
+					return;
 				}
 
 				// STATE == did not build refinery in adjacent direction
@@ -236,22 +234,15 @@ public class BotMiner extends Globals {
 
 				// all conditions for building refinery have been met
 				log("Building refinery at " + buildRefineryLocation);
-				if (rc.isReady()) {
-					Actions.doBuildRobot(RobotType.REFINERY, dir);
-					teamSoup = rc.getTeamSoup();
+				Actions.doBuildRobot(RobotType.REFINERY, dir);
+				teamSoup = rc.getTeamSoup();
 
-					tlog("Success");
+				writeTransactionRefineryBuilt(buildRefineryLocation);
+				addToRefineries(buildRefineryLocation);
 
-					writeTransactionRefineryBuilt(buildRefineryLocation);
-					addToRefineries(buildRefineryLocation);
-
-					buildRefineryLocation = null;
-					buildRefineryVisibleSoup = -1;
-					return;
-				} else {
-					tlog("But not ready");
-					return;
-				}
+				buildRefineryLocation = null;
+				buildRefineryVisibleSoup = -1;
+				return;
 			} else {
 				// STATE == not adjacent to refinery
 
@@ -275,22 +266,16 @@ public class BotMiner extends Globals {
 					}
 				}
 
-				if (rc.isReady()) {
-					Direction move = Nav.bugNavigate(buildRefineryLocation);
-					log("Moving to buildRefineryLocation at " + buildRefineryLocation);
-					if (move != null) {
-						tlog("Moved " + move);
-						return;
-					} else {
-						tlog("But no move found");
-					}
+				Direction move = Nav.bugNavigate(buildRefineryLocation);
+				log("Moving to buildRefineryLocation at " + buildRefineryLocation);
+				if (move != null) {
+					tlog("Moved " + move);
 				} else {
-					tlog("But not ready");
-					return;
+					tlog("But no move found");
 				}
+				return;
 			}
 
-			return; // always returns since we only want the "while" loop to run once
 		}
 
 		/*
@@ -305,26 +290,17 @@ public class BotMiner extends Globals {
 			}
 			if (here.isAdjacentTo(loc)) {
 				log("Depositing " + soupCarrying + " soup at refinery at " + loc);
-				if (rc.isReady()) {
-					rc.depositSoup(here.directionTo(loc), soupCarrying);
-					refineriesIndex = -1;
-					tlog("Success");
-				} else {
-					tlog("But not ready");
-				}
+				rc.depositSoup(here.directionTo(loc), soupCarrying);
+				refineriesIndex = -1;
 				return;
 			}
 
 			log("Moving to refinery at " + refineries[refineriesIndex]);
-			if (rc.isReady()) {
-				Direction move = Nav.bugNavigate(refineries[refineriesIndex]);
-				if (move != null) {
-					tlog("Moved " + move);
-				} else {
-					tlog("But no move found");
-				}
+			Direction move = Nav.bugNavigate(refineries[refineriesIndex]);
+			if (move != null) {
+				tlog("Moved " + move);
 			} else {
-				tlog("But not ready");
+				tlog("But no move found");
 			}
 			return;
 		}
@@ -333,10 +309,8 @@ public class BotMiner extends Globals {
 		mine dat soup
 		*/
 		if (soupDeposit != null && here.distanceSquaredTo(soupDeposit) <= 2) {
-			if (rc.isReady()) {
-				log("Mining soup at " + soupDeposit);
-				rc.mineSoup(here.directionTo(soupDeposit));
-			}
+			log("Mining soup at " + soupDeposit);
+			rc.mineSoup(here.directionTo(soupDeposit));
 			return;
 		}
 
@@ -371,15 +345,11 @@ public class BotMiner extends Globals {
 
 		if (soupDeposit != null) {
 			log("Moving to soupDeposit at " + soupDeposit);
-			if (rc.isReady()) {
-				Direction move = Nav.bugNavigate(soupDeposit);
-				if (move != null) {
-					tlog("Moved " + move);
-				} else {
-					tlog("But no move found");
-				}
+			Direction move = Nav.bugNavigate(soupDeposit);
+			if (move != null) {
+				tlog("Moved " + move);
 			} else {
-				tlog("But not ready");
+				tlog("But no move found");
 			}
 			return;
 		} else {
@@ -393,15 +363,11 @@ public class BotMiner extends Globals {
 					// do not return, instead try to explore
 				} else {
 					log("Moving to soupCluster at " + soupClusters[soupClusterIndex]);
-					if (rc.isReady()) {
-						Direction move = Nav.bugNavigate(loc);
-						if (move != null) {
-							tlog("Moved " + move);
-						} else {
-							tlog("But no move found");
-						}
+					Direction move = Nav.bugNavigate(loc);
+					if (move != null) {
+						tlog("Moved " + move);
 					} else {
-						tlog("But not ready");
+						tlog("But no move found");
 					}
 					return;
 				}
@@ -415,16 +381,13 @@ public class BotMiner extends Globals {
 			}
 
 			log("Exploring " + myExploreLocation);
-			if (rc.isReady()) {
-				Direction move = Nav.bugNavigate(myExploreLocation);
-				if (move != null) {
-					tlog("Moved " + move);
-				} else {
-					tlog("But no move found");
-				}
+			Direction move = Nav.bugNavigate(myExploreLocation);
+			if (move != null) {
+				tlog("Moved " + move);
 			} else {
-				log("But not ready");
+				tlog("But no move found");
 			}
+			return;
 		}
 	}
 
