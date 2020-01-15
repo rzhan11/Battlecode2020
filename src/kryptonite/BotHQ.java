@@ -195,8 +195,6 @@ public class BotHQ extends Globals {
 	Does not affect HQ yet - Remind Richard
 	*/
 	public static void locateNearbySoup () throws GameActionException {
-		int minDistance = Integer.MAX_VALUE;
-
 		for (int[] dir: senseDirections) {
 			if (actualSensorRadiusSquared < dir[2]) {
 				break;
