@@ -122,20 +122,41 @@ public class BotHQ extends Globals {
 			return;
 		}
 
+		// 1. Loop through visibile enemies and identify if any are bad landscapers
+		// 2. Find the closest landscaper and go that way
+		// 3. Check if I can place a troop in that direction
+		// 4. If I can't move onto the next one
+		Direction[] enemy = new Direction[3];
+		int distance = 150;
 		if (visibleEnemies.length > 0) {
 			for (RobotInfo ri : visibleEnemies) {
-				if (ri.type == RobotType.LANDSCAPER && here.distanceSquaredTo(ri.location) < RobotType.MINER.sensorRadiusSquared) {
-					log("Enemy Landscaper detected");
-					if (teamSoup >= RobotType.MINER.cost) {
-						log("Trying to build protection miner");
-						boolean didBuild = tryBuild(RobotType.MINER, directions);
-						if (didBuild) {
-							explorerMinerCount++;
-						}
+				if (ri.type == RobotType.LANDSCAPER && here.distanceSquaredTo(ri.location) < distance) {
+					Direction temp = here.directionTo(ri.location);
+					if (isDirDryFlatEmpty(temp) || isDirDryFlatEmpty(temp.rotateLeft()) || isDirDryFlatEmpty(temp.rotateRight())) {
+						enemy[0] = temp;
+						enemy[1] = temp.rotateLeft();
+						enemy[2] = temp.rotateRight();
+						distance = here.distanceSquaredTo(ri.location);
 					}
 				}
 			}
+			if (teamSoup >= RobotType.MINER.cost) {
+				if (isDirDryFlatEmpty(enemy[0])) {
+					rc.buildRobot(RobotType.MINER, enemy[0]);
+					explorerMinerCount++;
+				}
+				if (isDirDryFlatEmpty(enemy[1])) {
+					rc.buildRobot(RobotType.MINER, enemy[1]);
+					explorerMinerCount++;
+				}
+				if (isDirDryFlatEmpty(enemy[2])) {
+					rc.buildRobot(RobotType.MINER, enemy[2]);
+					explorerMinerCount++;
+				}
+			}
 		}
+
+
 
 		// try to shoot the closest visible enemy units
 		int closestDist = P_INF;
@@ -151,10 +172,12 @@ public class BotHQ extends Globals {
 				}
 			}
 		}
+
 		// shoot radius less than sensor radius
 		if(id != -1 && closestDist <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
 			Actions.doShootUnit(id);
 		}
+
 
 		//if explorer miners have been build and have enough money, build a BuilderMiner
 		if(true) {
