@@ -71,7 +71,7 @@ public class BotMiner extends Globals {
 				}
 
 				if (builderMinerID == rc.getID()) {
-					BotBuilderMiner.turn();
+					BotMinerBuilder.turn();
 				} else {
 					turn();
 				}
@@ -92,26 +92,27 @@ public class BotMiner extends Globals {
 			log("Not ready");
 			return;
 		}
-		if (!isBuilderMiner(rc.getID())) {
-			if (visibleEnemies.length > 0) {
-				for (RobotInfo ri : visibleEnemies) {
-					if (ri.type == RobotType.LANDSCAPER) {
-						for (Direction dir : directions) {
-							RobotInfo adjRobot = rc.senseRobotAtLocation(rc.adjacentLocation(dir));
-							if (adjRobot != null && adjRobot.team == us && adjRobot.type == RobotType.HQ)
-								return;
-						}
-					}
-				}
-			}
-		}
 
 		soupCarrying = rc.getSoupCarrying();
 
 		log("soupCarrying: " + soupCarrying);
 
+		// defend
+		if (here.isAdjacentTo(HQLocation)) {
+			for (RobotInfo ri : visibleEnemies) {
+				if (ri.type == RobotType.LANDSCAPER) {
+					log("Staying still to protect HQ from landscaper");
+					return;
+				}
+			}
+		}
+
+		int avoidDangerResult = Nav.avoidDanger();
+		if (avoidDangerResult == 1) {
+			return;
+		}
 		// moves away from immediate water danger
-		Nav.avoidWater();
+//		Nav.avoidWater();
 
 		/*
 		If we are not moving to/building a refinery

@@ -7,7 +7,7 @@ import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
 
-public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
+public class BotDeliveryDroneOffense extends BotDeliveryDrone {
 
     public static boolean initialized = false;
 
@@ -30,13 +30,17 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
             return;
         }
 
-
         if (roundNum % 500 == 0) {
             isDroneSwarming = true;
         }
 
-        // only move in cardinal directions
         if (!isDroneSwarming) {
+            int avoidDangerResult = Nav.avoidDanger();
+            if (avoidDangerResult == 1) {
+                return;
+            }
+
+            // only move in cardinal directions
             for (int i = 1; i < isDirMoveable.length; i+=2) {
                 isDirMoveable[i] = false;
             }
@@ -49,10 +53,6 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
         locateFlooding();
         log("floodingMemory: " + floodingMemory);
 
-        log();
-        log("holdingTemporaryRobot: " + holdingTemporaryRobot);
-        log("holdingTemporaryRobotLocation: " + holdingTemporaryRobotLocation);
-        log("crossedTemporaryRobotLocation: " + crossedTemporaryRobotLocation);
         // if we are temporarily holding a robot, try to put it back
         if (holdingTemporaryRobot) {
             // if we are on the holdingTemporaryRobotLocation
@@ -89,21 +89,21 @@ public class BotOffenseDeliveryDrone extends BotDeliveryDrone {
 
         // if enemyHQLocation not found, go to exploreSymmetryLocation
         MapLocation targetLoc = getSymmetryLocation();
+        if (isDroneSwarming) {
+            boolean sawEnemy = tryKillRobots(visibleEnemies, them);
+            if (sawEnemy) {
+                return;
+            }
+            boolean sawCow = tryKillRobots(visibleCows, cowTeam);
+            if (sawCow) {
+                return;
+            }
+        }
         if (enemyHQLocation == null) {
             log("Moving towards symmetry location at " + targetLoc);
         } else {
             // STATE == enemyHQLocation found (AKA not null)
             // chase enemies and drop them into water
-            if (isDroneSwarming) {
-                boolean sawEnemy = tryKillRobots(visibleEnemies, them);
-                if (sawEnemy) {
-                    return;
-                }
-                boolean sawCow = tryKillRobots(visibleCows, cowTeam);
-                if (sawCow) {
-                    return;
-                }
-            }
 
             log("Moving towards enemyHQLocation at " + enemyHQLocation);
         }

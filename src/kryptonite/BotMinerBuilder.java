@@ -6,7 +6,7 @@ import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
 
-public class BotBuilderMiner extends BotMiner {
+public class BotMinerBuilder extends BotMiner {
 
 	// private
 

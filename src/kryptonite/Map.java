@@ -90,47 +90,75 @@ public class Map extends Globals {
     }
 
     public static void updateIsDirMoveable() throws GameActionException {
-        if (!myType.isBuilding()) {
-            RobotInfo[] nearbyEnemies = null;
-            if (myType == RobotType.MINER) {
-                nearbyEnemies = rc.senseNearbyRobots(8, them);;
-            }
-            outer: for (int i = 0; i < directions.length; i++) {
-                MapLocation adjLoc = rc.adjacentLocation(directions[i]);
+        if (myType.isBuilding()) {
+            return;
+        }
 
-                if (!inMap(adjLoc)) {
+        for (int i = 0; i < directions.length; i++) {
+            MapLocation adjLoc = rc.adjacentLocation(directions[i]);
+            if (!inMap(adjLoc)) {
+                isDirMoveable[i] = false;
+                continue;
+            }
+
+            if (myType == RobotType.DELIVERY_DRONE) {
+                if (!isDirEmpty(directions[i])) {
                     isDirMoveable[i] = false;
                     continue;
                 }
+            } else {
+                // STATE == I am a miner/landscaper
+                if (!isDirDryFlatEmpty(directions[i])) {
+                    isDirMoveable[i] = false;
+                    continue;
+                }
+            }
+            isDirMoveable[i] = true;
+        }
+    }
 
-                if (myType == RobotType.DELIVERY_DRONE) {
-                    if (!isDirEmpty(directions[i])) {
-                        isDirMoveable[i] = false;
-                        continue;
+    public static void updateIsDirDanger () throws GameActionException {
+        if (myType.isBuilding()) {
+            return;
+        }
+
+        inDanger = false;
+        RobotInfo[] nearbyEnemies;
+        if (myType == RobotType.DELIVERY_DRONE) {
+            nearbyEnemies = visibleEnemies;;
+            for (RobotInfo ri : nearbyEnemies) {
+                if (canShootType(ri.type)) {
+                    if (here.distanceSquaredTo(ri.location) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
+                        inDanger = true;
                     }
-                    // checks for dangerous netguns
-                    // add check for if we are ignoring netguns
-                    if (!BotDeliveryDrone.isDroneSwarming) {
-                        for (RobotInfo ri : visibleEnemies) {
-                            if (canShootType(ri.type)) {
-                                if (adjLoc.distanceSquaredTo(ri.location) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
-                                    isDirMoveable[i] = false;
-                                    isDirDanger[i] = true;
-                                    continue outer;
-                                }
-                            }
-                        }
+                }
+            }
+        } else {
+            nearbyEnemies = rc.senseNearbyRobots(8, them);;
+            for (RobotInfo ri : nearbyEnemies) {
+                if (ri.type == RobotType.DELIVERY_DRONE) {
+                    if (ri.location.isAdjacentTo(here)) {
+                        inDanger = true;
                     }
-                } else {
-                    // STATE == I am a miner/landscaper
-                    if (!isDirDryFlatEmpty(directions[i])) {
-                        isDirMoveable[i] = false;
-                        continue;
-                    }
-                    // checks for dangerous drones
+                }
+            }
+        }
+        outer: for (int i = 0; i < directions.length; i++) {
+            MapLocation adjLoc = rc.adjacentLocation(directions[i]);
+
+            if (!inMap(adjLoc)) {
+                isDirMoveable[i] = false;
+                isDirDanger[i] = false;
+                continue;
+            }
+
+            if (myType == RobotType.DELIVERY_DRONE) {
+                // checks for dangerous netguns
+                // add check for if we are ignoring netguns
+                if (!BotDeliveryDrone.isDroneSwarming) {
                     for (RobotInfo ri : nearbyEnemies) {
-                        if (ri.type == RobotType.DELIVERY_DRONE) {
-                            if (ri.location.isAdjacentTo(adjLoc)) {
+                        if (canShootType(ri.type)) {
+                            if (adjLoc.distanceSquaredTo(ri.location) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
                                 isDirMoveable[i] = false;
                                 isDirDanger[i] = true;
                                 continue outer;
@@ -138,9 +166,20 @@ public class Map extends Globals {
                         }
                     }
                 }
-                isDirDanger[i] = false;
-                isDirMoveable[i] = true;
+            } else {
+                // STATE == I am a miner/landscaper
+                // checks for dangerous drones
+                for (RobotInfo ri : nearbyEnemies) {
+                    if (ri.type == RobotType.DELIVERY_DRONE) {
+                        if (ri.location.isAdjacentTo(adjLoc)) {
+                            isDirMoveable[i] = false;
+                            isDirDanger[i] = true;
+                            continue outer;
+                        }
+                    }
+                }
             }
+            isDirDanger[i] = false;
         }
     }
 }

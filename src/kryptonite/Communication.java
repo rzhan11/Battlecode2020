@@ -476,7 +476,7 @@ message[3] = y coordinate of our HQ
 		log("Submitter ID: " + decryptID(message[0]));
 		log("Checkpoint Number " + checkpoint_number);
 		log("Posted round: " + round);
-		BotBuilderMiner.reachedDroneCheckpoint = checkpoint_number;
+		BotMinerBuilder.reachedDroneCheckpoint = checkpoint_number;
 	}
 
 	/*
@@ -506,7 +506,7 @@ message[3] = y coordinate of our HQ
 		log("Submitter ID: " + decryptID(message[0]));
 		log("Posted round: " + round);
 		log("Checkpoint Number " + checkpoint_number);
-		BotBuilderMiner.reachedLandscaperCheckpoint = checkpoint_number;
+		BotMinerBuilder.reachedLandscaperCheckpoint = checkpoint_number;
 	}
 
 	/*
@@ -617,13 +617,13 @@ message[3] = y coordinate of our HQ
 
 	public static void readTransactionEnemyHQLocation (int[] message, int round) throws GameActionException {
 		if (message[3] == 1) {
-			BotOffenseDeliveryDrone.enemyHQLocation = symmetryHQLocations[message[2]];
+			BotDeliveryDroneOffense.enemyHQLocation = symmetryHQLocations[message[2]];
 		}
-		BotOffenseDeliveryDrone.isSymmetryHQLocation[message[2]] = message[3];
+		BotDeliveryDroneOffense.isSymmetryHQLocation[message[2]] = message[3];
 		log("Reading transaction for 'Enemy HQ Location'");
 		log("Submitter ID: " + decryptID(message[0]));
 		log("Location: " + symmetryHQLocations[message[2]]);
-		log("Exists: " + BotOffenseDeliveryDrone.isSymmetryHQLocation[message[2]]);
+		log("Exists: " + BotDeliveryDroneOffense.isSymmetryHQLocation[message[2]]);
 		log("Posted round: " + round);
 	}
 

@@ -89,7 +89,7 @@ public class BotDeliveryDrone extends Globals {
 				}
 
 				if (isOffenseDrone) {
-					BotOffenseDeliveryDrone.turn();
+					BotDeliveryDroneOffense.turn();
 				} else {
 					turn();
 				}
@@ -112,6 +112,11 @@ public class BotDeliveryDrone extends Globals {
 
 		if (!rc.isReady()) {
 			log("Not ready");
+			return;
+		}
+
+		int avoidDangerResult = Nav.avoidDanger();
+		if (avoidDangerResult == 1) {
 			return;
 		}
 
@@ -605,8 +610,6 @@ public class BotDeliveryDrone extends Globals {
 			}
 		}
 
-		log("Cannot confirm floodingMemory, searching for visible flooded tile");
-
 		// runs if floodingMemory is not visible or is null
 		// searches for a flooded tile that is empty
 		for (int[] dir: senseDirections) {
@@ -628,6 +631,5 @@ public class BotDeliveryDrone extends Globals {
 				return;
 			}
 		}
-
 	}
 }

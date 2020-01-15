@@ -90,6 +90,11 @@ public class BotLandscaper extends Globals {
 			return;
 		}
 
+		int avoidDangerResult = Nav.avoidDanger();
+		if (avoidDangerResult == 1) {
+			return;
+		}
+
 		// calculates the index of largeWall that we are on
 		if (maxXYDistance(HQLocation, here) == 4) {
 			for (int i = 0; i < largeWallLength; i++) {

@@ -166,6 +166,8 @@ public class Nav extends Globals {
 	public static boolean[][] bugVisitedLocations;
 
 	public static Direction bugNavigate (MapLocation target) throws GameActionException {
+		log("Bug navigating to " + target);
+
 		if (isTrapped()) {
 			return null;
 		}
@@ -174,7 +176,6 @@ public class Nav extends Globals {
 			bugTarget = target;
 			bugTracing = false;
 			bugClosestDistanceToTarget = here.distanceSquaredTo(bugTarget);
-
 		}
 
 		if (here.equals(bugTarget)) {
@@ -317,9 +318,36 @@ public class Nav extends Globals {
 	}
 
 	/*
+	Return 0 if not in danger
+	Return 1 if was in danger, but moved out of it
+	Return -1 if cannot move out of danger
+	 */
+	public static int avoidDanger() throws GameActionException {
+		if (!inDanger) {
+			log("Not in danger");
+			return 0;
+		}
+
+		for (int i = 0; i < directions.length; i++) {
+			MapLocation loc = rc.adjacentLocation(directions[i]);
+			if (!inMap(loc)) {
+				continue;
+			}
+			if (isDirMoveable[i]) {
+				log("Avoiding danger");
+				Actions.doMove(directions[i]);
+				return 1;
+			}
+		}
+
+		log("Cannot avoid danger");
+		return -1;
+	}
+
+	/*
 	Checks if water will kill us next turn and moves away from it if capable
 	Returns true if we were in danger and moved away from water
-	Returns false if we did not move away from danger (or was unable to due to cooldown)
+	Returns false if we did not move away from danger
 	*/
 	public static boolean avoidWater() throws GameActionException {
 		// check we are ready to move and if our current elevation in under the water elevation
@@ -340,10 +368,6 @@ public class Nav extends Globals {
 		}
 
 		log("This tile will be flooded next turn");
-		if (!rc.isReady()) {
-			log("Cooldown is not ready. I am dying to water! :(");
-			return false;
-		}
 
 		int size = 8;
 		int[] elevationDirection = new int[size];

@@ -56,6 +56,7 @@ public class Globals {
 
 	public static boolean[] isDirMoveable = new boolean[8];
 	public static boolean[] isDirDanger = new boolean[8];
+	public static boolean inDanger;
 
 	// checks if drones picked up and dropped this unit
 	public static boolean droppedLastTurn = false;
@@ -151,6 +152,8 @@ public class Globals {
 
 		// update moveable directions
 		updateIsDirMoveable();
+		// updates dangerous directions and modifies isdirmoveable based on this
+		updateIsDirDanger();
 
 		if (roundNum == lastActiveTurn + 1) {
 			droppedLastTurn = false;
