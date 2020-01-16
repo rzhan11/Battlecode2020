@@ -18,7 +18,6 @@ public class Globals {
 	public static Team cowTeam;
 	public static int myID;
 	public static RobotType myType;
-	public static int baseSensorRadiusSquared;
 
 	public static int[][] senseDirections = null; // stores (dx, dy, magnitude) of locations that can be sensed
 
@@ -71,7 +70,7 @@ public class Globals {
 	public static MapLocation HQLocation = null;
 	public static int HQElevation;
 
-	public static MapLocation[] symmetryHQLocations = null;
+	public static MapLocation[] symmetryHQLocations = new MapLocation[3];
 	public static int[] isSymmetryHQLocation = {-1, -1, -1}; // -1 is unknown, 0 is false, 1 is true
 	public static int symmetryHQLocationsIndex; // current symmetry that we are exploring
 	public static MapLocation enemyHQLocation = null;
@@ -95,7 +94,6 @@ public class Globals {
 
 		myID = rc.getID();
 		myType = rc.getType();
-		baseSensorRadiusSquared = myType.sensorRadiusSquared;
 		senseDirections = HardCode.getSenseDirections(myType);
 
 		mapWidth = rc.getMapWidth();
@@ -170,7 +168,7 @@ public class Globals {
 		calculateDynamicCost();
 
 		// find HQ location and symmetries if not already found
-		if (symmetryHQLocations == null) {
+		if (HQLocation == null) {
 			findHQLocation();
 			symmetryHQLocationsIndex = myID % symmetryHQLocations.length;
 			log("Initial exploreSymmetryLocation: " + symmetryHQLocations[symmetryHQLocationsIndex]);
@@ -283,7 +281,6 @@ public class Globals {
 		}
 
 		// calculates possible enemy HQ locations
-		symmetryHQLocations = new MapLocation[3];
 		symmetryHQLocations[0] = new MapLocation(mapWidth - 1 - HQLocation.x, HQLocation.y);
 		symmetryHQLocations[1] = new MapLocation(HQLocation.x, mapHeight - 1 - HQLocation.y);
 		symmetryHQLocations[2] = new MapLocation(mapWidth - 1 - HQLocation.x, mapHeight - 1 - HQLocation.y);

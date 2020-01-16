@@ -10,7 +10,7 @@ import static kryptonite.Map.*;
 public class BotFulfillmentCenter extends Globals {
 
 	public static int dronesMade = 0;
-	public static int[] droneCheckpoints = {7, 8};
+	public static int[] droneCheckpoints = {4, 8};
 	public static boolean[] checkpointSent = {false, false};
 
 	public static void loop() throws GameActionException {

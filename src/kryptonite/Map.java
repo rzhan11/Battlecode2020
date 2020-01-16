@@ -10,6 +10,13 @@ import static kryptonite.Map.*;
 public class Map extends Globals {
 
     /*
+    Reflects ml1 over ml2
+     */
+    public static MapLocation reflect(MapLocation ml1, MapLocation ml2) {
+        return new MapLocation(2 * ml2.x - ml1.x, 2 * ml2.y - ml1.y);
+    }
+
+    /*
     Returns true if the location is within the map boundaries
     Returns false if not
     */
