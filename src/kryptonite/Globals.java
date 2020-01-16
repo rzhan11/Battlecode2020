@@ -337,6 +337,10 @@ public class Globals {
 		return move;
 	}
 
+	public static boolean isDigLocation(MapLocation ml) {
+		return (ml.x - HQLocation.x) % 2 == 0 && (ml.y - HQLocation.y) % 2 == 0;
+	}
+
 	public static void updateSymmetry () throws GameActionException {
 
 		if (enemyHQLocation != null) {
