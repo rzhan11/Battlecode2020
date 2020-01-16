@@ -1,10 +1,10 @@
-package kryptonite;
+package wall;
 
 import battlecode.common.*;
 
-import static kryptonite.Communication.*;
-import static kryptonite.Debug.*;
-import static kryptonite.Map.*;
+import static wall.Communication.*;
+import static wall.Debug.*;
+import static wall.Map.*;
 
 public class BotMinerBuilder extends BotMiner {
 

@@ -1,8 +1,8 @@
-package kryptonite;
+package wall;
 
 import battlecode.common.*;
 
-import static kryptonite.Debug.*;
+import static wall.Debug.*;
 
 public class Communication extends Globals {
 

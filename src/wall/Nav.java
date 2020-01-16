@@ -1,10 +1,10 @@
-package kryptonite;
+package wall;
 
 import battlecode.common.*;
 
-import static kryptonite.Constants.*;
-import static kryptonite.Debug.*;
-import static kryptonite.Map.*;
+import static wall.Constants.*;
+import static wall.Debug.*;
+import static wall.Map.*;
 
 public class Nav extends Globals {
 

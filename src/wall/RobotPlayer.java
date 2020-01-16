@@ -1,4 +1,4 @@
-package kryptonite;
+package wall;
 
 import battlecode.common.*;
 

@@ -1,11 +1,11 @@
-package kryptonite;
+package wall;
 
 import battlecode.common.*;
 
-import static kryptonite.Communication.*;
-import static kryptonite.Constants.*;
-import static kryptonite.Debug.*;
-import static kryptonite.Map.*;
+import static wall.Communication.*;
+import static wall.Constants.*;
+import static wall.Debug.*;
+import static wall.Map.*;
 
 public class BotHQ extends Globals {
 

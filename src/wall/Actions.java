@@ -1,9 +1,9 @@
-package kryptonite;
+package wall;
 
 import battlecode.common.*;
 
-import static kryptonite.Constants.*;
-import static kryptonite.Debug.*;
+import static wall.Constants.*;
+import static wall.Debug.*;
 
 public class Actions extends Globals {
 
