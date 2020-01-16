@@ -87,24 +87,22 @@ public class BotDeliveryDroneOffense extends BotDeliveryDrone {
             }
         }
 
+        // chase enemies and drop them into water
+        boolean sawEnemy = tryKillRobots(visibleEnemies, them);
+        if (sawEnemy) {
+            return;
+        }
+        boolean sawCow = tryKillRobots(visibleCows, cowTeam);
+        if (sawCow) {
+            return;
+        }
+
         // if enemyHQLocation not found, go to exploreSymmetryLocation
         MapLocation targetLoc = getSymmetryLocation();
-        if (isDroneSwarming) {
-            boolean sawEnemy = tryKillRobots(visibleEnemies, them);
-            if (sawEnemy) {
-                return;
-            }
-            boolean sawCow = tryKillRobots(visibleCows, cowTeam);
-            if (sawCow) {
-                return;
-            }
-        }
         if (enemyHQLocation == null) {
             log("Moving towards symmetry location at " + targetLoc);
         } else {
             // STATE == enemyHQLocation found (AKA not null)
-            // chase enemies and drop them into water
-
             log("Moving towards enemyHQLocation at " + enemyHQLocation);
         }
 

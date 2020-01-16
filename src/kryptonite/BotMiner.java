@@ -57,7 +57,7 @@ public class BotMiner extends Globals {
 
 					spawnDirection = HQLocation.directionTo(here);
 
-					myExploreDirection = spawnDirection;
+					myExploreDirection = directions[myID % 8];
 					myExploreLocation = findExploreLocation(myExploreDirection);
 					log("myExploreLocation: " + myExploreLocation);
 
