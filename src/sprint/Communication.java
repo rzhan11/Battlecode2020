@@ -36,7 +36,7 @@ public class Communication extends Globals {
 
 	public static int dynamicCost;
 
-	public static int[][] unsentMessages = new int[MAX_UNSENT_TRANSACTIONS_LENGTH][GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
+	public static int[][] unsentMessages = new int[MAX_UNSENT_TRANSACTIONS_LENGTH][GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 	public static int unsentTransactionsIndex = 0;
 	public static int unsentTransactionsLength = 0;
 
@@ -186,10 +186,10 @@ public class Communication extends Globals {
 			dynamicCost = FIRST_TURN_DYNAMIC_COST;
 		} else {
 			Transaction[] messages = rc.getBlock(roundNum - 1);
-			if (messages.length < GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH) {
+			if (messages.length < GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH) {
 				dynamicCost = 1;
 			} else {
-				dynamicCost = messages[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH - 1].getCost() + 1;
+				dynamicCost = messages[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH - 1].getCost() + 1;
 			}
 		}
 	}
@@ -229,7 +229,7 @@ public class Communication extends Globals {
 	*/
 	public static void writeTransactionHQFirstTurn (MapLocation myHQLocation) throws GameActionException {
 		Debug.tlog("Writing transaction for 'HQ First Turn' at " + myHQLocation);
-		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = HQ_FIRST_TURN_SIGNAL;
 		message[2] = myHQLocation.x;
@@ -263,7 +263,7 @@ message[3] = y coordinate of our HQ
 */
 	public static void writeTransactionSmallWallComplete () throws GameActionException {
 		Debug.tlog("Writing transaction for 'Small Wall Complete'");
-		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = SMALL_WALL_BUILD_SIGNAL;
 
@@ -291,7 +291,7 @@ message[3] = y coordinate of our HQ
 	*/
 	public static void writeTransactionSoupCluster (MapLocation soupClusterLocation) throws GameActionException {
 		Debug.tlog("Writing transaction for 'Soup Cluster' at " + soupClusterLocation);
-		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = SOUP_CLUSTER_SIGNAL;
 		message[2] = soupClusterLocation.x;
@@ -324,7 +324,7 @@ message[3] = y coordinate of our HQ
 	public static void writeTransactionRefineryBuilt (MapLocation refineryLocation) throws GameActionException {
 		// check money
 		Debug.tlog("Writing transaction for 'Refinery Built' at " + refineryLocation);
-		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = REFINERY_BUILT_SIGNAL;
 		message[2] = refineryLocation.x;
@@ -358,7 +358,7 @@ message[3] = y coordinate of our HQ
 	public static void writeTransactionSymmetryMinerBuilt(int symmetryMinerID, MapLocation symmetryLocation) throws GameActionException {
 		// check money
 		Debug.tlog("Writing transaction for 'Symmetry Miner Built' with ID " + symmetryMinerID + " finding " + symmetryLocation);
-		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = SYMMETRY_MINER_BUILT_SIGNAL;
 		message[2] = symmetryMinerID;
@@ -396,7 +396,7 @@ message[3] = y coordinate of our HQ
 
 	public static void writeTransactionBuilderMinerBuilt(int id) throws GameActionException{
 		Debug.tlog("Writing transaction for Builder Miner of ID: " + id);
-		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = BUILDER_MINER_BUILT_SIGNAL;
 		message[2] = id;
@@ -425,7 +425,7 @@ message[3] = y coordinate of our HQ
 
 	public static void writeTransactionDroneCheckpoint(int checkpoint) throws GameActionException{
 		Debug.tlog("Writing transaction for drone checkpoint " + checkpoint );
-		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = DRONE_CHECKPOINT_SIGNAL;
 		message[2] = checkpoint;
@@ -456,7 +456,7 @@ message[3] = y coordinate of our HQ
 
 	public static void writeTransactionLandscaperCheckpoint(int checkpoint) throws GameActionException{
 		Debug.tlog("Writing transaction for landscaper checkpoint " + checkpoint);
-		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = LANDSCAPER_CHECKPOINT_SIGNAL;
 		message[2] = checkpoint;
@@ -486,7 +486,7 @@ message[3] = y coordinate of our HQ
 
 	public static void writeTransactionVaporatorCheckpoint() throws GameActionException{
 		Debug.tlog("Writing transaction for vaporator checkpoint");
-		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = VAPORATOR_CHECKPOINT_SIGNAL;
 		xorMessage(message);
@@ -512,7 +512,7 @@ message[3] = y coordinate of our HQ
 
 	public static void writeTransactionNetgunCheckpoint() throws GameActionException{
 		Debug.tlog("Writing transaction for netgun checkpoint");
-		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = NETGUN_CHECKPOINT_SIGNAL;
 		xorMessage(message);
@@ -539,7 +539,7 @@ message[3] = y coordinate of our HQ
 
 	public static void writeTransactionFloodingFound (MapLocation loc) throws GameActionException{
 		Debug.tlog("Writing transaction for 'Flooding Found'");
-		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = FLOODING_FOUND_SIGNAL;
 		message[2] = loc.x;
@@ -570,7 +570,7 @@ message[3] = y coordinate of our HQ
 	 */
 	public static void writeTransactionEnemyHQLocation (int symmetryIndex, int exists) throws GameActionException{
 		Debug.tlog("Writing transaction for 'Enemy HQ Location'");
-		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = ENEMY_HQ_LOCATION_SIGNAL;
 		message[2] = symmetryIndex;
@@ -604,7 +604,7 @@ message[3] = y coordinate of our HQ
 	 */
 	public static void writeTransactionLargeWallFull () throws GameActionException{
 		Debug.tlog("Writing transaction for 'Large Wall Full'");
-		int[] message = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = LARGE_WALL_FULL_SIGNAL;
 
