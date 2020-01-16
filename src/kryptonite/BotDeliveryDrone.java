@@ -60,7 +60,7 @@ public class BotDeliveryDrone extends Globals {
 					int index = 0;
 					for(int i = 0; i < innerRingRadius + 1; i++) for(int j = 0; j < innerRingRadius + 1; j++) {
 						MapLocation newl = templ.translate(-2 * i, -2 * j);
-						if(inMap(newl) && !HQLocation.equals(newl)) {
+						if(rc.onTheMap(newl) && !HQLocation.equals(newl)) {
 							if (maxXYDistance(HQLocation, newl) >= innerRingRadius) { // excludes holes inside the 5x5 plot
 								// excludes corners
 								if (HQLocation.distanceSquaredTo(newl) == 18) {
@@ -151,7 +151,7 @@ public class BotDeliveryDrone extends Globals {
 				// check adjacent tiles for a 5x5 plot tile that is not occupied/flooded
 				for (Direction dir : directions) {
 					MapLocation loc = rc.adjacentLocation(dir);
-					if (inMap(loc) && maxXYDistance(HQLocation, loc) <= 2 && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
+					if (rc.onTheMap(loc) && maxXYDistance(HQLocation, loc) <= 2 && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
 						log("Dropped robot inside the wall at " +  loc);
 						tlog("Dropped " +  dir);
 						Actions.doDropUnit(dir);
@@ -177,7 +177,7 @@ public class BotDeliveryDrone extends Globals {
 				// check adjacent tiles for a tile outside the wall that is not occupied/flooded
 				for (Direction dir : directions) {
 					MapLocation loc = rc.adjacentLocation(dir);
-					if (inMap(loc) && maxXYDistance(HQLocation, loc) > (largeWallRingRadius + 1) && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
+					if (rc.onTheMap(loc) && maxXYDistance(HQLocation, loc) > (largeWallRingRadius + 1) && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
 						log("Dropped robot outside the wall at " +  loc);
 						tlog("Dropped " +  dir);
 						Actions.doDropUnit(dir);
@@ -210,7 +210,7 @@ public class BotDeliveryDrone extends Globals {
 				// drop robot onto a wall tile that isn't occupied/flooded
 				for (Direction dir : directions) {
 					MapLocation loc = rc.adjacentLocation(dir);
-					if (inMap(loc) && maxXYDistance(HQLocation, loc) == largeWallRingRadius && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
+					if (rc.onTheMap(loc) && maxXYDistance(HQLocation, loc) == largeWallRingRadius && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
 						log("Dropped robot on the wall at " +  loc);
 							tlog("Dropped " +  dir);
 							Actions.doDropUnit(dir);
@@ -435,7 +435,7 @@ public class BotDeliveryDrone extends Globals {
 						movingRobotOutwards = true;
 						movingOutwardsLocation = ri.location.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
 						tlog("Moving robot outwards to " + movingOutwardsLocation);
-						if (!inMap(movingOutwardsLocation)) {
+						if (!rc.onTheMap(movingOutwardsLocation)) {
 							tlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
 							movingOutwardsLocation = getSymmetryLocation();
 						}
@@ -457,7 +457,7 @@ public class BotDeliveryDrone extends Globals {
 						movingRobotOutwards = true;
 						movingOutwardsLocation = ri.location.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
 						tlog("Moving robot outwards to " + movingOutwardsLocation);
-						if (!inMap(movingOutwardsLocation)) {
+						if (!rc.onTheMap(movingOutwardsLocation)) {
 							tlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
 							movingOutwardsLocation = getSymmetryLocation();
 						}
@@ -502,7 +502,7 @@ public class BotDeliveryDrone extends Globals {
 				// check for adjacent empty water
 				for (Direction dir: directions) {
 					MapLocation loc = rc.adjacentLocation(dir);
-					if (inMap(loc) && rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
+					if (rc.onTheMap(loc) && rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
 						log("Dropped unit into water at " + loc);
 						Actions.doDropUnit(dir);
 						movingRobotToWater = false;
@@ -552,7 +552,7 @@ public class BotDeliveryDrone extends Globals {
 			// checks for adjacent enemies that can be picked up
 			for (Direction dir: directions) {
 				MapLocation loc = rc.adjacentLocation(dir);
-				if (inMap(loc)) {
+				if (rc.onTheMap(loc)) {
 					RobotInfo ri = rc.senseRobotAtLocation(loc);
 					if (ri != null && ri.team == killTeam && rc.canPickUpUnit(ri.ID)) {
 						Actions.doPickUpUnit(ri.ID);
@@ -617,7 +617,7 @@ public class BotDeliveryDrone extends Globals {
 				break;
 			}
 			MapLocation loc = here.translate(dir[0], dir[1]);
-			if (inMap(loc) && rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
+			if (rc.onTheMap(loc) && rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
 				// floodingMemory[loc.x][loc.y] = rc.senseFlooding(loc);
 
 				log("Found visible flooded tile at " + loc);

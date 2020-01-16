@@ -35,7 +35,6 @@ public class Globals {
 	public static boolean firstTurn = true;
 
 	public static int roundNum;
-	public static int teamSoup;
 
 	public static MapLocation here;
 	public static int myElevation;
@@ -52,6 +51,9 @@ public class Globals {
 	public static RobotInfo[] adjacentAllies = null;
 	public static RobotInfo[] adjacentEnemies = null;
 	public static RobotInfo[] adjacentCows = null;
+
+	public static MapLocation[] visibleSoupLocations = null;
+	public static MapLocation closestSoupLocation = null;
 
 	public static boolean[] isDirMoveable = new boolean[8];
 	public static boolean[] isDirDanger = new boolean[8];
@@ -118,7 +120,7 @@ public class Globals {
 		int startByte = Clock.getBytecodesLeft();
 		here = rc.getLocation();
 		roundNum = rc.getRoundNum();
-		teamSoup = rc.getTeamSoup();
+
 
 		if (firstTurn) {
 			log("------------------------------\n");
@@ -146,6 +148,8 @@ public class Globals {
 			adjacentAllies = rc.senseNearbyRobots(2, us);
 			adjacentEnemies = rc.senseNearbyRobots(2, them);
 			adjacentCows = rc.senseNearbyRobots(2, cowTeam);
+
+			visibleSoupLocations = rc.senseNearbySoup();
 		}
 
 		// update moveable directions
@@ -211,7 +215,7 @@ public class Globals {
 		log("*dynamicCost: " + dynamicCost);
 		log("------------------------------\n");
 		if (isBuilderMiner(myID)) {
-			drawDot(here, BROWN);
+			drawDot(here, GRAY);
 			log("I am the builder miner");
 		}
 	}
@@ -463,7 +467,7 @@ public class Globals {
 		int index = 0;
 		for(int i = 0; i < innerRingRadius + 1; i++) for(int j = 0; j < innerRingRadius + 1; j++) {
 			MapLocation newl = templ.translate(-2 * i, -2 * j);
-			if(inMap(newl) && !HQLocation.equals(newl)) {
+			if(rc.onTheMap(newl) && !HQLocation.equals(newl)) {
 				if (maxXYDistance(HQLocation, newl) >= innerRingRadius) { // excludes holes inside the 5x5 plot
 					// excludes corners
 //					if (HQLocation.distanceSquaredTo(newl) == 18) {
@@ -486,7 +490,7 @@ public class Globals {
 		templ = HQLocation.translate(smallWallRingRadius, smallWallRingRadius);
 		for(int i = 0; i < smallWallRingSize; i++) for(int j = 0; j < smallWallRingSize; j++) {
 			MapLocation newl = templ.translate(-i, -j);
-			if (inMap(newl) && !HQLocation.equals(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
+			if (rc.onTheMap(newl) && !HQLocation.equals(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
 				smallWall[index] = newl;
 				index++;
 			}
@@ -508,7 +512,7 @@ public class Globals {
 		index = 0;
 		for(int i = 0; i < outerRingRadius + 1; i++) for(int j = 0; j < outerRingRadius + 1; j++) {
 			MapLocation newl = templ.translate(-2 * i, -2 * j);
-			if(inMap(newl) && !HQLocation.equals(newl)) {
+			if(rc.onTheMap(newl) && !HQLocation.equals(newl)) {
 				if (maxXYDistance(HQLocation, newl) >= outerRingRadius) { // excludes holes inside the 9x9 plot
 					outerDigLocations[index] = newl;
 					index++;
@@ -528,7 +532,7 @@ public class Globals {
 		templ = HQLocation.translate(largeWallRingRadius, largeWallRingRadius);
 		for(int i = 0; i < largeWallRingSize - 1; i++) {
 			MapLocation newl = templ.translate(0, -i);
-			if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
+			if(rc.onTheMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
 				largeWall[index] = newl;
 				index++;
 			}
@@ -537,7 +541,7 @@ public class Globals {
 		templ = HQLocation.translate(largeWallRingRadius, -largeWallRingRadius);
 		for(int i = 0; i < largeWallRingSize - 1; i++) {
 			MapLocation newl = templ.translate(-i, 0);
-			if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
+			if(rc.onTheMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
 				largeWall[index] = newl;
 				index++;
 			}
@@ -546,7 +550,7 @@ public class Globals {
 		templ = HQLocation.translate(-largeWallRingRadius, -largeWallRingRadius);
 		for(int i = 0; i < largeWallRingSize - 1; i++) {
 			MapLocation newl = templ.translate(0, i);
-			if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
+			if(rc.onTheMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
 				largeWall[index] = newl;
 				index++;
 			}
@@ -555,7 +559,7 @@ public class Globals {
 		templ = HQLocation.translate(-largeWallRingRadius, largeWallRingRadius);
 		for(int i = 0; i < largeWallRingSize - 1; i++) {
 			MapLocation newl = templ.translate(i, 0);
-			if(inMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
+			if(rc.onTheMap(newl) && !inArray(innerDigLocations, newl, innerDigLocationsLength)) {
 				largeWall[index] = newl;
 				index++;
 			}
@@ -580,7 +584,7 @@ public class Globals {
 			MapLocation loc = rc.adjacentLocation(d);
 			if (!rc.senseFlooding(loc) && isLocFlat(loc) && rc.senseRobotAtLocation(loc) == null) {
 				Actions.doBuildRobot(rt, d);
-				teamSoup = rc.getTeamSoup();
+
 				tlog("Success");
 				return true;
 			}

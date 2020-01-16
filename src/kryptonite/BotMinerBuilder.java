@@ -63,11 +63,11 @@ public class BotMinerBuilder extends BotMiner {
 
 		// first step is to build the fulfillment center
 		// This fragment of code checks to build the center if the cost of the refinery, sending that signal and the fufillment center are all
-		// less than teamSoup
+		// less than rc.getTeamSoup()
 
 		if (!fulfillmentCenterBuilt) {
 			log("Trying for fulfillmentCenter");
-			if (teamSoup >= RobotType.FULFILLMENT_CENTER.cost + RobotType.REFINERY.cost) {
+			if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost + RobotType.REFINERY.cost) {
 
 				//find a spot in the 5x5 where it can build fulfillment center
 				boolean built = false;
@@ -80,7 +80,7 @@ public class BotMinerBuilder extends BotMiner {
 					if(rc.canBuildRobot(RobotType.FULFILLMENT_CENTER,dir)){
 						Actions.doBuildRobot(RobotType.FULFILLMENT_CENTER,dir);
 						built = true;
-						teamSoup = rc.getTeamSoup();
+
 						fulfillmentCenterBuilt = true;
 						tlog("Fulfillment Center Built");
 						return;
@@ -106,7 +106,7 @@ public class BotMinerBuilder extends BotMiner {
 		// after the drone checkpoint has been reached, this fragment then builds the designSchool with the same cost requirements as the fulfillment center
 		if (!designSchoolBuilt) {
 			log("Trying for designSchool");
-			if (teamSoup >= RobotType.DESIGN_SCHOOL.cost + RobotType.REFINERY.cost) {
+			if (rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost + RobotType.REFINERY.cost) {
 				// potential bug - what if we are already on the designSchoolLocation?
 				//find a spot in the 5x5 where it can build fulfillment center
 				boolean built = false;
@@ -119,7 +119,7 @@ public class BotMinerBuilder extends BotMiner {
 					if(rc.canBuildRobot(RobotType.DESIGN_SCHOOL,dir)){
 						Actions.doBuildRobot(RobotType.DESIGN_SCHOOL,dir);
 						built = true;
-						teamSoup = rc.getTeamSoup();
+
 						designSchoolBuilt = true;
 						tlog("Design School Built");
 						return;
@@ -151,12 +151,12 @@ public class BotMinerBuilder extends BotMiner {
 			for (int k = 0; k < netGunQuadrant.length; k++) {
 				MapLocation buildLocation = new MapLocation(HQLocation.x + netGunQuadrant[k][0], HQLocation.y + netGunQuadrant[k][1]);
 				Direction dir = here.directionTo(buildLocation);
-				if (here.isAdjacentTo(buildLocation) && teamSoup >= RobotType.NET_GUN.cost + RobotType.REFINERY.cost
+				if (here.isAdjacentTo(buildLocation) && rc.getTeamSoup() >= RobotType.NET_GUN.cost + RobotType.REFINERY.cost
 						&& !rc.senseFlooding(buildLocation) && isLocFlat(buildLocation)
 						&& rc.senseRobotAtLocation(buildLocation) == null) {
 					log("Building netgun at " + buildLocation);
 					Actions.doBuildRobot(RobotType.NET_GUN, dir);
-					teamSoup = rc.getTeamSoup();
+
 					netGunsBuilt++;
 					built = true;
 					return;
@@ -184,13 +184,13 @@ public class BotMinerBuilder extends BotMiner {
 						continue;
 					}
 					Direction dir = here.directionTo(buildLocation);
-					if (here.isAdjacentTo(buildLocation) && teamSoup >= RobotType.VAPORATOR.cost + RobotType.REFINERY.cost
+					if (here.isAdjacentTo(buildLocation) && rc.getTeamSoup() >= RobotType.VAPORATOR.cost + RobotType.REFINERY.cost
 							&& !rc.senseFlooding(buildLocation) && isLocFlat(buildLocation)
 							&& rc.senseRobotAtLocation(buildLocation) == null) {
 						log("Building vaporator at " + buildLocation);
 						Actions.doBuildRobot(RobotType.VAPORATOR, dir);
 						built = true;
-						teamSoup = rc.getTeamSoup();
+
 						vaporatorsBuilt++;
 						tlog("VAPORATOR Built");
 						if (vaporatorsBuilt >= maxVaporators) {
@@ -202,7 +202,7 @@ public class BotMinerBuilder extends BotMiner {
 			}
 			if (!built) {
 				tlog("Vaporator Not Built");
-				if (teamSoup >= RobotType.VAPORATOR.cost + RobotType.REFINERY.cost) {
+				if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost + RobotType.REFINERY.cost) {
 					moveLog(HQLocation);
 				}
 			}
@@ -225,12 +225,12 @@ public class BotMinerBuilder extends BotMiner {
 			for (int k = 0; k < netGunQuadrant.length; k++) {
 				MapLocation buildLocation = new MapLocation(HQLocation.x + netGunQuadrant[k][0], HQLocation.y + netGunQuadrant[k][1]);
 				Direction dir = here.directionTo(buildLocation);
-				if (here.isAdjacentTo(buildLocation) && teamSoup >= RobotType.NET_GUN.cost + RobotType.REFINERY.cost
+				if (here.isAdjacentTo(buildLocation) && rc.getTeamSoup() >= RobotType.NET_GUN.cost + RobotType.REFINERY.cost
 						&& !rc.senseFlooding(buildLocation) && isLocFlat(buildLocation)
 						&& rc.senseRobotAtLocation(buildLocation) == null) {
 					log("Building netgun at " + buildLocation);
 					Actions.doBuildRobot(RobotType.NET_GUN, dir);
-					teamSoup = rc.getTeamSoup();
+
 					netGunsBuilt++;
 					built = true;
 					if (netGunsBuilt >= maxNetGuns[1]) {

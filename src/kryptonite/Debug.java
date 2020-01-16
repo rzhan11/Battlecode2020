@@ -9,7 +9,7 @@ import static kryptonite.Map.*;
 
 public class Debug extends Globals {
 
-	public static boolean SILENCE_LOGS = true;
+	public static boolean SILENCE_LOGS = false;
 	public static boolean SILENCE_INDICATORS = false;
 
 	/*
@@ -22,15 +22,15 @@ public class Debug extends Globals {
 		}
 		switch (myType) {
 			case DELIVERY_DRONE: return false;
-			case DESIGN_SCHOOL: return false;
-			case FULFILLMENT_CENTER: return false;
-			case HQ: return false;
+			case DESIGN_SCHOOL: return true;
+			case FULFILLMENT_CENTER: return true;
+			case HQ: return true;
 			case LANDSCAPER: return false;
 			case MINER:
 				if (isBuilderMiner(myID)) {
-					return false;
+					return true;
 				}
-				return false;
+				return true;
 			case NET_GUN: return false;
 			case REFINERY: return false;
 			case VAPORATOR: return false;

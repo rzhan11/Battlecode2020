@@ -2,10 +2,8 @@ package kryptonite;
 
 import battlecode.common.*;
 
-import static kryptonite.Communication.*;
 import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
-import static kryptonite.Map.*;
 
 public class Actions extends Globals {
 
@@ -15,7 +13,7 @@ public class Actions extends Globals {
 	}
 
 	public static void doPickUpUnit (int id) throws GameActionException {
-		drawLine(here, rc.senseRobot(id).location, MAGENTA);
+		drawLine(here, rc.senseRobot(id).location, PINK);
 		rc.pickUpUnit(id);
 	}
 
@@ -50,5 +48,15 @@ public class Actions extends Globals {
 	public static void doBuildRobot (RobotType type, Direction dir) throws GameActionException {
 		drawLine(here, rc.adjacentLocation(dir), CYAN);
 		rc.buildRobot(type, dir);
+	}
+
+	public static void doMineSoup (Direction dir) throws GameActionException {
+		drawLine(here, rc.adjacentLocation(dir), MAGENTA);
+		rc.mineSoup(dir);
+	}
+
+	public static void doDepositSoup (Direction dir, int amount) throws GameActionException {
+		drawLine(here, rc.adjacentLocation(dir), GRAY);
+		rc.depositSoup(dir, amount);
 	}
 }

@@ -15,15 +15,7 @@ public class Map extends Globals {
     public static MapLocation reflect(MapLocation ml1, MapLocation ml2) {
         return new MapLocation(2 * ml2.x - ml1.x, 2 * ml2.y - ml1.y);
     }
-
-    /*
-    Returns true if the location is within the map boundaries
-    Returns false if not
-    */
-    public static boolean inMap(MapLocation ml) {
-        return ml.x >= 0 && ml.x < mapWidth && ml.y >= 0 && ml.y < mapHeight;
-    }
-
+    
     /*
     Useful for ring structures
     */
@@ -103,7 +95,7 @@ public class Map extends Globals {
 
         for (int i = 0; i < directions.length; i++) {
             MapLocation adjLoc = rc.adjacentLocation(directions[i]);
-            if (!inMap(adjLoc)) {
+            if (!rc.onTheMap(adjLoc)) {
                 isDirMoveable[i] = false;
                 continue;
             }
@@ -153,7 +145,7 @@ public class Map extends Globals {
         outer: for (int i = 0; i < directions.length; i++) {
             MapLocation adjLoc = rc.adjacentLocation(directions[i]);
 
-            if (!inMap(adjLoc)) {
+            if (!rc.onTheMap(adjLoc)) {
                 isDirMoveable[i] = false;
                 isDirDanger[i] = false;
                 continue;

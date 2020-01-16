@@ -37,7 +37,7 @@ public class BotDesignSchool extends Globals {
 
 		if (visibleEnemies.length > 0) {
 			log("Enemies detected");
-			if (teamSoup >= RobotType.LANDSCAPER.cost) {
+			if (rc.getTeamSoup() >= RobotType.LANDSCAPER.cost) {
 				log("Trying to build protection landscapers");
 				boolean didBuild = tryBuild(RobotType.LANDSCAPER, directions);
 				if (didBuild) {
@@ -56,9 +56,9 @@ public class BotDesignSchool extends Globals {
 		//initial 31 landscapers
 		if (landscapersMade < landscaperCheckpoints[0]) {
 			log("Landscaper checkpoint 0 not reached");
-			log("soup " + teamSoup);
+			log("soup " + rc.getTeamSoup());
 			// leave enough to build a refinery
-			if (teamSoup >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost) {
+			if (rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost) {
 				log("Trying to build landscaper");
 				boolean didBuild = tryBuild(RobotType.LANDSCAPER, directions);
 				if (didBuild) {
@@ -83,7 +83,7 @@ public class BotDesignSchool extends Globals {
 
 		// 32 landscapers built after the 8 net guns 12 drones and 4 vaporators built
 		if (landscapersMade < landscaperCheckpoints[1]) {
-			if (teamSoup >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost) {
+			if (rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost) {
 				log("Trying to build landscaper");
 				boolean didBuild = tryBuild(RobotType.LANDSCAPER, directions);
 				if (didBuild) {
@@ -109,7 +109,7 @@ public class BotDesignSchool extends Globals {
 		// comment from here
 		// next 16 landscapers built after largeWallFull
 //		if (landscapersMade < landscaperCheckpoints[2]) {
-//			if (teamSoup >= RobotType.LANDSCAPER.cost) {
+//			if (rc.getTeamSoup() >= RobotType.LANDSCAPER.cost) {
 //				log("Trying to build landscaper");
 //				boolean didBuild = tryBuild(RobotType.LANDSCAPER, directions);
 //				if (didBuild) {

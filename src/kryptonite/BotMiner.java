@@ -27,7 +27,6 @@ public class BotMiner extends Globals {
 	public static MapLocation symmetryLocation;
 
 	// a soup deposit is a single soup location
-	private static MapLocation soupDeposit = null;
 	private static int soupCarrying;
 	private static int visibleSoup;
 	private static MapLocation centerOfVisibleSoup = null;
@@ -123,8 +122,8 @@ public class BotMiner extends Globals {
 		*/
 		if (buildRefineryLocation == null) {
 			if (refineriesIndex == -1) {
-				if (soupDeposit != null && rc.canSenseLocation(soupDeposit) && rc.senseSoup(soupDeposit) == 0) {
-					soupDeposit = null;
+				if (closestSoupLocation != null && rc.canSenseLocation(closestSoupLocation) && rc.senseSoup(closestSoupLocation) == 0) {
+					closestSoupLocation = null;
 					if (soupCarrying > 0) {
 						pickRefinery();
 					}
@@ -155,7 +154,7 @@ public class BotMiner extends Globals {
 		If we are building a refinery, try to build the refinery or move towards the buildRefineryLocation
 		*/
 		while (buildRefineryLocation != null) { // this only ever runs one time, it is a while look to take advantage of break;
-			if (teamSoup < RobotType.REFINERY.cost) {
+			if (rc.getTeamSoup() < RobotType.REFINERY.cost) {
 				buildRefineryLocation = null;
 				buildRefineryVisibleSoup = -1;
 				log("Cannot afford to build refinery");
@@ -236,7 +235,7 @@ public class BotMiner extends Globals {
 				// all conditions for building refinery have been met
 				log("Building refinery at " + buildRefineryLocation);
 				Actions.doBuildRobot(RobotType.REFINERY, dir);
-				teamSoup = rc.getTeamSoup();
+
 
 				writeTransactionRefineryBuilt(buildRefineryLocation);
 				addToRefineries(buildRefineryLocation);
@@ -291,7 +290,7 @@ public class BotMiner extends Globals {
 			}
 			if (here.isAdjacentTo(loc)) {
 				log("Depositing " + soupCarrying + " soup at refinery at " + loc);
-				rc.depositSoup(here.directionTo(loc), soupCarrying);
+				Actions.doDepositSoup(here.directionTo(loc), soupCarrying);
 				refineriesIndex = -1;
 				return;
 			}
@@ -309,16 +308,16 @@ public class BotMiner extends Globals {
 		/*
 		mine dat soup
 		*/
-		if (soupDeposit != null && here.distanceSquaredTo(soupDeposit) <= 2) {
-			log("Mining soup at " + soupDeposit);
-			rc.mineSoup(here.directionTo(soupDeposit));
+		if (closestSoupLocation != null && here.distanceSquaredTo(closestSoupLocation) <= 2) {
+			log("Mining soup at " + closestSoupLocation);
+			Actions.doMineSoup(here.directionTo(closestSoupLocation));
 			return;
 		}
 
 		/*
 		Tries to target a soupCluster
 		*/
-		if (soupDeposit == null) {
+		if (closestSoupLocation == null) {
 			int closestDistance = P_INF;
 			int closestIndex = -1;
 			for (int i = 0; i < soupClustersSize; i++) {
@@ -344,9 +343,9 @@ public class BotMiner extends Globals {
 		3. Explore the direction they were spawned in
 		*/
 
-		if (soupDeposit != null) {
-			log("Moving to soupDeposit at " + soupDeposit);
-			Direction move = Nav.bugNavigate(soupDeposit);
+		if (closestSoupLocation != null) {
+			log("Moving to soupDeposit at " + closestSoupLocation);
+			Direction move = Nav.bugNavigate(closestSoupLocation);
 			if (move != null) {
 				tlog("Moved " + move);
 			} else {
@@ -479,12 +478,8 @@ public class BotMiner extends Globals {
 		int totalY = 0;
 		visibleSoup = 0;
 
-		for (int[] dir: senseDirections) {
-			if (actualSensorRadiusSquared < dir[2]) {
-				break;
-			}
-			MapLocation loc = here.translate(dir[0], dir[1]);
-			if (rc.canSenseLocation(loc) && rc.senseSoup(loc) > 0) {
+		for (MapLocation loc: visibleSoupLocations) {
+			if (rc.senseSoup(loc) > 0) {
 				if (!rc.senseFlooding(loc)) {
 					totalX += loc.x;
 					totalY += loc.y;
@@ -500,8 +495,8 @@ public class BotMiner extends Globals {
 			return;
 		}
 
-		if (soupDeposit == null) {
-			soupDeposit = soups[0];
+		if (closestSoupLocation == null) {
+			closestSoupLocation = soups[0];
 		}
 
 		if (visibleSoup >= MIN_SOUP_WRITE_SOUP_CLUSTER) { // enough soup to warrant a Transaction
@@ -590,7 +585,7 @@ public class BotMiner extends Globals {
 		}
 
 		// try to build a refinery
-		if (teamSoup >= RobotType.REFINERY.cost) {
+		if (rc.getTeamSoup() >= RobotType.REFINERY.cost) {
 			if (visibleSoup >= MIN_SOUP_BUILD_REFINERY) { // enough soup to warrant a refinery
 				if (!rc.senseFlooding(centerOfVisibleSoup) && rc.senseRobotAtLocation(centerOfVisibleSoup) == null) { // centerOfVisibleSoup is not flooded/occupied
 					buildRefineryLocation = centerOfVisibleSoup;

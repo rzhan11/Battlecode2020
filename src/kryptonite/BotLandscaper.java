@@ -54,7 +54,7 @@ public class BotLandscaper extends Globals {
 					int index = 0;
 					for(int i = 0; i < 6; i++) for(int j = 0; j < 6; j++) {
 						MapLocation newl = templ.translate(-2*i, -2*j);
-						if(inMap(newl) && !HQLocation.equals(newl)) {
+						if(rc.onTheMap(newl) && !HQLocation.equals(newl)) {
 							if (maxXYDistance(HQLocation, newl) > 2) { // excludes holes inside the 5x5 plot
 								allDigLocations[index] = newl;
 								index++;
@@ -278,7 +278,7 @@ public class BotLandscaper extends Globals {
 					// tries to fill in flooded tiles
 					for(Direction d : directions) {
 						MapLocation loc = rc.adjacentLocation(d);
-						if(inMap(loc) && rc.senseFlooding(loc) && maxXYDistance(HQLocation, loc) <= 4) {
+						if(rc.onTheMap(loc) && rc.senseFlooding(loc) && maxXYDistance(HQLocation, loc) <= 4) {
 							log("Flooded base tile at " + loc);
 							if (rc.getDirtCarrying() == 0) {
 								tlog("Digging dirt");
@@ -558,7 +558,7 @@ public class BotLandscaper extends Globals {
 			Direction minDir = null;
 			for (Direction d : allDirections) {
 				MapLocation newloc = here.add(d);
-				if (!inMap(newloc)) {
+				if (!rc.onTheMap(newloc)) {
 					continue;
 				}
 

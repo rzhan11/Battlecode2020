@@ -40,7 +40,7 @@ public class BotFulfillmentCenter extends Globals {
 		if (visibleEnemies.length > 0) {
 			for (RobotInfo ri : visibleEnemies) {
 				if (ri.type == RobotType.LANDSCAPER) {
-					if (teamSoup >= RobotType.DELIVERY_DRONE.cost) {
+					if (rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost) {
 						log("Landscapers detected, building drones");
 						boolean didBuild = tryBuild(RobotType.DELIVERY_DRONE, dirToEnemyHQ);
 						if (didBuild) {
@@ -63,7 +63,7 @@ public class BotFulfillmentCenter extends Globals {
 		if (dronesMade < droneCheckpoints[0]) {
 			log("Drone checkpoint 0 not reached");
 			// leave enough to build a refinery
-			if (teamSoup >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost) {
+			if (rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost) {
 				log("Trying to build delivery drone");
 				boolean didBuild = tryBuild(RobotType.DELIVERY_DRONE, dirToEnemyHQ);
 				if (didBuild) {
@@ -90,7 +90,7 @@ public class BotFulfillmentCenter extends Globals {
 		if (dronesMade < droneCheckpoints[1]) {
 			log("Drone checkpoint 1 not reached");
 			// leave enough to build a refinery
-			if (teamSoup >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost) {
+			if (rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost) {
 				log("Trying to build delivery drone");
 				boolean didBuild = tryBuild(RobotType.DELIVERY_DRONE, dirToEnemyHQ);
 				if (didBuild) {
@@ -126,7 +126,7 @@ public class BotFulfillmentCenter extends Globals {
 
 		// after second landscaper checkpoint, make as many drones as possible
 
-		if (teamSoup >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost) {
+		if (rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost) {
 			log("Trying to build delivery drone");
 			boolean didBuild = tryBuild(RobotType.DELIVERY_DRONE, directions);
 			if (didBuild) {

@@ -17,7 +17,7 @@ public class Nav extends Globals {
 	*/
 	public static boolean checkDirMoveable(Direction dir) throws GameActionException {
 //		MapLocation loc = rc.adjacentLocation(dir);
-//		return inMap(loc) && rc.canMove(dir) && (isDrone || !rc.senseFlooding(loc));
+//		return rc.onTheMap(loc) && rc.canMove(dir) && (isDrone || !rc.senseFlooding(loc));
 		switch (dir) {
 			case NORTH:
 				return isDirMoveable[0];
@@ -296,7 +296,7 @@ public class Nav extends Globals {
 				curDir = curDir.rotateRight();
 			}
 			MapLocation curDest = rc.adjacentLocation(curDir);
-			if (!inMap(curDest) && !recursed) {
+			if (!rc.onTheMap(curDest) && !recursed) {
 				// tlog("Hit the edge of map, reverse and recurse");
 				// if we hit the edge of the map, reverse direction and recurse
 				bugRotateLeft = !bugRotateLeft;
@@ -330,7 +330,7 @@ public class Nav extends Globals {
 
 		for (int i = 0; i < directions.length; i++) {
 			MapLocation loc = rc.adjacentLocation(directions[i]);
-			if (!inMap(loc)) {
+			if (!rc.onTheMap(loc)) {
 				continue;
 			}
 			if (isDirMoveable[i]) {
@@ -358,7 +358,7 @@ public class Nav extends Globals {
 		boolean danger = false;
 		for (Direction dir: directions) {
 			MapLocation loc = rc.adjacentLocation(dir);
-			if (inMap(loc) && rc.senseFlooding(loc)) {
+			if (rc.onTheMap(loc) && rc.senseFlooding(loc)) {
 				danger = true;
 				break;
 			}
@@ -401,7 +401,7 @@ public class Nav extends Globals {
 			int index = 0;
 			for (Direction dir: directions) {
 				MapLocation loc = rc.adjacentLocation(dir);
-				if (inMap(loc)) {
+				if (rc.onTheMap(loc)) {
 					elevationDirection[index] = rc.senseElevation(loc);
 				} else {
 					elevationDirection[index] = N_INF;
