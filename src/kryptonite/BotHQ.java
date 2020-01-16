@@ -12,7 +12,6 @@ public class BotHQ extends Globals {
 	final public static int RELAX_LARGE_WALL_FULL_ROUND_NUM = 1000;
 	final public static int RELAX_LARGE_WALL_FULL_AMOUNT = 4;
 
-	private static boolean[] exploredDirections = new boolean[8]; // whether or not a Miner has been sent in this direction
 	private static int explorerMinerCount = 0;
 
 	// has miner been built to check horizontal, vertical, rotational symmetries
@@ -53,6 +52,7 @@ public class BotHQ extends Globals {
 		if (!hasLoadedWallInformation && madeBuilderMiner) {
 			loadWallInformation();
 		}
+
 		if (hasLoadedWallInformation) {
 			if(!smallWallFinished) {
 				boolean canSeeAll = true;
@@ -122,41 +122,42 @@ public class BotHQ extends Globals {
 			return;
 		}
 
-		// 1. Loop through visibile enemies and identify if any are bad landscapers
+		// 1. Loop through visible enemies and identify if any are bad landscapers
 		// 2. Find the closest landscaper and go that way
 		// 3. Check if I can place a troop in that direction
 		// 4. If I can't move onto the next one
-		Direction[] enemy = new Direction[3];
-		int distance = 150;
-		if (visibleEnemies.length > 0) {
-			for (RobotInfo ri : visibleEnemies) {
-				if (ri.type == RobotType.LANDSCAPER && here.distanceSquaredTo(ri.location) < distance) {
-					Direction temp = here.directionTo(ri.location);
-					if (isDirDryFlatEmpty(temp) || isDirDryFlatEmpty(temp.rotateLeft()) || isDirDryFlatEmpty(temp.rotateRight())) {
-						enemy[0] = temp;
-						enemy[1] = temp.rotateLeft();
-						enemy[2] = temp.rotateRight();
-						distance = here.distanceSquaredTo(ri.location);
+		int minDist = P_INF;
+		Direction closestEnemyDir = null;
+		for (RobotInfo ri : visibleEnemies) {
+			if (ri.type == RobotType.LANDSCAPER) {
+				int dist = here.distanceSquaredTo(ri.location);
+				if (dist < minDist) {
+					Direction dir = here.directionTo(ri.location);
+					if (isDirDryFlatEmpty(dir)) {
+						minDist = dist;
+						closestEnemyDir = dir;
+					}
+					if (isDirDryFlatEmpty(dir.rotateLeft())) {
+						minDist = dist;
+						closestEnemyDir = dir.rotateLeft();
+					}
+					if (isDirDryFlatEmpty(dir.rotateRight())) {
+						minDist = dist;
+						closestEnemyDir = dir.rotateRight();
 					}
 				}
 			}
+		}
+		if (closestEnemyDir != null) {
 			if (teamSoup >= RobotType.MINER.cost) {
-				if (isDirDryFlatEmpty(enemy[0])) {
-					rc.buildRobot(RobotType.MINER, enemy[0]);
-					explorerMinerCount++;
-				}
-				if (isDirDryFlatEmpty(enemy[1])) {
-					rc.buildRobot(RobotType.MINER, enemy[1]);
-					explorerMinerCount++;
-				}
-				if (isDirDryFlatEmpty(enemy[2])) {
-					rc.buildRobot(RobotType.MINER, enemy[2]);
-					explorerMinerCount++;
-				}
+				log("Building defensive miner");
+				Actions.doBuildRobot(RobotType.MINER, closestEnemyDir);
+				explorerMinerCount++;
+				return;
+			} else {
+				log("Would build defensive miner but can't afford it");
 			}
 		}
-
-
 
 		// try to shoot the closest visible enemy units
 		int closestDist = P_INF;
@@ -172,45 +173,42 @@ public class BotHQ extends Globals {
 				}
 			}
 		}
-
 		// shoot radius less than sensor radius
 		if(id != -1 && closestDist <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
+			log("Shooting unit");
 			Actions.doShootUnit(id);
+			return;
 		}
 
-
-		//if explorer miners have been build and have enough money, build a BuilderMiner
-		if(true) {
-			if (explorerMinerCount >= 8 && !madeBuilderMiner && teamSoup >= (RobotType.MINER.cost + 1)) {
-				//try building
-				for (int k = 0; k < 8; k++) {
-					if (rc.canBuildRobot(RobotType.MINER, directions[k])) {
-						Actions.doBuildRobot(RobotType.MINER, directions[k]);
-						teamSoup = rc.getTeamSoup();
-						madeBuilderMiner = true;
-
-						//make transaction
-						RobotInfo ri = rc.senseRobotAtLocation(here.add(directions[k]));
-						//SEND TRANSACTION
-						writeTransactionBuilderMinerBuilt(ri.ID);
-
-						return;
-					}
-				}
-			}
-		}
 		/*
 		build explorer miners
 		build three Miners to explore symmetries
 		EDIT: DRONES SHOULD EXPLORE SYMMETRIES
 		*/
-		if (teamSoup >= RobotType.MINER.cost) {
+		if (explorerMinerCount < 8 && teamSoup >= RobotType.MINER.cost) {
 			buildMiner();
-			// if (symmetryMinerCount < 3) {
-			// 	buildSymmetryMiner();
-			// } else {
-			//	buildMiner();
-			// }
+		} else {
+			log("Not enough soup to build explorer miner");
+		}
+
+		//if explorer miners have been build and have enough money, build a BuilderMiner
+		if (!madeBuilderMiner && teamSoup >= RobotType.MINER.cost) {
+			//try building
+			for (int k = 0; k < 8; k++) {
+				if (rc.canBuildRobot(RobotType.MINER, directions[k])) {
+					log("Building builder miner");
+					Actions.doBuildRobot(RobotType.MINER, directions[k]);
+					teamSoup = rc.getTeamSoup();
+					madeBuilderMiner = true;
+
+					//make transaction
+					RobotInfo ri = rc.senseRobotAtLocation(here.add(directions[k]));
+					//SEND TRANSACTION
+					writeTransactionBuilderMinerBuilt(ri.ID);
+
+					return;
+				}
+			}
 		}
 
 		// @todo: Create Attack Miners
@@ -241,17 +239,22 @@ public class BotHQ extends Globals {
 	public static boolean buildMiner() throws GameActionException {
 		Direction[] orderedDirections;
 		if (soupLocation == null) {
+			log("d1");
 			orderedDirections = getCloseDirections(here.directionTo(getSymmetryLocation()));
-		} else
-		orderedDirections = getCloseDirections(here.directionTo(soupLocation));
+		} else {
+			log("d2");
+			orderedDirections = getCloseDirections(here.directionTo(soupLocation));
+		}
+		for (Direction dir: orderedDirections) {
+			log("dir " +  dir);
+		}
 
 		for (int i = 0; i < orderedDirections.length; i++) {
 			Direction dir = orderedDirections[i];
 			MapLocation loc = rc.adjacentLocation(dir);
-			if (!exploredDirections[i] && rc.canBuildRobot(RobotType.MINER, dir)) {
+			if (rc.canBuildRobot(RobotType.MINER, dir)) {
 				Actions.doBuildRobot(RobotType.MINER, dir);
 				teamSoup = rc.getTeamSoup();
-				exploredDirections[i] = true;
 				explorerMinerCount++;
 				return true;
 			}
@@ -260,26 +263,4 @@ public class BotHQ extends Globals {
 		return false;
 	}
 
-	/*
-	Tries to build a symmetry miner if not all three symmetry miners have been built
-	Returns true if built a symmetry miner
-	Returns false if did not build a symmetry miner
-	*/
-	public static boolean buildSymmetryMiner() throws GameActionException {
-		for (int i = 0; i < symmetryHQLocations.length; i++) {
-			Direction dir = here.directionTo(symmetryHQLocations[i]);
-			MapLocation loc = rc.adjacentLocation(dir);
-			if (!builtSymmetryMiner[i] && rc.canBuildRobot(RobotType.MINER, dir)) {
-				Actions.doBuildRobot(RobotType.MINER, dir);
-				teamSoup = rc.getTeamSoup();
-				builtSymmetryMiner[i] = true;
-				symmetryMinerCount++;
-
-				RobotInfo ri = rc.senseRobotAtLocation(loc);
-				writeTransactionSymmetryMinerBuilt(ri.ID, symmetryHQLocations[i]);
-				return true;
-			}
-		}
-		return false;
-	}
 }

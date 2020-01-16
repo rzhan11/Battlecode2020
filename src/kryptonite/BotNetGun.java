@@ -50,6 +50,8 @@ public class BotNetGun extends Globals {
 		// shoot radius less than sensor radius
 		if(id != -1 && closestDist <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
 			Actions.doShootUnit(id);
+			log("Shooting unit");
+			return;
 		}
 	}
 
