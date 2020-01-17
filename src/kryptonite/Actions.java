@@ -51,7 +51,11 @@ public class Actions extends Globals {
 	}
 
 	public static void doMineSoup (Direction dir) throws GameActionException {
-		drawLine(here, rc.adjacentLocation(dir), MAGENTA);
+		if (dir == Direction.CENTER) {
+			drawDot(here, MAGENTA);
+		} else {
+			drawLine(here, rc.adjacentLocation(dir), MAGENTA);
+		}
 		rc.mineSoup(dir);
 	}
 

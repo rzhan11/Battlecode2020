@@ -64,7 +64,7 @@ public class Globals {
 	public static boolean droppedLastTurn = false;
 	public static int lastActiveTurn = 0;
 
-	public static int oldBlocksLength;
+	public static int oldBlocksLength = -1;
 	public static int oldBlocksIndex = 1;
 	public static int oldTransactionsIndex = 0;
 
@@ -184,7 +184,9 @@ public class Globals {
 
 		// read previous round's transactions
 		if (!firstTurn) {
-			oldBlocksLength = roundNum;
+			if (oldBlocksLength == -1) {
+				oldBlocksLength = roundNum - 1;
+			}
 			log("Reading the previous round's transactions");
 			int result = readBlock(roundNum - 1, 0);
 			if (result < 0) {
@@ -291,6 +293,11 @@ public class Globals {
 
 	public static boolean inArray(Object[] arr, Object item, int length) {
 		for(int i = 0; i < length; i++) if(arr[i].equals(item)) return true;
+		return false;
+	}
+
+	public static boolean inArray(int[] arr, int item, int length) {
+		for(int i = 0; i < length; i++) if(arr[i] == item) return true;
 		return false;
 	}
 

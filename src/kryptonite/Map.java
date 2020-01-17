@@ -62,6 +62,10 @@ public class Map extends Globals {
         }
     }
 
+    public static boolean isLocDryEmpty (MapLocation loc) throws GameActionException {
+        return !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null;
+    }
+
     /*
     Returns true if this direction's elevation is within +/-3 of our tile's elevation
     Returns false otherwise

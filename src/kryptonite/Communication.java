@@ -247,10 +247,15 @@ public class Communication extends Globals {
 						break;
 
 					case SOUP_ZONE_SIGNAL:
-						readTransactionSoupZone(message, round);
+						readTransactionZoneStatus(message, round);
 
 					case SOUP_FOUND_SIGNAL:
-						readTransactionSoupFound(message, round);
+						if (myType == RobotType.MINER) {
+							if (Clock.getBytecodesLeft() < READ_BIG_TRANSACTION_MIN_BYTECODE && round != roundNum - 1) {
+								return -(index + 1);
+							}
+							readTransactionSoupFound(message, round);
+						}
 				}
 			}
 
@@ -668,8 +673,8 @@ message[3] = y coordinate of our HQ
 	message[3] =
 
 	 */
-	public static void writeTransactionSoupZone(int xZone, int yZone, int status) throws GameActionException {
-		log("Writing transaction for 'Soup Zone'");
+	public static void writeTransactionZoneStatus(int xZone, int yZone, int status) throws GameActionException {
+		log("Writing transaction for 'Zone Status'");
 		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = SOUP_ZONE_SIGNAL;
@@ -685,12 +690,12 @@ message[3] = y coordinate of our HQ
 		}
 	}
 
-	public static void readTransactionSoupZone(int[] message, int round) throws GameActionException {
+	public static void readTransactionZoneStatus(int[] message, int round) throws GameActionException {
 		int xZone = message[2] & ((1 << 6) - 1);
 		int yZone = ((message[2] >>> 6) & ((1 << 6) - 1));
 		int status = message[2] >>> 12;
 
-		log("Reading transaction for 'Soup Zone'");
+		log("Reading transaction for 'Zone Status'");
 		log("Submitter ID: " + decryptID(message[0]));
 		log("[xZone, yZone]: " + xZone + " " + yZone);
 		log("status: " + xZone + " " + yZone);
@@ -699,7 +704,7 @@ message[3] = y coordinate of our HQ
 
 	/*
 	soupAmount -> soup is <= 0, 10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240, infinity
-	soupAmount indices       0   1   2   3   4    5    6    7     8     9     10    11,       12
+	soupAmount indices       1   2   3   4    5   6    7    8     9     10   11,    12,       13
 	message[1] = signal & number of locations
 	max 8 locations reported
 	 */
@@ -748,7 +753,7 @@ message[3] = y coordinate of our HQ
 			MapLocation loc = new MapLocation(m & ((1 << 6) - 1), (m >>> 6) & ((1 << 6) - 1));
 			int soupAmount = m >>> 12;
 			tlog(loc + " " + soupAmount);
-			addToSoupZones(loc, soupAmount);
+			updateSoupZones(loc, soupAmount, false);
 
 			i_message++;
 		}

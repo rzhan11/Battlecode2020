@@ -2,6 +2,7 @@ package kryptonite;
 
 import battlecode.common.*;
 
+import static kryptonite.Constants.*;
 import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
@@ -53,6 +54,13 @@ public class BotMinerBuilder extends BotMiner {
 		if (!rc.isReady()) {
 			log("Not ready");
 			return;
+		}
+
+		for (int i = 0; i < directions.length; i++) {
+			if (isDigLocation(rc.adjacentLocation(directions[i]))) {
+				isDirDanger[i] = true;
+				isDirMoveable[i] = false;
+			}
 		}
 
 		log("checkpoints: ");
@@ -113,26 +121,36 @@ public class BotMinerBuilder extends BotMiner {
 				//find a spot in the 5x5 where it can build fulfillment center
 				boolean built = false;
 				for (Direction dir: directions) {
-					MapLocation buildLocation = rc.adjacentLocation(dir);
-					// forces it to be on 5x5 ring
-					if (maxXYDistance(HQLocation, buildLocation) != 2) {
-						continue;
+					MapLocation loc = rc.adjacentLocation(dir);
+					if (maxXYDistance(HQLocation, loc) == 2 && !isDigLocation(loc)) {
+						if (isDirDryFlatEmpty(dir)) {
+							Actions.doBuildRobot(RobotType.DESIGN_SCHOOL, dir);
+							designSchoolBuilt = true;
+							tlog("Design School Built");
+							return;
+						}
 					}
-					if (!isDigLocation(buildLocation)) {
-						continue;
-					}
-					if(rc.canBuildRobot(RobotType.DESIGN_SCHOOL,dir)){
-						Actions.doBuildRobot(RobotType.DESIGN_SCHOOL,dir);
-						built = true;
+				}
 
-						designSchoolBuilt = true;
-						tlog("Design School Built");
-						return;
+				MapLocation closestBuildLoc = null;
+				int closestBuildDist = P_INF;
+				for (int[] dir: senseDirections) {
+					// ignore locs that are out of sensor range or within build range (since they are not flat)
+					if (dir[2] <= 2 || actualSensorRadiusSquared < dir[2]) {
+						continue;
+					}
+					MapLocation buildLocation = here.translate(dir[0], dir[1]);
+					// forces it to be on 2x2 ring
+					if (maxXYDistance(HQLocation, buildLocation) == 2 && !isDigLocation(buildLocation)) {
+						if (isLocDryEmpty(buildLocation)) {
+							log("Moving to build design school");
+							moveLog(buildLocation);
+							return;
+						}
 					}
 				}
 				if(!built){
 					tlog("Design School Not Built");
-					moveLog(HQLocation);
 				}
 			} else {
 				log("Not enough soup for Design School + Refinery");

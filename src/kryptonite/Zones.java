@@ -6,7 +6,7 @@ import static kryptonite.Communication.*;
 import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
 
-public class Zones {
+public class Zones extends Globals {
 
     public static int zoneSize = 4;
     public static int numLocsinZone;
@@ -17,7 +17,7 @@ public class Zones {
     public static MapLocation[][] zoneStatus = null;
 
 
-    public static int[] soupLevels = {0, 10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240};
+    public static int[] soupLevels = {-1, 0, 10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240};
 
     // which locations in soupzones have soup (uses indices)
     public static MapLocation[] newSoupLocs = null;
@@ -55,7 +55,10 @@ public class Zones {
 
         soupZonesLocs = new int[numXZones][numYZones][numLocsinZone];
         soupZonesLocsLength = new int[numXZones][numYZones];
-        newSoupLocs = new MapLocation[myType.sensorRadiusSquared];
+        newSoupLocs = new MapLocation[senseDirections.length];
+
+        log("LOADING ZONE INFORMATION 2");
+
         soupZonesAmount = new int[numXZones][numYZones][numLocsinZone];
 
         hasLoadedZones = true;
@@ -87,7 +90,7 @@ public class Zones {
         return new int[] {loc.x / zoneSize, loc.y / zoneSize};
     }
 
-    public static void addToSoupZones (MapLocation loc, int soupLevel) throws GameActionException {
+    public static void updateSoupZones(MapLocation loc, int soupLevel, boolean fromVision) throws GameActionException {
 
         if (!hasLoadedZones) {
             loadZoneInformation();
@@ -98,21 +101,23 @@ public class Zones {
         int[] locs = soupZonesLocs[zone[0]][zone[1]];
         int locsLength = soupZonesLocsLength[zone[0]][zone[1]];
 
-        if (soupZonesAmount[zone[0]][zone[1]][zoneLoc] == soupLevel) {
-            return;
-        }
-
-        soupZonesAmount[zone[0]][zone[1]][zoneLoc] = soupLevel;
-        for (int i = 0; i < locsLength; i++) {
-            if (locs[i] == zoneLoc) {
-                drawDot(loc, CYAN);
-                return;
+        int origAmount = soupZonesAmount[zone[0]][zone[1]][zoneLoc];
+        if (origAmount == 0 || soupLevel < origAmount) {
+            soupZonesAmount[zone[0]][zone[1]][zoneLoc] = soupLevel;
+            if (fromVision) {
+                newSoupLocs[newSoupLocsLength] = loc;
+                newSoupLocsLength++;
+            }
+            if (inArray(locs, zoneLoc, locsLength)) {
+                tlog("Updated soupLoc at " + loc);
+                drawLine(here, loc, CYAN);
+            } else {
+                tlog("Found newSoupLoc at " + loc);
+                drawLine(here, loc, WHITE);
+                soupZonesLocs[zone[0]][zone[1]][locsLength] = zoneLoc;
+                soupZonesLocsLength[zone[0]][zone[1]]++;
             }
         }
-        tlog("newSoupLoc at " + loc);
-        drawDot(loc, WHITE);
-        soupZonesLocs[zone[0]][zone[1]][locsLength] = zoneLoc;
-        soupZonesLocsLength[zone[0]][zone[1]]++;
     }
 
     public static int soupToIndex (int soup) throws GameActionException {
