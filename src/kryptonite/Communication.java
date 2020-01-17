@@ -3,6 +3,7 @@ package kryptonite;
 import battlecode.common.*;
 
 import static kryptonite.Debug.*;
+import static kryptonite.Zones.*;
 
 public class Communication extends Globals {
 
@@ -26,6 +27,8 @@ public class Communication extends Globals {
 	final public static int FLOODING_FOUND_SIGNAL = 10;
 	final public static int ENEMY_HQ_LOCATION_SIGNAL = 11;
 	final public static int LARGE_WALL_FULL_SIGNAL = 12;
+	final public static int SOUP_ZONE_SIGNAL = 13;
+	final public static int SOUP_FOUND_SIGNAL = 14;
 
 	// used to alter our own data
 	public static int secretKey;
@@ -64,7 +67,7 @@ public class Communication extends Globals {
 	Returns the integer value of the code based on the id
 	*/
 	public static int encryptID (int id) {
-	    return id * 65536 + ((id + secretKey) % 65536);
+	    return id * (1 << 16) + ((id + secretKey) % (1 << 16));
 	}
 
 	/*
@@ -72,17 +75,62 @@ public class Communication extends Globals {
 	Returns -1 if not our team
 	*/
 	public static int decryptID (int code) {
-		int id = code / 65536;
-		int confirm = code % 65536;
-		if (id == (confirm - secretKey + 65536) % 65536) {
+		int id = code / (1 << 16);
+		int confirm = code & ((1 << 16) - 1);
+		if (id == (confirm - secretKey + (1 << 16)) % (1 << 16)) {
 			return id;
 		} else {
 			return -1;
 		}
 	}
 
+	/*
+	Returns the minimum cost that would be guaranteed to have been in last round's transactions
+	If first round, returns preset constant
+	 */
+	public static void calculateDynamicCost () throws GameActionException {
+		if (roundNum == 1) {
+			dynamicCost = FIRST_TURN_DYNAMIC_COST;
+		} else {
+			Transaction[] messages = rc.getBlock(roundNum - 1);
+			if (messages.length < GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH) {
+				dynamicCost = 1;
+			} else {
+				dynamicCost = messages[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH - 1].getCost() + 1;
+			}
+		}
+	}
+
+	/*
+	If a message was not sent due to cost, save it and try to send later
+	*/
+	public static void saveUnsentTransaction (int[] message, int cost) {
+		if (unsentTransactionsLength == MAX_UNSENT_TRANSACTIONS_LENGTH) {
+			logi("ERROR: unsentTransactionsLength reached MAX_UNSENT_TRANSACTIONS_LENGTH limit");
+			return;
+		}
+		unsentMessages[unsentTransactionsLength] = message;
+		unsentTransactionsLength++;
+	}
+
+	public static void submitUnsentTransactions () throws GameActionException {
+		while (unsentTransactionsIndex < unsentTransactionsLength) {
+			int[] message = unsentMessages[unsentTransactionsIndex];
+			if (dynamicCost <= rc.getTeamSoup()) {
+				rc.submitTransaction(message, dynamicCost);
+
+				unsentTransactionsIndex++;
+
+				xorMessage(message);
+				log("Submitted unsent transaction with signal of " + message[1]);
+			} else {
+				break;
+			}
+		}
+	}
+
 	public static void readOldBlocks() throws GameActionException {
-		if (oldBlocksIndex >= spawnRound - 1) {
+		if (oldBlocksIndex >= oldBlocksLength) {
 			log("No old blocks");
 			return;
 		} else {
@@ -91,7 +139,7 @@ public class Communication extends Globals {
 		int startBlockIndex = oldBlocksIndex;
 		int startTransactionsIndex = oldTransactionsIndex;
 		int totalReadTransactions = 0;
-		while (oldBlocksIndex < spawnRound - 1) { // -1 is since we always read previous transactions, so spawnRound - 1 is already read
+		while (oldBlocksIndex < oldBlocksLength) { // -1 is since we always read previous transactions, so spawnRound - 1 is already read
 			if (Clock.getBytecodesLeft() < READ_TRANSACTION_MIN_BYTECODE) {
 				break;
 			}
@@ -136,18 +184,18 @@ public class Communication extends Globals {
 				log("Found opponent's transaction");
 				continue; // not submitted by our team
 			} else {
-				switch (message[1]) {
+				switch (message[1] % (1 << 8)) {
 					case HQ_FIRST_TURN_SIGNAL:
 						readTransactionHQFirstTurn(message, round);
 						break;
-					case SOUP_CLUSTER_SIGNAL:
-						if (myType == RobotType.MINER) {
-							if (Clock.getBytecodesLeft() < READ_BIG_TRANSACTION_MIN_BYTECODE && round != roundNum - 1) {
-								return -(index + 1);
-							}
-							readTransactionSoupCluster(message, round);
-						}
-						break;
+//					case SOUP_CLUSTER_SIGNAL:
+//						if (myType == RobotType.MINER) {
+//							if (Clock.getBytecodesLeft() < READ_BIG_TRANSACTION_MIN_BYTECODE && round != roundNum - 1) {
+//								return -(index + 1);
+//							}
+//							readTransactionSoupCluster(message, round);
+//						}
+//						break;
 					case REFINERY_BUILT_SIGNAL:
 						if (myType == RobotType.MINER) {
 							if (Clock.getBytecodesLeft() < READ_BIG_TRANSACTION_MIN_BYTECODE && round != roundNum - 1) {
@@ -197,6 +245,12 @@ public class Communication extends Globals {
 					case LARGE_WALL_FULL_SIGNAL:
 						readTransactionLargeWallFull(message, round);
 						break;
+
+					case SOUP_ZONE_SIGNAL:
+						readTransactionSoupZone(message, round);
+
+					case SOUP_FOUND_SIGNAL:
+						readTransactionSoupFound(message, round);
 				}
 			}
 
@@ -204,51 +258,6 @@ public class Communication extends Globals {
 		}
 
 		return index;
-	}
-
-	/*
-	Returns the minimum cost that would be guaranteed to have been in last round's transactions
-	If first round, returns preset constant
-	 */
-	public static void calculateDynamicCost () throws GameActionException {
-		if (roundNum == 1) {
-			dynamicCost = FIRST_TURN_DYNAMIC_COST;
-		} else {
-			Transaction[] messages = rc.getBlock(roundNum - 1);
-			if (messages.length < GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH) {
-				dynamicCost = 1;
-			} else {
-				dynamicCost = messages[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH - 1].getCost() + 1;
-			}
-		}
-	}
-
-	/*
-	If a message was not sent due to cost, save it and try to send later
-	*/
-	public static void saveUnsentTransaction (int[] message, int cost) {
-		if (unsentTransactionsLength == MAX_UNSENT_TRANSACTIONS_LENGTH) {
-			logi("ERROR: unsentTransactionsLength reached MAX_UNSENT_TRANSACTIONS_LENGTH limit");
-			return;
-		}
-		unsentMessages[unsentTransactionsLength] = message;
-		unsentTransactionsLength++;
-	}
-
-	public static void submitUnsentTransactions () throws GameActionException {
-		while (unsentTransactionsIndex < unsentTransactionsLength) {
-			int[] message = unsentMessages[unsentTransactionsIndex];
-			if (dynamicCost <= rc.getTeamSoup()) {
-				rc.submitTransaction(message, dynamicCost);
-
-				unsentTransactionsIndex++;
-
-				xorMessage(message);
-				log("Submitted unsent transaction with signal of " + message[1]);
-			} else {
-				break;
-			}
-		}
 	}
 
 	/*
@@ -318,32 +327,32 @@ message[3] = y coordinate of our HQ
 	message[3] = y coordinate of cluster
 
 	*/
-	public static void writeTransactionSoupCluster (MapLocation soupClusterLocation) throws GameActionException {
-		log("Writing transaction for 'Soup Cluster' at " + soupClusterLocation);
-		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
-		message[0] = encryptID(myID);
-		message[1] = SOUP_CLUSTER_SIGNAL;
-		message[2] = soupClusterLocation.x;
-		message[3] = soupClusterLocation.y;
-
-		xorMessage(message);
-		if (rc.getTeamSoup() >= dynamicCost) {
-			rc.submitTransaction(message, dynamicCost);
-
-		} else {
-			log("Could not afford transaction");
-			saveUnsentTransaction(message, dynamicCost);
-		}
-	}
-
-	public static void readTransactionSoupCluster (int[] message, int round) {
-		MapLocation loc = new MapLocation(message[2], message[3]);
-		log("Reading 'Soup Cluster' transaction");
-		tlog("Submitter ID: " + decryptID(message[0]));
-		tlog("Location: " + loc);
-		tlog("Posted round: " + round);
-		BotMiner.addToSoupClusters(new MapLocation(message[2], message[3]));
-	}
+//	public static void writeTransactionSoupCluster (MapLocation soupClusterLocation) throws GameActionException {
+//		log("Writing transaction for 'Soup Cluster' at " + soupClusterLocation);
+//		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
+//		message[0] = encryptID(myID);
+//		message[1] = SOUP_CLUSTER_SIGNAL;
+//		message[2] = soupClusterLocation.x;
+//		message[3] = soupClusterLocation.y;
+//
+//		xorMessage(message);
+//		if (rc.getTeamSoup() >= dynamicCost) {
+//			rc.submitTransaction(message, dynamicCost);
+//
+//		} else {
+//			log("Could not afford transaction");
+//			saveUnsentTransaction(message, dynamicCost);
+//		}
+//	}
+//
+//	public static void readTransactionSoupCluster (int[] message, int round) {
+//		MapLocation loc = new MapLocation(message[2], message[3]);
+//		log("Reading 'Soup Cluster' transaction");
+//		tlog("Submitter ID: " + decryptID(message[0]));
+//		tlog("Location: " + loc);
+//		tlog("Posted round: " + round);
+//		BotMiner.addToSoupClusters(new MapLocation(message[2], message[3]));
+//	}
 
 	/*
 	message[2] = x coordinate of refinery
@@ -652,5 +661,98 @@ message[3] = y coordinate of our HQ
 		log("Reading transaction for 'Large Wall Full'");
 		log("Submitter ID: " + decryptID(message[0]));
 		log("Posted round: " + round);
+	}
+
+	/*
+	message[2] = xZone, yZone, status
+	message[3] =
+
+	 */
+	public static void writeTransactionSoupZone(int xZone, int yZone, int status) throws GameActionException {
+		log("Writing transaction for 'Soup Zone'");
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
+		message[0] = encryptID(myID);
+		message[1] = SOUP_ZONE_SIGNAL;
+		message[2] = xZone + (yZone << 6) + (status << 12);
+
+		xorMessage(message);
+		if (rc.getTeamSoup() >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
+
+		} else {
+			log("Could not afford transaction");
+			saveUnsentTransaction(message, dynamicCost);
+		}
+	}
+
+	public static void readTransactionSoupZone(int[] message, int round) throws GameActionException {
+		int xZone = message[2] & ((1 << 6) - 1);
+		int yZone = ((message[2] >>> 6) & ((1 << 6) - 1));
+		int status = message[2] >>> 12;
+
+		log("Reading transaction for 'Soup Zone'");
+		log("Submitter ID: " + decryptID(message[0]));
+		log("[xZone, yZone]: " + xZone + " " + yZone);
+		log("status: " + xZone + " " + yZone);
+		log("Posted round: " + round);
+	}
+
+	/*
+	soupAmount -> soup is <= 0, 10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240, infinity
+	soupAmount indices       0   1   2   3   4    5    6    7     8     9     10    11,       12
+	message[1] = signal & number of locations
+	max 8 locations reported
+	 */
+	public static void writeTransactionSoupFound(MapLocation[] soupLocs, int index, int locsLength) throws GameActionException {
+		log("Writing transaction for 'Soup Found'");
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
+		message[0] = encryptID(myID);
+		message[1] = SOUP_FOUND_SIGNAL;
+		int i_message = 4;
+		for (; index < locsLength && (i_message / 2) < message.length; index++) {
+			int temp = soupLocs[index].x + (soupLocs[index].y << 6) + (soupToIndex(rc.senseSoup(soupLocs[index])) << 12);
+			if (i_message % 2 == 1) {
+				temp = temp << 16;
+			}
+			message[i_message / 2] |= temp;
+			i_message++;
+		}
+		message[1] += (i_message - 4) << 8;
+
+		xorMessage(message);
+		if (rc.getTeamSoup() >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
+
+		} else {
+			log("Could not afford transaction");
+			saveUnsentTransaction(message, dynamicCost);
+		}
+
+		if (index < locsLength) {
+			writeTransactionSoupFound(soupLocs, index, locsLength);
+		}
+	}
+
+	public static void readTransactionSoupFound(int[] message, int round) throws GameActionException {
+		log("Reading transaction for 'Soup Found'");
+		tlog("Submitter ID: " + decryptID(message[0]));
+		int numLocs = message[1] >>> 8;
+		int i_message = 4;
+		for (int i = 0; i < numLocs; i++) {
+			int m = message[i_message / 2];
+			if (i_message % 2 == 0) {
+				m = m & ((1 << 16) - 1);
+			} else {
+				m = m >>> 16;
+			}
+			MapLocation loc = new MapLocation(m & ((1 << 6) - 1), (m >>> 6) & ((1 << 6) - 1));
+			int soupAmount = m >>> 12;
+			tlog(loc + " " + soupAmount);
+			addToSoupZones(loc, soupAmount);
+
+			i_message++;
+		}
+
+		tlog("Posted round: " + round);
 	}
 }

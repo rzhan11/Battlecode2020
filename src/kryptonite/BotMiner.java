@@ -6,6 +6,7 @@ import static kryptonite.Communication.*;
 import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
+import static kryptonite.Zones.*;
 
 public class BotMiner extends Globals {
 
@@ -27,14 +28,8 @@ public class BotMiner extends Globals {
 	public static MapLocation symmetryLocation;
 
 	// a soup deposit is a single soup location
-	private static int soupCarrying;
 	private static int visibleSoup;
 	private static MapLocation centerOfVisibleSoup = null;
-
-	public static MapLocation[] soupClusters = new MapLocation[BIG_ARRAY_SIZE];
-	public static boolean[] emptySoupClusters = new boolean[BIG_ARRAY_SIZE];
-	public static int soupClustersSize = 0;
-	private static int soupClusterIndex = -1;
 
 	public static MapLocation[] refineries = new MapLocation[BIG_ARRAY_SIZE];
 	public static boolean[] deadRefineries = new boolean[BIG_ARRAY_SIZE];
@@ -65,8 +60,7 @@ public class BotMiner extends Globals {
 					log("Saving HQ as a refinery");
 					addToRefineries(HQLocation);
 
-					Globals.endTurn(true);
-					Globals.update();
+					loadZoneInformation();
 				}
 
 				if (builderMinerID == rc.getID()) {
@@ -92,9 +86,10 @@ public class BotMiner extends Globals {
 			return;
 		}
 
-		soupCarrying = rc.getSoupCarrying();
+		closestSoupLocation = findClosestSoup();
+		log("closestSoupLocation: " + closestSoupLocation);
 
-		log("soupCarrying: " + soupCarrying);
+		log("soupCarrying: " + rc.getSoupCarrying());
 
 		// defend
 		if (here.isAdjacentTo(HQLocation)) {
@@ -124,11 +119,11 @@ public class BotMiner extends Globals {
 			if (refineriesIndex == -1) {
 				if (closestSoupLocation != null && rc.canSenseLocation(closestSoupLocation) && rc.senseSoup(closestSoupLocation) == 0) {
 					closestSoupLocation = null;
-					if (soupCarrying > 0) {
+					if (rc.getSoupCarrying() > 0) {
 						pickRefinery();
 					}
 				}
-				if (refineriesIndex == -1 && soupCarrying == RobotType.MINER.soupLimit) {
+				if (refineriesIndex == -1 && rc.getSoupCarrying() == RobotType.MINER.soupLimit) {
 					pickRefinery();
 				}
 			} else {
@@ -163,6 +158,7 @@ public class BotMiner extends Globals {
 				log("Reverting to known refinery at " + refineries[refineriesIndex]);
 				break;
 			}
+
 			// if centerOfVisibleSoup is better than buildRefineryLocation, replace it
 			// makes sure that centerOfVisibleSoup isn't flooded or occupied
 			if (visibleSoup > buildRefineryVisibleSoup && !rc.senseFlooding(centerOfVisibleSoup) && rc.senseRobotAtLocation(centerOfVisibleSoup) == null) {
@@ -289,8 +285,8 @@ public class BotMiner extends Globals {
 				loc = refineries[refineriesIndex];
 			}
 			if (here.isAdjacentTo(loc)) {
-				log("Depositing " + soupCarrying + " soup at refinery at " + loc);
-				Actions.doDepositSoup(here.directionTo(loc), soupCarrying);
+				log("Depositing " + rc.getSoupCarrying() + " soup at refinery at " + loc);
+				Actions.doDepositSoup(here.directionTo(loc), rc.getSoupCarrying());
 				refineriesIndex = -1;
 				return;
 			}
@@ -317,24 +313,24 @@ public class BotMiner extends Globals {
 		/*
 		Tries to target a soupCluster
 		*/
-		if (closestSoupLocation == null) {
-			int closestDistance = P_INF;
-			int closestIndex = -1;
-			for (int i = 0; i < soupClustersSize; i++) {
-				if (!emptySoupClusters[i]) {
-					int dist = here.distanceSquaredTo(soupClusters[i]);
-					if (dist < closestDistance) {
-						closestDistance = dist;
-						closestIndex = i;
-					}
-
-				}
-			}
-			if (closestIndex != -1) {
-				soupClusterIndex = closestIndex;
-				log("Targetting soupCluster at " + soupClusters[soupClusterIndex]);
-			}
-		}
+//		if (closestSoupLocation == null) {
+//			int closestDistance = P_INF;
+//			int closestIndex = -1;
+//			for (int i = 0; i < soupClustersSize; i++) {
+//				if (!emptySoupClusters[i]) {
+//					int dist = here.distanceSquaredTo(soupClusters[i]);
+//					if (dist < closestDistance) {
+//						closestDistance = dist;
+//						closestIndex = i;
+//					}
+//
+//				}
+//			}
+//			if (closestIndex != -1) {
+//				soupClusterIndex = closestIndex;
+//				log("Targetting soupCluster at " + soupClusters[soupClusterIndex]);
+//			}
+//		}
 
 		/*
 		Miners do one of the following:
@@ -345,6 +341,9 @@ public class BotMiner extends Globals {
 
 		if (closestSoupLocation != null) {
 			log("Moving to soupDeposit at " + closestSoupLocation);
+			int[] zone = zoneIndex(closestSoupLocation);
+			int zoneIndex = zoneLocIndex(closestSoupLocation);
+
 			Direction move = Nav.bugNavigate(closestSoupLocation);
 			if (move != null) {
 				tlog("Moved " + move);
@@ -354,24 +353,24 @@ public class BotMiner extends Globals {
 			return;
 		} else {
 			// head to soupClusterIndex
-			if (soupClusterIndex != -1) {
-				MapLocation loc = soupClusters[soupClusterIndex];
-				if (here.distanceSquaredTo(loc) <= 2) { // flag emptySoupClusters if no soup deposits are found at this soup cluster
-					log("Reached and removing soupCluster at " + soupClusters[soupClusterIndex]);
-					emptySoupClusters[soupClusterIndex] = true;
-					soupClusterIndex = -1;
-					// do not return, instead try to explore
-				} else {
-					log("Moving to soupCluster at " + soupClusters[soupClusterIndex]);
-					Direction move = Nav.bugNavigate(loc);
-					if (move != null) {
-						tlog("Moved " + move);
-					} else {
-						tlog("But no move found");
-					}
-					return;
-				}
-			}
+//			if (soupClusterIndex != -1) {
+//				MapLocation loc = soupClusters[soupClusterIndex];
+//				if (here.distanceSquaredTo(loc) <= 2) { // flag emptySoupClusters if no soup deposits are found at this soup cluster
+//					log("Reached and removing soupCluster at " + soupClusters[soupClusterIndex]);
+//					emptySoupClusters[soupClusterIndex] = true;
+//					soupClusterIndex = -1;
+//					// do not return, instead try to explore
+//				} else {
+//					log("Moving to soupCluster at " + soupClusters[soupClusterIndex]);
+//					Direction move = Nav.bugNavigate(loc);
+//					if (move != null) {
+//						tlog("Moved " + move);
+//					} else {
+//						tlog("But no move found");
+//					}
+//					return;
+//				}
+//			}
 
 			// go to explore location
 			if (here.equals(myExploreLocation)) {
@@ -423,29 +422,6 @@ public class BotMiner extends Globals {
 		return null;
 	}
 
-	/*
-	Adds a location to soupClusters if not already added
-	*/
-	public static boolean addToSoupClusters (MapLocation loc) {
-		boolean isNew = true;
-		for (int i = 0; i < soupClustersSize; i++) {
-			if (loc.equals(soupClusters[i])) {
-				isNew = false;
-				break;
-			}
-		}
-		if (isNew) {
-			if (soupClustersSize == BIG_ARRAY_SIZE) {
-				logi("ERROR: soupClustersSize reached BIG_ARRAY_SIZE limit");
-				return false;
-			}
-			soupClusters[soupClustersSize] = loc;
-			soupClustersSize++;
-			log("Added a soupCluster at " + loc);
-		}
-		return isNew;
-	}
-
 	public static boolean addToRefineries (MapLocation loc) {
 		boolean isNew = true;
 		for (int i = 0; i < refineriesSize; i++) {
@@ -467,53 +443,70 @@ public class BotMiner extends Globals {
 	}
 
 	/*
-		If we have not found a soupDeposit yet, we try to find the closest soupDeposit
-		If we find a group of soupDeposits that satisfy the conditions for the soup cluster, submit a Transaction that signals this
-	*/
-	public static void locateSoup () throws GameActionException {
-		MapLocation[] soups = new MapLocation[senseDirections.length];
-		int size = 0;
+	Based on soupZonesLocs, find the closest soup location
+	 */
+	public static MapLocation findClosestSoup () throws GameActionException {
+		int startByte = Clock.getBytecodesLeft();
+		int[] zone = zoneIndex(here);
+		int range = 1;
+		int x_lower = Math.max(0, zone[0] - range);
+		int x_upper = Math.min(numXZones - 1, zone[0] + range);
+		int y_lower = Math.max(0, zone[1] - range);
+		int y_upper = Math.min(numYZones - 1, zone[1] + range);
 
+		int closestDist = P_INF;
+		MapLocation closestLoc = null;
+		for (int x = x_lower; x <= x_upper; x++) {
+			for (int y = y_lower; y <= y_upper; y++) {
+				for (int i = 0; i < soupZonesLocsLength[x][y]; i++) {
+					int index = soupZonesLocs[x][y][i];
+					if (soupZonesAmount[x][y][index] > 0) {
+						MapLocation loc = indexToLoc(x, y, index);
+						int dist = here.distanceSquaredTo(loc);
+						if (dist < closestDist) {
+							closestDist = dist;
+							closestLoc = loc;
+						}
+					}
+				}
+			}
+		}
+		tlog("BYTES: " + (startByte - Clock.getBytecodesLeft()));
+		return closestLoc;
+	}
+
+	public static void locateSoup () throws GameActionException {
+
+		centerOfVisibleSoup = null;
+		visibleSoup = 0;
 		int totalX = 0;
 		int totalY = 0;
-		visibleSoup = 0;
 
 		for (MapLocation loc: visibleSoupLocations) {
-			if (rc.senseSoup(loc) > 0) {
-				if (!rc.senseFlooding(loc)) {
-					totalX += loc.x;
-					totalY += loc.y;
-					visibleSoup += rc.senseSoup(loc);
+			int soup = rc.senseSoup(loc);
+			int level = soupToIndex(soup);
+			if (level > 0 && !rc.senseFlooding(loc)) {
+				visibleSoup += soup;
+				totalX += soup * loc.x;
+				totalY += soup * loc.y;
 
-					soups[size] = loc;
-					size++;
+				int[] zone = zoneIndex(loc);
+				int zoneLoc = zoneLocIndex(loc);
+				// use !inArray(soupZonesLocs[zone[0]][zone[1]], i, soupZonesLocsLength[zone[0]][zone[1]])
+				if (soupZonesAmount[zone[0]][zone[1]][zoneLoc] != level) {
+					newSoupLocs[newSoupLocsLength] = loc;
+					newSoupLocsLength++;
+					addToSoupZones(loc, level);
 				}
 			}
 		}
 
-		if (size == 0) {
-			return;
+		if (visibleSoup > 0) {
+			centerOfVisibleSoup = new MapLocation(totalX / visibleSoup, totalY / visibleSoup);
 		}
 
-		if (closestSoupLocation == null) {
-			closestSoupLocation = soups[0];
-		}
-
-		if (visibleSoup >= MIN_SOUP_WRITE_SOUP_CLUSTER) { // enough soup to warrant a Transaction
-			// if this cluster is too close (distance) to another cluster that has already been submitted in a Transaction, we will not submit a new Transaction
-			boolean worthSubmitting = true;
-			centerOfVisibleSoup = new MapLocation(totalX / size, totalY / size);
-
-			for (int i = 0; i < soupClustersSize; i++) {
-				if (centerOfVisibleSoup.distanceSquaredTo(soupClusters[i]) < 16) {
-					worthSubmitting = false;
-					break;
-				}
-			}
-
-			if (worthSubmitting) {
-				writeTransactionSoupCluster(centerOfVisibleSoup);
-			}
+		if (newSoupLocsLength > 0) {
+			writeTransactionSoupFound(newSoupLocs, 0, newSoupLocsLength);
 		}
 	}
 
@@ -599,12 +592,5 @@ public class BotMiner extends Globals {
 		// target the closest refinery since we cannot build one
 		refineriesIndex = closestIndex;
 		log("Targetting far refinery at " + refineries[refineriesIndex]);
-	}
-
-	/*
-	Remind Richard to do stuff about this
-	*/
-	public static void symmtryMinerTurn () {
-		log("Symmetry miner turn");
 	}
 }

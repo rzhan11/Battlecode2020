@@ -6,6 +6,7 @@ import static kryptonite.Communication.*;
 import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
+import static kryptonite.Zones.*;
 
 public class Globals {
 	/*
@@ -63,6 +64,7 @@ public class Globals {
 	public static boolean droppedLastTurn = false;
 	public static int lastActiveTurn = 0;
 
+	public static int oldBlocksLength;
 	public static int oldBlocksIndex = 1;
 	public static int oldTransactionsIndex = 0;
 
@@ -138,6 +140,8 @@ public class Globals {
 			logi("WARNING: Extreme pollution has made actualSensorRadiusSquared < 2, so errors may occur. Ask Richard.");
 		}
 
+		newSoupLocsLength = 0;
+
 		printMyInfo();
 
 		visibleAllies = rc.senseNearbyRobots(-1, us); // -1 uses all robots within sense radius
@@ -179,7 +183,8 @@ public class Globals {
 		}
 
 		// read previous round's transactions
-		if (roundNum > 1) {
+		if (!firstTurn) {
+			oldBlocksLength = roundNum;
 			log("Reading the previous round's transactions");
 			int result = readBlock(roundNum - 1, 0);
 			if (result < 0) {
@@ -224,37 +229,31 @@ public class Globals {
 	earlyEnd should be true, unless this method was called at the end of the loop() method
 	*/
 	public static void endTurn (boolean earlyEnd) throws GameActionException {
-		try {
-			firstTurn &= earlyEnd; // if early end, do not count as full turn
-			lastActiveTurn = roundNum;
-
-			readOldBlocks();
-			// check if we went over the bytecode limit
-			int endTurn = rc.getRoundNum();
-			if (roundNum != endTurn) {
-				printMyInfo();
-				logi("BYTECODE LIMIT EXCEEDED");
-				int bytecodeOver = Clock.getBytecodeNum();
-				int turns = endTurn - roundNum;
-				tlogi("Overused bytecode: " + (bytecodeOver + (turns - 1) * myType.bytecodeLimit));
-				tlogi("Skipped turns: " + turns);
-
-				// catch up on missed Transactions
-				for (int i = roundNum; i < endTurn; i++) {
-					readBlock(i, 0);
-				}
+		firstTurn &= earlyEnd; // if early end, do not count as full turn
+		lastActiveTurn = roundNum;
+		readOldBlocks();
+		// check if we went over the bytecode limit
+		int endTurn = rc.getRoundNum();
+		if (roundNum != endTurn) {
+			printMyInfo();
+			logi("BYTECODE LIMIT EXCEEDED");
+			int bytecodeOver = Clock.getBytecodeNum();
+			int turns = endTurn - roundNum;
+			tlogi("Overused bytecode: " + (bytecodeOver + (turns - 1) * myType.bytecodeLimit));
+			tlogi("Skipped turns: " + turns);
+			// catch up on missed Transactions
+			for (int i = roundNum; i < endTurn; i++) {
+				readBlock(i, 0);
 			}
-			if(!noTurnLog) {
-				log("------------------------------\n");
-				if (earlyEnd) {
-					log("EARLY");
-				}
-				log("END TURN");
-				log("Bytecode left: " + Clock.getBytecodesLeft());
-				log("------------------------------\n");
+		}
+		if(!noTurnLog) {
+			log("------------------------------\n");
+			if (earlyEnd) {
+				log("EARLY");
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
+			log("END TURN");
+			log("Bytecode left: " + Clock.getBytecodesLeft());
+			log("------------------------------\n");
 		}
 		Clock.yield();
 	}
@@ -432,27 +431,24 @@ public class Globals {
 
 	// information about digLocations
 	public static boolean hasLoadedWallInformation = false;
-
 	public static MapLocation[] innerDigLocations;
 	public static boolean[] innerDigLocationsOccupiedMemory; // the last time this digLocation was visible, was it occupied?
 	public static int innerDigLocationsLength;
-
 	public static MapLocation[] outerDigLocations;
 	public static boolean[] outerDigLocationsOccupiedMemory; // the last time this digLocation was visible, was it occupied?
 	public static int outerDigLocationsLength;
-
 	public static int smallWallRingRadius = 3;
 	public static int smallWallRingSize = 2 * smallWallRingRadius + 1;
 	public static int smallWallDepth; // HQElevation + 1, set in the readTransactionHQFirstTurn
 	public static MapLocation[] smallWall;
 	public static int smallWallLength;
 	public static boolean smallWallFinished = false;
-
 	public static int largeWallRingRadius = 4;
 	public static int largeWallRingSize = 2 * largeWallRingRadius + 1;
 	public static MapLocation[] largeWall;
 	public static int largeWallLength;
 	public static boolean largeWallFull = false;
+
 
 	/*
 	Loads wall information into variables

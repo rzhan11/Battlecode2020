@@ -81,13 +81,33 @@ public class BotHQ extends Globals {
 			}
 
 			if (!largeWallFull) {
-				boolean flag = true;
-				for(Direction d : Globals.directions) {
-					if(rc.senseRobotAtLocation(here.add(d)) == null) flag = false;
+				boolean canSeeAll = true;
+				int count = 0;
+				for (int i = 0; i < largeWallLength; i++) {
+					if (rc.canSenseLocation(largeWall[i])) {
+						RobotInfo unit = rc.senseRobotAtLocation(largeWall[i]);
+						if (unit != null && unit.type == RobotType.LANDSCAPER) {
+							count++;
+						}
+					} else {
+						canSeeAll = false;
+						break;
+					}
 				}
-				if(flag) {
-					largeWallFull = true;
-					writeTransactionLargeWallFull();
+
+				log("Large wall full: " + count + " / " + largeWallLength);
+				if (!canSeeAll) {
+					log("Cannot see all of large wall");
+				} else {
+					if (count == largeWallLength) {
+						tlog("LARGE WALL IS FULL");
+						largeWallFull = true;
+						writeTransactionLargeWallFull();
+					} else if (count >= largeWallLength - RELAX_LARGE_WALL_FULL_AMOUNT && roundNum >= RELAX_LARGE_WALL_FULL_ROUND_NUM) {
+						tlog("LARGE WALL IS ABOUT FULL");
+						largeWallFull = true;
+						writeTransactionLargeWallFull();
+					}
 				}
 			}
 		}
