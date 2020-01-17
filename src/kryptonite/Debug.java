@@ -25,7 +25,7 @@ public class Debug extends Globals {
 			case DESIGN_SCHOOL: return true;
 			case FULFILLMENT_CENTER: return true;
 			case HQ: return true;
-			case LANDSCAPER: return false;
+			case LANDSCAPER: return true;
 			case MINER:
 				if (isBuilderMiner(myID)) {
 					return true;
