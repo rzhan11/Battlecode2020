@@ -13,6 +13,7 @@ public class BotLandscaper extends Globals {
 	private static int role, currentStep = 0;
 	private static final int WALL_ROLE = 1, DEFENSE_ROLE = 2, TERRA_ROLE = 3, ATTACK_ROLE = 4, SUPPORT_WALL_ROLE = 5,
 							TERRA_ATTACK_ROLE = 6, TERRA_BOUNCE_ROLE = 7;
+	private static Direction[] landscaperDirections = {Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST, Direction.NORTHEAST, Direction.SOUTHWEST, Direction.SOUTHEAST, Direction.NORTHWEST}; // 8 directions
 
 
 	// WALL_ROLE Variables
@@ -50,7 +51,7 @@ public class BotLandscaper extends Globals {
 						Debug.ttlog("DEFENDING FROM BUILDING IN LOCATION: " + buildingLocation);
 					}
 					else if (role == WALL_ROLE) {
-						for(Direction d : Globals.allDirections) {
+						for(Direction d : landscaperDirections) {
 							if(rc.senseRobotAtLocation(HQLocation.add(d)) == null) {
 								wallBuildLocation = HQLocation.add(d);
 								break;
@@ -170,10 +171,45 @@ public class BotLandscaper extends Globals {
 
 			case SUPPORT_WALL_ROLE:
 				if(here.equals(supportWallBuildLocation)) {
-
+					if(currentStep == 0) {
+						if(rc.getDirtCarrying() < 10) {
+							Debug.ttlog("DIGGING DIRT");
+							landscaperDig();
+						}
+						else {
+							currentStep = 1;
+						}
+					}
+					if(currentStep == 1) {
+						if(rc.getDirtCarrying() > 0) {
+							int minDirt = 10000;
+							Direction minDir = null;
+							for(Direction d : Globals.directions) {
+								if(maxXYDistance(HQLocation, here.add(d)) == 1 && rc.senseElevation(here.add(d)) < minDirt) {
+									minDirt = rc.senseElevation(here.add(d));
+									minDir = d;
+								}
+							}
+							Debug.ttlog("DEPOSITING DIRT IN DIRECTION: " + minDir);
+							if(rc.canDepositDirt(minDir)) rc.depositDirt(minDir);
+						}
+						else {
+							currentStep = 0;
+						}
+					}
 				}
 				else {
-
+					if(rc.canSenseLocation(supportWallBuildLocation)) {
+						if(rc.senseRobotAtLocation(supportWallBuildLocation) != null) {
+							rerollRole();
+						}
+						else {
+							Nav.bugNavigate(supportWallBuildLocation);
+						}
+					}
+					else {
+						Nav.bugNavigate(supportWallBuildLocation);
+					}
 				}
 				break;
 
@@ -262,6 +298,29 @@ public class BotLandscaper extends Globals {
 			else {
 				role = WALL_ROLE;
 			}
+		}
+		Debug.ttlog("REROLLED ROLE: " + role);
+		if(role == DEFENSE_ROLE) {
+			Debug.ttlog("DEFENDING FROM BUILDING IN LOCATION: " + buildingLocation);
+		}
+		else if (role == WALL_ROLE) {
+			for(Direction d : landscaperDirections) {
+				if(rc.senseRobotAtLocation(HQLocation.add(d)) == null) {
+					wallBuildLocation = HQLocation.add(d);
+					break;
+				}
+			}
+			Debug.ttlog("BUILDING WALL IN LOCATION: " + wallBuildLocation);
+		}
+		else if(role == SUPPORT_WALL_ROLE) {
+			for(int i = 2; i >= -2; i--) for(int j = 2; j >= -2; j--) {
+				if(Math.abs(i) != 2 && Math.abs(j) != 2) continue;
+				if(!isDigLocation(HQLocation.translate(i, j)) && rc.senseRobotAtLocation(HQLocation.translate(i, j)) == null) {
+					supportWallBuildLocation = HQLocation.translate(i,j);
+					break;
+				}
+			}
+			Debug.ttlog("BUILDING WALL IN LOCATION: " + supportWallBuildLocation);
 		}
 	}
 }
