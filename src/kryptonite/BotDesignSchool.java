@@ -9,8 +9,9 @@ import static kryptonite.Map.*;
 
 public class BotDesignSchool extends Globals {
 
-	public static int roundParity = -1;
 	public static int landscapersBuilt = 0;
+	public static int roundParity = -1;
+	public static int roundNumBuilt = 0;
 
 	public static void loop() throws GameActionException {
 		while (true) {
@@ -33,26 +34,36 @@ public class BotDesignSchool extends Globals {
 			log("Not ready");
 			return;
 		}
-		if (roundParity == -1) roundParity = roundNum % 2;
-
+		if (roundNumBuilt == 0) {
+			roundNumBuilt = roundNum;
+			roundParity = roundNum % 2;
+		}
 		// close to hq one
-		if (roundParity != -1) {
+		if (roundParity < 0) {
 			if (landscapersBuilt < 5) {
-				Direction[] dirToHQ = getCloseDirections(here.directionTo(HQLocation));
-				for (Direction dir : dirToHQ) {
-					if (rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost && isDirDryFlatEmpty(dir)) {
-						Debug.tlog("We are building");
-						Actions.doBuildRobot(RobotType.LANDSCAPER, dir);
-						landscapersBuilt++;
-					}
-				}
+				designBuild(getCloseDirections(here.directionTo(HQLocation)));
 				return;
 			}
 		}
 
 		// other type of design school
 		else {
-
+			if (roundNum % 20 == roundNumBuilt % 20) {
+				designBuild(directions);
+				return;
+			}
 		}
+	}
+
+	private static void designBuild(Direction[] dirs) throws GameActionException{
+		for (Direction dir : dirs) {
+			if (rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost && isDirDryFlatEmpty(dir)) {
+				Debug.tlog("We are building");
+				Actions.doBuildRobot(RobotType.LANDSCAPER, dir);
+				landscapersBuilt++;
+				return;
+			}
+		}
+		return;
 	}
 }
