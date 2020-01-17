@@ -9,9 +9,7 @@ import static kryptonite.Map.*;
 
 public class BotDesignSchool extends Globals {
 
-	public static int landscapersMade = 0;
-	public static int[] landscaperCheckpoints = {4, 32, 48};
-	public static boolean[] checkpointReached = {false, false};
+	public static int roundParity = -1;
 
 	public static void loop() throws GameActionException {
 		while (true) {
@@ -34,98 +32,18 @@ public class BotDesignSchool extends Globals {
 			log("Not ready");
 			return;
 		}
-
-		if (visibleEnemies.length > 0) {
-			log("Enemies detected");
-			if (rc.getTeamSoup() >= RobotType.LANDSCAPER.cost) {
-				log("Trying to build protection landscapers");
-				boolean didBuild = tryBuild(RobotType.LANDSCAPER, directions);
-				if (didBuild) {
-					landscapersMade++;
-					if (landscapersMade >= landscaperCheckpoints[0] && !checkpointReached[0]) {
-						writeTransactionLandscaperCheckpoint(0);
-						checkpointReached[0] = true;
-					} else if (landscapersMade >= landscaperCheckpoints[1] && !checkpointReached[1]) {
-						writeTransactionLandscaperCheckpoint(1);
-						checkpointReached[1] = true;
-					}
-				}
-			}
-			return;
-		}
-		//initial 31 landscapers
-		if (landscapersMade < landscaperCheckpoints[0]) {
-			log("Landscaper checkpoint 0 not reached");
-			log("soup " + rc.getTeamSoup());
-			// leave enough to build a refinery
-			if (rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost) {
-				log("Trying to build landscaper");
-				boolean didBuild = tryBuild(RobotType.LANDSCAPER, directions);
-				if (didBuild) {
-					landscapersMade++;
-					if (landscapersMade >= landscaperCheckpoints[0] && !checkpointReached[0]) {
-						writeTransactionLandscaperCheckpoint(0);
-						checkpointReached[0] = true;
-					}
-				}
-			}
-			return;
-		} else {
-			log("Landscaper checkpoint 0 reached");
+		if (roundParity == -1) {
+			roundParity = rc.getRoundNum() % 2;
 		}
 
-		if (reachedNetgunCheckpoint) {
-			log("Continuing: Netgun checkpoint reached");
-		} else {
-			log("Returning: Netgun checkpoint not reached");
-			return;
+		// close to hq one
+		if (roundParity == 0) {
+
 		}
 
-		// 32 landscapers built after the 8 net guns 12 drones and 4 vaporators built
-		if (landscapersMade < landscaperCheckpoints[1]) {
-			if (rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost) {
-				log("Trying to build landscaper");
-				boolean didBuild = tryBuild(RobotType.LANDSCAPER, directions);
-				if (didBuild) {
-					landscapersMade++;
-				}
-				if (landscapersMade >= landscaperCheckpoints[1] && !checkpointReached[1]) {
-					writeTransactionLandscaperCheckpoint(1);
-					checkpointReached[1] = true;
-				}
-			}
-			log("Can't afford landscaper");
-		} else {
-			log("Landscaper checkpoint 1 reached");
+		// other type of design school
+		else {
+
 		}
-
-		if (largeWallFull) {
-			log("Continuing: largeWallFull checkpoint reached");
-		} else {
-			log("Returning: largeWallFull checkpoint not reached");
-			return;
-		}
-
-		// comment from here
-		// next 16 landscapers built after largeWallFull
-//		if (landscapersMade < landscaperCheckpoints[2]) {
-//			if (rc.getTeamSoup() >= RobotType.LANDSCAPER.cost) {
-//				log("Trying to build landscaper");
-//				boolean didBuild = tryBuild(RobotType.LANDSCAPER, directions);
-//				if (didBuild) {
-//					landscapersMade++;
-//				}
-//				if (landscapersMade >= landscaperCheckpoints[2] && !checkpointReached[1]) {
-//					writeTransactionLandscaperCheckpoint(2);
-//					checkpointReached[2] = true;
-//				}
-//			}
-//			log("Can't afford landscaper");
-//		} else {
-//			log("Landscaper checkpoint 2 reached");
-//		}
-		// to here
-
-		return;
 	}
 }
