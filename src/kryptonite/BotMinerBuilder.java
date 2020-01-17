@@ -74,7 +74,7 @@ public class BotMinerBuilder extends BotMiner {
 				for (Direction dir: directions) {
 					MapLocation buildLocation = rc.adjacentLocation(dir);
 					// forces it to be on 3x3 ring
-					if (maxXYDistance(HQLocation, buildLocation) != 1) {
+					if (maxXYDistance(HQLocation, buildLocation) != 2) {
 						continue;
 					}
 					if(rc.canBuildRobot(RobotType.FULFILLMENT_CENTER,dir)){
@@ -141,7 +141,7 @@ public class BotMinerBuilder extends BotMiner {
 			log("Returning: Landscaper checkpoint 0 not reached");
 			return;
 		}
-
+		/*
 		// now building the 4 net guns
 		if (netGunsBuilt < maxNetGuns[0]) {
 			log("Attempting net guns phase 0");
@@ -259,7 +259,7 @@ public class BotMinerBuilder extends BotMiner {
 			return;
 		}
 		moveLog(HQLocation);
-
+		*/
 		return;
 	}
 }
