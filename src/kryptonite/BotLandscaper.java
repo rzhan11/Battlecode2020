@@ -72,6 +72,12 @@ public class BotLandscaper extends Globals {
 
 	public static void turn() throws GameActionException {
 
+		for (int i = 0; i < directions.length; i++) {
+			if (isDigLocation(rc.adjacentLocation(directions[i]))) {
+				isDirDanger[i] = true;
+			}
+		}
+
 		if (largeWallFull && !checkSelfDestructed) { // self destruct
 			checkSelfDestructed = true;
 			Direction dir = here.directionTo(getSymmetryLocation());
