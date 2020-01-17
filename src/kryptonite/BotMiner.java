@@ -551,7 +551,7 @@ public class BotMiner extends Globals {
 		int closestIndex = -1;
 		for (int i = 0; i < refineriesSize; i++) {
 			if (!deadRefineries[i]) {
-				if (largeWallFull && refineries[i].equals(HQLocation)) {
+				if (refineries[i].equals(HQLocation)) {
 					continue;
 				}
 				int dist = here.distanceSquaredTo(refineries[i]);

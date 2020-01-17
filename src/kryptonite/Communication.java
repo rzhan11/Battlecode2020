@@ -20,14 +20,14 @@ public class Communication extends Globals {
 	final public static int REFINERY_BUILT_SIGNAL = 2;
 	final public static int SYMMETRY_MINER_BUILT_SIGNAL = 3;
 	final public static int BUILDER_MINER_BUILT_SIGNAL = 4;
-	final public static int SMALL_WALL_BUILD_SIGNAL = 5;
+	final public static int SUPPORT_WALL_FULL_SIGNAL = 5;
 	final public static int DRONE_CHECKPOINT_SIGNAL = 6;
 	final public static int LANDSCAPER_CHECKPOINT_SIGNAL = 7;
 	final public static int VAPORATOR_CHECKPOINT_SIGNAL = 8;
 	final public static int NETGUN_CHECKPOINT_SIGNAL = 9;
 	final public static int FLOODING_FOUND_SIGNAL = 10;
 	final public static int ENEMY_HQ_LOCATION_SIGNAL = 11;
-	final public static int LARGE_WALL_FULL_SIGNAL = 12;
+	final public static int WALL_FULL_SIGNAL = 12;
 	final public static int SOUP_ZONE_SIGNAL = 13;
 	final public static int SOUP_FOUND_SIGNAL = 14;
 
@@ -215,8 +215,8 @@ public class Communication extends Globals {
 						readTransactionBuilderMinerBuilt(message, round);
 						break;
 
-					case SMALL_WALL_BUILD_SIGNAL:
-						readTransactionSmallWallComplete(message, round);
+					case SUPPORT_WALL_FULL_SIGNAL:
+						readTransactionSupportWallFull(message, round);
 						break;
 
 					case DRONE_CHECKPOINT_SIGNAL:
@@ -243,8 +243,8 @@ public class Communication extends Globals {
 						readTransactionEnemyHQLocation(message, round);
 						break;
 
-					case LARGE_WALL_FULL_SIGNAL:
-						readTransactionLargeWallFull(message, round);
+					case WALL_FULL_SIGNAL:
+						readTransactionWallFull(message, round);
 						break;
 
 					case SOUP_ZONE_SIGNAL:
@@ -307,11 +307,18 @@ message[2] = x coordinate of our HQ
 message[3] = y coordinate of our HQ
 
 */
-	public static void writeTransactionSmallWallComplete () throws GameActionException {
+	public static void readTransactionSupportWallFull(int[] message, int round) throws GameActionException {
+		supportFull = true;
+		log("Reading transaction for 'Large Wall Full'");
+		log("Submitter ID: " + decryptID(message[0]));
+		log("Posted round: " + round);
+	}
+
+	public static void writeTransactionSupportWallComplete() throws GameActionException {
 		log("Writing transaction for 'Small Wall Complete'");
 		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
-		message[1] = SMALL_WALL_BUILD_SIGNAL;
+		message[1] = SUPPORT_WALL_FULL_SIGNAL;
 
 		xorMessage(message);
 		if (rc.getTeamSoup() >= dynamicCost) {
@@ -322,45 +329,6 @@ message[3] = y coordinate of our HQ
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
-
-	public static void readTransactionSmallWallComplete (int[] message, int round) {
-		log("Reading 'Small Wall Complete' transaction");
-		smallWallFinished = true;
-		tlog("Submitter ID: " + decryptID(message[0]));
-		tlog("Posted round: " + round);
-	}
-
-	/*
-	message[2] = x coordinate of cluster
-	message[3] = y coordinate of cluster
-
-	*/
-//	public static void writeTransactionSoupCluster (MapLocation soupClusterLocation) throws GameActionException {
-//		log("Writing transaction for 'Soup Cluster' at " + soupClusterLocation);
-//		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
-//		message[0] = encryptID(myID);
-//		message[1] = SOUP_CLUSTER_SIGNAL;
-//		message[2] = soupClusterLocation.x;
-//		message[3] = soupClusterLocation.y;
-//
-//		xorMessage(message);
-//		if (rc.getTeamSoup() >= dynamicCost) {
-//			rc.submitTransaction(message, dynamicCost);
-//
-//		} else {
-//			log("Could not afford transaction");
-//			saveUnsentTransaction(message, dynamicCost);
-//		}
-//	}
-//
-//	public static void readTransactionSoupCluster (int[] message, int round) {
-//		MapLocation loc = new MapLocation(message[2], message[3]);
-//		log("Reading 'Soup Cluster' transaction");
-//		tlog("Submitter ID: " + decryptID(message[0]));
-//		tlog("Location: " + loc);
-//		tlog("Posted round: " + round);
-//		BotMiner.addToSoupClusters(new MapLocation(message[2], message[3]));
-//	}
 
 	/*
 	message[2] = x coordinate of refinery
@@ -602,11 +570,11 @@ message[3] = y coordinate of our HQ
 	}
 
 	public static void readTransactionFloodingFound (int[] message, int round) throws GameActionException {
-		BotDeliveryDrone.floodingMemory = new MapLocation(message[2], message[3]);
+		/*BotDeliveryDrone.floodingMemory = new MapLocation(message[2], message[3]);
 		log("Reading transaction for 'Flooding Found'");
 		log("Submitter ID: " + decryptID(message[0]));
 		log("Location: " + BotDeliveryDrone.floodingMemory);
-		log("Posted round: " + round);
+		log("Posted round: " + round);*/
 	}
 
 	/*
@@ -646,13 +614,12 @@ message[3] = y coordinate of our HQ
 
 	/*
 	none
-
 	 */
-	public static void writeTransactionLargeWallFull () throws GameActionException{
+	public static void writeTransactionWallFull() throws GameActionException {
 		log("Writing transaction for 'Large Wall Full'");
 		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
-		message[1] = LARGE_WALL_FULL_SIGNAL;
+		message[1] = WALL_FULL_SIGNAL;
 
 		xorMessage(message);
 		if (rc.getTeamSoup() >= dynamicCost) {
@@ -664,9 +631,9 @@ message[3] = y coordinate of our HQ
 		}
 	}
 
-	public static void readTransactionLargeWallFull (int[] message, int round) throws GameActionException {
-		largeWallFull = true;
-		log("Reading transaction for 'Large Wall Full'");
+	public static void readTransactionWallFull(int[] message, int round) throws GameActionException {
+		wallFull = true;
+		log("Reading transaction for 'Wall Full'");
 		log("Submitter ID: " + decryptID(message[0]));
 		log("Posted round: " + round);
 	}
