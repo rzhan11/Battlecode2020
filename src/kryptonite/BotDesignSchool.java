@@ -10,6 +10,7 @@ import static kryptonite.Map.*;
 public class BotDesignSchool extends Globals {
 
 	public static int roundParity = -1;
+	public static int landscapersBuilt = 0;
 
 	public static void loop() throws GameActionException {
 		while (true) {
@@ -32,13 +33,21 @@ public class BotDesignSchool extends Globals {
 			log("Not ready");
 			return;
 		}
-		if (roundParity == -1) {
-			roundParity = rc.getRoundNum() % 2;
-		}
+		if (roundParity == -1) roundParity = roundNum % 2;
 
 		// close to hq one
-		if (roundParity == 0) {
-
+		if (roundParity != -1) {
+			if (landscapersBuilt < 5) {
+				Direction[] dirToHQ = getCloseDirections(here.directionTo(HQLocation));
+				for (Direction dir : dirToHQ) {
+					if (rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost && isDirDryFlatEmpty(dir)) {
+						Debug.tlog("We are building");
+						Actions.doBuildRobot(RobotType.LANDSCAPER, dir);
+						landscapersBuilt++;
+					}
+				}
+				return;
+			}
 		}
 
 		// other type of design school
