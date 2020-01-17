@@ -185,6 +185,7 @@ public class Globals {
 		// read previous round's transactions
 		if (!firstTurn) {
 			if (oldBlocksLength == -1) {
+				oldBlocksIndex = Math.max(1, roundNum - RESUBMIT_INTERVAL);
 				oldBlocksLength = roundNum - 1;
 			}
 			log("Reading the previous round's transactions");

@@ -7,6 +7,7 @@ import static kryptonite.Zones.*;
 
 public class Communication extends Globals {
 
+	final public static int RESUBMIT_INTERVAL = 200;
 	final public static int MAX_UNSENT_TRANSACTIONS_LENGTH = 100;
 	final public static int READ_TRANSACTION_MIN_BYTECODE = 500; // how many bytecodes required to read a transaction
 	final public static int READ_BIG_TRANSACTION_MIN_BYTECODE = 1500; // how many bytecodes required to read a costly transaction
@@ -247,7 +248,9 @@ public class Communication extends Globals {
 						break;
 
 					case SOUP_ZONE_SIGNAL:
-						readTransactionZoneStatus(message, round);
+						if (myType == RobotType.MINER) {
+							readTransactionZoneStatus(message, round);
+						}
 
 					case SOUP_FOUND_SIGNAL:
 						if (myType == RobotType.MINER) {
@@ -695,10 +698,12 @@ message[3] = y coordinate of our HQ
 		int yZone = ((message[2] >>> 6) & ((1 << 6) - 1));
 		int status = message[2] >>> 12;
 
+		zoneStatus[xZone][yZone] = status;
+
 		log("Reading transaction for 'Zone Status'");
 		log("Submitter ID: " + decryptID(message[0]));
 		log("[xZone, yZone]: " + xZone + " " + yZone);
-		log("status: " + xZone + " " + yZone);
+		log("status: " + status);
 		log("Posted round: " + round);
 	}
 

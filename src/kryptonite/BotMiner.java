@@ -16,12 +16,12 @@ public class BotMiner extends Globals {
 	// distance at which we try to use refineries
 	final private static int REFINERY_DISTANCE_LIMIT = 18;
 	final private static int MIN_SOUP_BUILD_REFINERY = 1000;
+	final private static int MIN_SOUP_RETURN_REFINERY = 20;
 
 	// spawnDirection is the direction that this Miner was spawned by the HQ
 	private static Direction spawnDirection;
 	// the target location that this Miner wants to explore, based on spawnDirection
-	private static Direction myExploreDirection;
-	private static MapLocation myExploreLocation;
+	private static int[] closestUnexploredZone;
 
 	public static boolean isSymmetryMiner = false;
 	public static MapLocation symmetryLocation;
@@ -50,10 +50,6 @@ public class BotMiner extends Globals {
 
 					spawnDirection = HQLocation.directionTo(here);
 
-					myExploreDirection = directions[myID % 8];
-					myExploreLocation = findExploreLocation(myExploreDirection);
-					log("myExploreLocation: " + myExploreLocation);
-
 
 					// store HQ as a refinery
 					log("Saving HQ as a refinery");
@@ -76,6 +72,7 @@ public class BotMiner extends Globals {
 
 	public static void turn() throws GameActionException {
 
+		checkZone();
 		locateSoup();
 		// updates known refineries based on what we can sense this turn
 		locateRefineries();
@@ -87,6 +84,9 @@ public class BotMiner extends Globals {
 
 		closestSoupLocation = findClosestSoup();
 		log("closestSoupLocation: " + closestSoupLocation);
+
+		closestUnexploredZone = findClosestUnexploredZone();
+		log("closestUnexploredZone: [" + closestUnexploredZone[0] + ", " + closestUnexploredZone[1] + "]");
 
 		log("soupCarrying: " + rc.getSoupCarrying());
 
@@ -118,7 +118,7 @@ public class BotMiner extends Globals {
 			if (refineriesIndex == -1) {
 				if (closestSoupLocation != null && rc.canSenseLocation(closestSoupLocation) && rc.senseSoup(closestSoupLocation) == 0) {
 					closestSoupLocation = null;
-					if (rc.getSoupCarrying() > 0) {
+					if (rc.getSoupCarrying() > MIN_SOUP_RETURN_REFINERY) {
 						pickRefinery();
 					}
 				}
@@ -329,20 +329,11 @@ public class BotMiner extends Globals {
 			return;
 		} else {
 
-			// go to explore location
-			if (here.equals(myExploreLocation)) {
-				myExploreDirection = myExploreDirection.rotateLeft();
-				myExploreLocation = findExploreLocation(myExploreDirection);
-				log("Finished exploring " + myExploreDirection);
-			}
+			// go to explore zone
 
-			log("Exploring " + myExploreLocation);
-			Direction move = Nav.bugNavigate(myExploreLocation);
-			if (move != null) {
-				tlog("Moved " + move);
-			} else {
-				tlog("But no move found");
-			}
+			log("Exploring zone " + closestUnexploredZone[0] + " " + closestUnexploredZone[1]);
+			MapLocation targetLocation = new MapLocation(closestUnexploredZone[0] * zoneSize, closestUnexploredZone[1] * zoneSize);
+			moveLog(targetLocation);
 			return;
 		}
 	}
@@ -413,7 +404,6 @@ public class BotMiner extends Globals {
 
 		int closestDist = P_INF;
 		MapLocation closestLoc = null;
-		int amt = 0;
 		for (int x = x_lower; x <= x_upper; x++) {
 			for (int y = y_lower; y <= y_upper; y++) {
 				for (int i = 0; i < soupZonesLocsLength[x][y]; i++) {
@@ -424,15 +414,61 @@ public class BotMiner extends Globals {
 						if (dist < closestDist) {
 							closestDist = dist;
 							closestLoc = loc;
-							amt = soupZonesAmount[x][y][index];
 						}
 					}
 				}
 			}
 		}
-		tlog("BYTES: " + (startByte - Clock.getBytecodesLeft()));
-		log("soup level " + amt);
+		tlog("FIND CLOSEST SOUP BYTES: " + (startByte - Clock.getBytecodesLeft()));
 		return closestLoc;
+	}
+
+	/*
+	Checks if the current zone we are in is unexplored
+	Updates
+	 */
+	public static void checkZone() throws GameActionException {
+		int[] zone = zoneIndex(here);
+		int mx = here.x % zoneSize;
+		int my = here.y % zoneSize;
+		mx = Math.max(mx, zoneSize - 1 - mx);
+		my = Math.max(my, zoneSize - 1 - my);
+		if (zoneStatus[zone[0]][zone[1]] == 0 && actualSensorRadiusSquared >= mx * mx + my * my) {
+			zoneStatus[zone[0]][zone[1]] = 1;
+			writeTransactionZoneStatus(zone[0], zone[1], zoneStatus[zone[0]][zone[1]]);
+		}
+	}
+
+	public static int[] findClosestUnexploredZone() throws GameActionException {
+		int startByte = Clock.getBytecodesLeft();
+		int[] myZone = zoneIndex(here);
+		int range = 2;
+		int x_lower = Math.max(0, myZone[0] - range);
+		int x_upper = Math.min(numXZones - 1, myZone[0] + range);
+		int y_lower = Math.max(0, myZone[1] - range);
+		int y_upper = Math.min(numYZones - 1, myZone[1] + range);
+
+		int minDist = P_INF;
+		int minXZone = -1;
+		int minYZone = -1;
+		for (int x = x_lower; x <= x_upper; x++) {
+			for (int y = y_lower; y <= y_upper; y++) {
+				if (zoneStatus[x][y] == 0) {
+					int dist = (int) (Math.pow(myZone[0] - x, 2) + Math.pow(myZone[1] - y, 2));
+					if (dist < minDist) {
+						minDist = dist;
+						minXZone = x;
+						minYZone = y;
+					}
+				}
+			}
+		}
+		tlog("FIND CLOSEST ZONE BYTES: " + (startByte - Clock.getBytecodesLeft()));
+		if (minXZone == -1) {
+			log("Cannot find nearby unexplored zone, going to symmetry location zone");
+			return zoneIndex(getSymmetryLocation());
+		}
+		return new int[] {minXZone, minYZone};
 	}
 
 	public static void locateSoup () throws GameActionException {

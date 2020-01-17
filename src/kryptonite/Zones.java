@@ -2,7 +2,6 @@ package kryptonite;
 
 import battlecode.common.*;
 
-import static kryptonite.Communication.*;
 import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
 
@@ -14,7 +13,10 @@ public class Zones extends Globals {
     public static int numYZones;
 
     // holds if the zone has been fully explored, cannot be fully explored, heavily polluted, etc
-    public static MapLocation[][] zoneStatus = null;
+    // 0 is unexplored
+    // 1 is explored
+//    public static int[][] orderedZones = null;
+    public static int[][] zoneStatus = null;
 
 
     public static int[] soupLevels = {-1, 0, 10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240};
@@ -53,9 +55,15 @@ public class Zones extends Globals {
         numXZones = (mapWidth + zoneSize - 1) / zoneSize;
         numYZones = (mapHeight + zoneSize - 1) / zoneSize;
 
+//        orderedZones = HardCode.getZoneLocations();
+        zoneStatus = new int[numXZones][numYZones];
+
         soupZonesLocs = new int[numXZones][numYZones][numLocsinZone];
         soupZonesLocsLength = new int[numXZones][numYZones];
         newSoupLocs = new MapLocation[senseDirections.length];
+
+        Globals.endTurn(true);
+        Globals.update();
 
         log("LOADING ZONE INFORMATION 2");
 
@@ -104,7 +112,8 @@ public class Zones extends Globals {
         int origAmount = soupZonesAmount[zone[0]][zone[1]][zoneLoc];
         if (origAmount == 0 || soupLevel < origAmount) {
             soupZonesAmount[zone[0]][zone[1]][zoneLoc] = soupLevel;
-            if (fromVision) {
+            // if this deposit became empty, signal
+            if (fromVision && soupLevel == soupToIndex(0)) {
                 newSoupLocs[newSoupLocsLength] = loc;
                 newSoupLocsLength++;
             }
