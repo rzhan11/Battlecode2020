@@ -117,7 +117,7 @@ public class BotHQ extends Globals {
 			return;
 		}
 
-		// 1. Loop through visible enemies and identify if any are bad landscapers
+		/*// 1. Loop through visible enemies and identify if any are bad landscapers
 		// 2. Find the closest landscaper and go that way
 		// 3. Check if I can place a troop in that direction
 		// 4. If I can't move onto the next one
@@ -152,7 +152,7 @@ public class BotHQ extends Globals {
 			} else {
 				log("Would build defensive miner but can't afford it");
 			}
-		}
+		}*/
 
 		// try to shoot the closest visible enemy units
 		int closestDist = P_INF;
