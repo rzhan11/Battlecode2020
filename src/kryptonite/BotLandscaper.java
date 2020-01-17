@@ -75,6 +75,7 @@ public class BotLandscaper extends Globals {
 		for (int i = 0; i < directions.length; i++) {
 			if (isDigLocation(rc.adjacentLocation(directions[i]))) {
 				isDirDanger[i] = true;
+				isDirMoveable[i] = true;
 			}
 		}
 
