@@ -59,7 +59,17 @@ public class BotLandscaper extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
-		if(!rc.isReady()) return;
+		if(!rc.isReady()) {
+			return;
+		}
+
+		for (int i = 0; i < directions.length; i++) {
+			if (isDigLocation(rc.adjacentLocation(directions[i]))) {
+				isDirDanger[i] = true;
+				isDirMoveable[i] = false;
+			}
+		}
+
 		if(role != DEFENSE_ROLE || (role == WALL_ROLE && here.equals(wallBuildLocation))) {
 			for (RobotInfo ri : visibleEnemies) {
 				if (ri.type.isBuilding()) {
