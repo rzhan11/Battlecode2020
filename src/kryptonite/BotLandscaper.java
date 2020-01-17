@@ -182,6 +182,10 @@ public class BotLandscaper extends Globals {
 					}
 					if(currentStep == 1) {
 						if(rc.getDirtCarrying() > 0) {
+							if(rc.senseElevation(here) - GameConstants.getWaterLevel(rc.getRoundNum()) < 2 && rc.senseElevation(here) < 15) {
+								Debug.ttlog("DEPOSITING DIRT IN DIRECTION: " + Direction.CENTER);
+								if(rc.canDepositDirt(Direction.CENTER)) rc.depositDirt(Direction.CENTER);
+							}
 							int minDirt = 10000;
 							Direction minDir = null;
 							for(Direction d : Globals.directions) {
