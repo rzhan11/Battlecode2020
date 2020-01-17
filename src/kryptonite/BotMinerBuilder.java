@@ -65,6 +65,7 @@ public class BotMinerBuilder extends BotMiner {
 		// This fragment of code checks to build the center if the cost of the refinery, sending that signal and the fufillment center are all
 		// less than rc.getTeamSoup()
 
+		/*
 		if (!fulfillmentCenterBuilt) {
 			log("Trying for fulfillmentCenter");
 			if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost + RobotType.REFINERY.cost) {
@@ -102,6 +103,7 @@ public class BotMinerBuilder extends BotMiner {
 			log("Returning: Drone checkpoint 0 not reached");
 			return;
 		}
+		 */
 
 		// after the drone checkpoint has been reached, this fragment then builds the designSchool with the same cost requirements as the fulfillment center
 		if (!designSchoolBuilt) {
@@ -114,6 +116,9 @@ public class BotMinerBuilder extends BotMiner {
 					MapLocation buildLocation = rc.adjacentLocation(dir);
 					// forces it to be on 5x5 ring
 					if (maxXYDistance(HQLocation, buildLocation) != 2) {
+						continue;
+					}
+					if (!isDigLocation(buildLocation)) {
 						continue;
 					}
 					if(rc.canBuildRobot(RobotType.DESIGN_SCHOOL,dir)){
