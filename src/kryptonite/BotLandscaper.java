@@ -11,15 +11,22 @@ import static kryptonite.Actions.*;
 public class BotLandscaper extends Globals {
 
 	private static int role, currentStep = 0;
-	private static final int WALL_ROLE = 1, DEFENSE_ROLE = 2, TERRA_ROLE = 3, ATTACK_ROLE = 4;
+	private static final int WALL_ROLE = 1, DEFENSE_ROLE = 2, TERRA_ROLE = 3, ATTACK_ROLE = 4, SUPPORT_WALL_ROLE = 5,
+							TERRA_ATTACK_ROLE = 6, TERRA_BOUNCE_ROLE = 7;
+	private static Direction[] landscaperDirections = {Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST, Direction.NORTHEAST, Direction.SOUTHWEST, Direction.SOUTHEAST, Direction.NORTHWEST}; // 8 directions
 
 
 	// WALL_ROLE Variables
-	private static boolean wallFull = false;
 	private static MapLocation wallBuildLocation;
 
 	// DEFENSE_ROLE Variables
 	private static MapLocation buildingLocation;
+
+	// TERRA_ROLE Variables
+	private static MapLocation targetLocation;
+
+	// SUPPORT_WALL_ROLE Variables
+	private static MapLocation supportWallBuildLocation;
 
 	// @todo: Fix Indicator Lines (Richard)
 	public static void loop() throws GameActionException {
@@ -29,27 +36,42 @@ public class BotLandscaper extends Globals {
 				if (firstTurn) {
 					role = ATTACK_ROLE;
 					if(rc.canSenseLocation(HQLocation)) {
-						role = largeWallFull ? TERRA_ROLE : WALL_ROLE;
-						if(role == WALL_ROLE) {
-							for(Direction d : Globals.allDirections) {
-								if(rc.senseRobotAtLocation(HQLocation.add(d)) == null) {
-									wallBuildLocation = HQLocation.add(d);
-									break;
-								}
+						if(wallFull) {
+							if(supportFull) role = TERRA_ROLE;
+							else {
+								role = (rc.getID() % 2 == 0) ? TERRA_ROLE : SUPPORT_WALL_ROLE;
 							}
+						}
+						else {
+							role = WALL_ROLE;
 						}
 					}
 					Debug.ttlog("INITIAL ASSIGNED ROLE: " + role);
 					if(role == DEFENSE_ROLE) {
 						Debug.ttlog("DEFENDING FROM BUILDING IN LOCATION: " + buildingLocation);
 					}
-					else if(role == WALL_ROLE) {
-						Debug.ttlog("BUILDING WANN IN LOCATION: " + wallBuildLocation);
+					else if (role == WALL_ROLE) {
+						for(Direction d : landscaperDirections) {
+							if(rc.senseRobotAtLocation(HQLocation.add(d)) == null) {
+								wallBuildLocation = HQLocation.add(d);
+								break;
+							}
+						}
+						Debug.ttlog("BUILDING WALL IN LOCATION: " + wallBuildLocation);
+					}
+					else if(role == SUPPORT_WALL_ROLE) {
+						for(int i = 2; i >= -2; i--) for(int j = 2; j >= -2; j--) {
+							if(Math.abs(i) != 2 && Math.abs(j) != 2) continue;
+							if(!isDigLocation(HQLocation.translate(i, j)) && rc.senseRobotAtLocation(HQLocation.translate(i, j)) == null) {
+								supportWallBuildLocation = HQLocation.translate(i,j);
+								break;
+							}
+						}
+						Debug.ttlog("BUILDING WALL IN LOCATION: " + supportWallBuildLocation);
 					}
 					Globals.endTurn(true);
 					Globals.update();
 				}
-
 				turn();
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -62,14 +84,12 @@ public class BotLandscaper extends Globals {
 		if(!rc.isReady()) {
 			return;
 		}
-
 		for (int i = 0; i < directions.length; i++) {
 			if (isDigLocation(rc.adjacentLocation(directions[i]))) {
 				isDirDanger[i] = true;
 				isDirMoveable[i] = false;
 			}
 		}
-
 		if(role != DEFENSE_ROLE || (role == WALL_ROLE && here.equals(wallBuildLocation))) {
 			for (RobotInfo ri : visibleEnemies) {
 				if (ri.type.isBuilding()) {
@@ -148,6 +168,55 @@ public class BotLandscaper extends Globals {
 					}
 				}
 				break;
+
+			case SUPPORT_WALL_ROLE:
+				if(here.equals(supportWallBuildLocation)) {
+					if(currentStep == 0) {
+						if(rc.getDirtCarrying() < 10) {
+							Debug.ttlog("DIGGING DIRT");
+							landscaperDig();
+						}
+						else {
+							currentStep = 1;
+						}
+					}
+					if(currentStep == 1) {
+						if(rc.getDirtCarrying() > 0) {
+							if(rc.senseElevation(here) - GameConstants.getWaterLevel(rc.getRoundNum()) < 2 && rc.senseElevation(here) < 15) {
+								Debug.ttlog("DEPOSITING DIRT IN DIRECTION: " + Direction.CENTER);
+								if(rc.canDepositDirt(Direction.CENTER)) rc.depositDirt(Direction.CENTER);
+							}
+							int minDirt = 10000;
+							Direction minDir = null;
+							for(Direction d : Globals.directions) {
+								if(maxXYDistance(HQLocation, here.add(d)) == 1 && rc.senseElevation(here.add(d)) < minDirt) {
+									minDirt = rc.senseElevation(here.add(d));
+									minDir = d;
+								}
+							}
+							Debug.ttlog("DEPOSITING DIRT IN DIRECTION: " + minDir);
+							if(rc.canDepositDirt(minDir)) rc.depositDirt(minDir);
+						}
+						else {
+							currentStep = 0;
+						}
+					}
+				}
+				else {
+					if(rc.canSenseLocation(supportWallBuildLocation)) {
+						if(rc.senseRobotAtLocation(supportWallBuildLocation) != null) {
+							rerollRole();
+						}
+						else {
+							Nav.bugNavigate(supportWallBuildLocation);
+						}
+					}
+					else {
+						Nav.bugNavigate(supportWallBuildLocation);
+					}
+				}
+				break;
+
 			case DEFENSE_ROLE:
 				if(here.isAdjacentTo(buildingLocation)) {
 					if(rc.senseRobotAtLocation(buildingLocation) == null) {
@@ -190,6 +259,20 @@ public class BotLandscaper extends Globals {
 
 			case TERRA_ROLE:
 				// @todo: Explore the Terraforming of Enemy HQ Locations
+				if(rc.getID() % 2 == 0) {
+					role = TERRA_ATTACK_ROLE;
+				}
+				else {
+					role = TERRA_BOUNCE_ROLE;
+				}
+				break;
+
+			case TERRA_ATTACK_ROLE:
+
+				break;
+
+			case TERRA_BOUNCE_ROLE:
+
 				break;
 
 			case ATTACK_ROLE:
@@ -207,26 +290,41 @@ public class BotLandscaper extends Globals {
 		}
 	}
 
-	private static void rerollRole() throws GameActionException{
+	private static void rerollRole() throws GameActionException {
 		role = ATTACK_ROLE;
-		// Selecting Role
-		for (RobotInfo ri : visibleEnemies) {
-			if (ri.type.isBuilding()) {
-				role = DEFENSE_ROLE;
-				buildingLocation = ri.location;
-				break;
+		if(rc.canSenseLocation(HQLocation)) {
+			if(wallFull) {
+				if(supportFull) role = TERRA_ROLE;
+				else {
+					role = (rc.getID() % 2 == 0) ? TERRA_ROLE : SUPPORT_WALL_ROLE;
+				}
+			}
+			else {
+				role = WALL_ROLE;
 			}
 		}
-		if(rc.canSenseLocation(HQLocation)) {
-			role = largeWallFull ? TERRA_ROLE : WALL_ROLE;
+		Debug.ttlog("REROLLED ROLE: " + role);
+		if(role == DEFENSE_ROLE) {
+			Debug.ttlog("DEFENDING FROM BUILDING IN LOCATION: " + buildingLocation);
 		}
-		if(role == WALL_ROLE) {
-			for(Direction d : Globals.allDirections) {
+		else if (role == WALL_ROLE) {
+			for(Direction d : landscaperDirections) {
 				if(rc.senseRobotAtLocation(HQLocation.add(d)) == null) {
 					wallBuildLocation = HQLocation.add(d);
 					break;
 				}
 			}
+			Debug.ttlog("BUILDING WALL IN LOCATION: " + wallBuildLocation);
+		}
+		else if(role == SUPPORT_WALL_ROLE) {
+			for(int i = 2; i >= -2; i--) for(int j = 2; j >= -2; j--) {
+				if(Math.abs(i) != 2 && Math.abs(j) != 2) continue;
+				if(!isDigLocation(HQLocation.translate(i, j)) && rc.senseRobotAtLocation(HQLocation.translate(i, j)) == null) {
+					supportWallBuildLocation = HQLocation.translate(i,j);
+					break;
+				}
+			}
+			Debug.ttlog("BUILDING WALL IN LOCATION: " + supportWallBuildLocation);
 		}
 	}
 }

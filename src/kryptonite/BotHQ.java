@@ -46,115 +46,36 @@ public class BotHQ extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
-		if (!hasLoadedWallInformation && madeBuilderMiner) {
-			loadWallInformation();
-		}
-
-		if (hasLoadedWallInformation) {
-			if(!smallWallFinished) {
-				boolean canSeeAll = true;
-				smallWallFinished = true; // temporary flag, will be set to false if not valid
-
-				for (int i = 0; i < smallWallLength; i++) {
-					if (rc.canSenseLocation(smallWall[i])) {
-						RobotInfo unit = rc.senseRobotAtLocation(smallWall[i]);
-						if(unit == null || !unit.type.isBuilding()) {
-							if(rc.senseElevation(smallWall[i]) != smallWallDepth) {
-								smallWallFinished = false;
-								log("smallWall not complete at " + smallWall[i]);
-								break;
-							}
-						}
-					} else { // if cannot see one of the walls, do not mark as complete
-						canSeeAll = false;
-						break;
-					}
-				}
-
-				if (!canSeeAll) {
-					log("Cannot see all of small wall");
-				} else {
-					if(smallWallFinished) {
-						tlog("SMALL WALL IS DONE");
-						writeTransactionSmallWallComplete();
-					}
-				}
-
-			}
-
-			if (!largeWallFull) {
-				boolean canSeeAll = true;
-				int count = 0;
-				for (int i = 0; i < largeWallLength; i++) {
-					if (rc.canSenseLocation(largeWall[i])) {
-						RobotInfo unit = rc.senseRobotAtLocation(largeWall[i]);
-						if (unit != null && unit.type == RobotType.LANDSCAPER) {
-							count++;
-						}
-					} else {
-						canSeeAll = false;
-						break;
-					}
-				}
-
-				log("Large wall full: " + count + " / " + largeWallLength);
-				if (!canSeeAll) {
-					log("Cannot see all of large wall");
-				} else {
-					if (count == largeWallLength) {
-						tlog("LARGE WALL IS FULL");
-						largeWallFull = true;
-						writeTransactionLargeWallFull();
-					} else if (count >= largeWallLength - RELAX_LARGE_WALL_FULL_AMOUNT && roundNum >= RELAX_LARGE_WALL_FULL_ROUND_NUM) {
-						tlog("LARGE WALL IS ABOUT FULL");
-						largeWallFull = true;
-						writeTransactionLargeWallFull();
-					}
-				}
-			}
-		}
-
 		if (!rc.isReady()) {
-			log("Not ready");
 			return;
 		}
 
-		/*// 1. Loop through visible enemies and identify if any are bad landscapers
-		// 2. Find the closest landscaper and go that way
-		// 3. Check if I can place a troop in that direction
-		// 4. If I can't move onto the next one
-		int minDist = P_INF;
-		Direction closestEnemyDir = null;
-		for (RobotInfo ri : visibleEnemies) {
-			if (ri.type == RobotType.LANDSCAPER) {
-				int dist = here.distanceSquaredTo(ri.location);
-				if (dist < minDist) {
-					Direction dir = here.directionTo(ri.location);
-					if (isDirDryFlatEmpty(dir)) {
-						minDist = dist;
-						closestEnemyDir = dir;
-					}
-					if (isDirDryFlatEmpty(dir.rotateLeft())) {
-						minDist = dist;
-						closestEnemyDir = dir.rotateLeft();
-					}
-					if (isDirDryFlatEmpty(dir.rotateRight())) {
-						minDist = dist;
-						closestEnemyDir = dir.rotateRight();
-					}
+		if(!wallFull) {
+			boolean flag = true;
+			for(Direction d : Globals.directions) {
+				if(rc.senseRobotAtLocation(here.add(d)) == null) {
+					flag = false;
+					break;
 				}
 			}
-		}
-		if (closestEnemyDir != null) {
-			if (rc.getTeamSoup() >= RobotType.MINER.cost) {
-				log("Building defensive miner");
-				Actions.doBuildRobot(RobotType.MINER, closestEnemyDir);
-				explorerMinerCount++;
-				return;
-			} else {
-				log("Would build defensive miner but can't afford it");
+			if(flag) {
+				Communication.writeTransactionWallFull();
 			}
-		}*/
+		}
+
+		if (!supportFull) {
+			boolean flag = true;
+			for(int i = 2; i >= -2; i--) for(int j = 2; j >= -2; j--) {
+				if(Math.abs(i) != 2 && Math.abs(j) != 2) continue;
+				if(!isDigLocation(here.translate(i, j)) && rc.senseRobotAtLocation(here.translate(i, j)) == null) {
+					flag = false;
+					break;
+				}
+			}
+			if(flag) {
+				Communication.writeTransactionSupportWallComplete();;
+			}
+		}
 
 		// try to shoot the closest visible enemy units
 		int closestDist = P_INF;

@@ -23,8 +23,6 @@ public class BotLandscaper extends Globals {
 	private static int depositsWithoutMove = 0;
 	public static boolean checkSelfDestructed = false;
 
-	// @todo: Landscapers should attack enemy buildings if in sight and not on large wall
-	// @todo: Landscapers should "heal" ally buildings if they are damaged
 	public static void loop() throws GameActionException {
 		while (true) {
 			if (largeWallFull && !checkSelfDestructed) { // self destruct
@@ -89,6 +87,22 @@ public class BotLandscaper extends Globals {
 			log("Not ready");
 			return;
 		}
+
+		for (Direction dir : directions) {
+			RobotInfo ri = rc.senseRobotAtLocation(rc.adjacentLocation(dir));
+			if (ri != null && ri.team == them) {
+				if (rc.getDirtCarrying() > 2) {
+					if (rc.canDepositDirt(dir))
+						rc.depositDirt(dir);
+				} else {
+					if (rc.canDigDirt(Direction.CENTER))
+						rc.digDirt(Direction.CENTER);
+				}
+				return;
+			}
+		}
+
+
 
 		Nav.bugNavigate(getSymmetryLocation());
 
@@ -235,6 +249,10 @@ public class BotLandscaper extends Globals {
 						break;
 					}
 				}
+
+
+				
+
 
 				if (maxXYDistance(HQLocation, newloc) == 4) {
 					if (minDirt > rc.senseElevation(newloc)) {
