@@ -72,7 +72,7 @@ public class BotHQ extends Globals {
 				}
 			}
 			if(flag) {
-				Communication.writeTransactionSupportWallComplete();;
+				Communication.writeTransactionSupportWallComplete();
 			}
 		}
 		// try to shoot the closest visible enemy units

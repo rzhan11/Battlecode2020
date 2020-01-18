@@ -62,9 +62,11 @@ public class BotLandscaper extends Globals {
 					else if(role == SUPPORT_WALL_ROLE) {
 						for(int i = 2; i >= -2; i--) for(int j = 2; j >= -2; j--) {
 							if(Math.abs(i) != 2 && Math.abs(j) != 2) continue;
-							if(!isDigLocation(HQLocation.translate(i, j)) && rc.senseRobotAtLocation(HQLocation.translate(i, j)) == null) {
-								supportWallBuildLocation = HQLocation.translate(i,j);
-								break;
+							if(!isDigLocation(HQLocation.translate(i, j))) {
+								if (!rc.canSenseLocation(HQLocation.translate(i, j)) ||  rc.senseRobotAtLocation(HQLocation.translate(i, j)) == null) {
+									supportWallBuildLocation = HQLocation.translate(i, j);
+									break;
+								}
 							}
 						}
 						Debug.ttlog("BUILDING WALL IN LOCATION: " + supportWallBuildLocation);
@@ -102,6 +104,8 @@ public class BotLandscaper extends Globals {
 		switch(role) {
 			case WALL_ROLE:
 				// @todo: Implement Support Wall Roles
+				if(wallBuildLocation == null) rerollRole();
+				Debug.ttlog("My Building Location is: " + wallBuildLocation);
 				if(here.equals(wallBuildLocation)) {
 					if(wallFull) {
 						if(currentStep == 0) {
@@ -170,6 +174,7 @@ public class BotLandscaper extends Globals {
 				break;
 
 			case SUPPORT_WALL_ROLE:
+				if(supportWallBuildLocation == null) rerollRole();
 				if(here.equals(supportWallBuildLocation)) {
 					if(currentStep == 0) {
 						if(rc.getDirtCarrying() < 10) {
@@ -319,9 +324,11 @@ public class BotLandscaper extends Globals {
 		else if(role == SUPPORT_WALL_ROLE) {
 			for(int i = 2; i >= -2; i--) for(int j = 2; j >= -2; j--) {
 				if(Math.abs(i) != 2 && Math.abs(j) != 2) continue;
-				if(!isDigLocation(HQLocation.translate(i, j)) && rc.senseRobotAtLocation(HQLocation.translate(i, j)) == null) {
-					supportWallBuildLocation = HQLocation.translate(i,j);
-					break;
+				if(!isDigLocation(HQLocation.translate(i, j))) {
+					if (!rc.canSenseLocation(HQLocation.translate(i, j)) ||  rc.senseRobotAtLocation(HQLocation.translate(i, j)) == null) {
+						supportWallBuildLocation = HQLocation.translate(i, j);
+						break;
+					}
 				}
 			}
 			Debug.ttlog("BUILDING WALL IN LOCATION: " + supportWallBuildLocation);
