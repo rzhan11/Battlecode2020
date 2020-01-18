@@ -116,7 +116,7 @@ public class Map extends Globals {
         }
     }
 
-    public static void updateIsDirDanger () throws GameActionException {
+    public static void updateIsDirDanger() throws GameActionException {
         if (myType.isBuilding()) {
             return;
         }
@@ -152,19 +152,19 @@ public class Map extends Globals {
             }
 
             if (myType == RobotType.DELIVERY_DRONE) {
-                // checks for dangerous netguns
-                // add check for if we are ignoring netguns
-                if (!BotDeliveryDrone.isDroneSwarming) {
-                    for (RobotInfo ri : nearbyEnemies) {
-                        if (canShootType(ri.type)) {
-                            if (adjLoc.distanceSquaredTo(ri.location) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
-                                isDirMoveable[i] = false;
-                                isDirDanger[i] = true;
-                                continue outer;
-                            }
-                        }
-                    }
-                }
+//                // checks for dangerous netguns
+//                // add check for if we are ignoring netguns
+//                if (!BotDeliveryDrone.isDroneSwarming) {
+//                    for (RobotInfo ri : nearbyEnemies) {
+//                        if (canShootType(ri.type)) {
+//                            if (adjLoc.distanceSquaredTo(ri.location) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
+//                                isDirMoveable[i] = false;
+//                                isDirDanger[i] = true;
+//                                continue outer;
+//                            }
+//                        }
+//                    }
+//                }
             } else {
                 // STATE == I am a miner/landscaper
                 // checks for dangerous drones

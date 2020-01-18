@@ -62,7 +62,6 @@ public class BotHQ extends Globals {
 				Communication.writeTransactionWallFull();
 			}
 		}
-
 		if (!supportFull) {
 			boolean flag = true;
 			for(int i = 2; i >= -2; i--) for(int j = 2; j >= -2; j--) {
@@ -76,7 +75,6 @@ public class BotHQ extends Globals {
 				Communication.writeTransactionSupportWallComplete();;
 			}
 		}
-
 		// try to shoot the closest visible enemy units
 		int closestDist = P_INF;
 		int id = -1;
