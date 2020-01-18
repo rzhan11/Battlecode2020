@@ -39,17 +39,17 @@ public class BotDeliveryDrone extends Globals {
 //	public static boolean[] campLocationsOccupiedMemory; // the last time this campLocation was visible, was it occupied?
 //	public static int campLocationsLength;
 //
-//	public static boolean isOffenseDrone = false;
-//	public static boolean isDroneSwarming = false;
+	public static boolean isOffenseDrone = false;
+	public static boolean isDroneSwarming = false;
 //
-//	public static void loop() throws GameActionException {
-//		while (true) {
-//			try {
-//				Globals.update();
-//				if (firstTurn) {
-//
-//					Nav.isDrone = true;
-//
+	public static void loop() throws GameActionException {
+		while (true) {
+			try {
+				Globals.update();
+				if (firstTurn) {
+
+					Nav.isDrone = true;
+
 //					log("LOADING CAMP LOCATIONS");
 //
 //					// determine campLocations
@@ -82,26 +82,26 @@ public class BotDeliveryDrone extends Globals {
 //					// Globals.update();
 //
 //					loadWallInformation();
-//				}
+				}
 //
 //				if (largeWallFull) {
 //					isOffenseDrone = true;
 //				}
 //
-//				if (isOffenseDrone) {
-//					BotDeliveryDroneOffense.turn();
-//				} else {
-//					turn();
-//				}
-//
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//			Globals.endTurn(false);
-//		}
-//	}
-//
-//	public static void turn() throws GameActionException {
+				if (isOffenseDrone) {
+					BotDeliveryDroneOffense.turn();
+				} else {
+					turn();
+				}
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			Globals.endTurn(false);
+		}
+	}
+
+	public static void turn() throws GameActionException {
 //
 //		/*
 //		update drone specific parameters
@@ -375,7 +375,7 @@ public class BotDeliveryDrone extends Globals {
 //
 //			log("Inner and outer dig locations are visibly occupied or occupied in memory");
 //		}
-//	}
+	}
 //
 //	/*
 //	Given an array of MapLocations and memory of its prior occupation

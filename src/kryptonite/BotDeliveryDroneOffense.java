@@ -22,8 +22,8 @@ public class BotDeliveryDroneOffense extends BotDeliveryDrone {
 //        initialized = true;
 //    }
 //
-//    public static void turn() throws GameActionException {
-//        log("OFFENSE DRONE");
+    public static void turn() throws GameActionException {
+        log("OFFENSE DRONE");
 //
 //        if (!rc.isReady()) {
 //            log("Not ready");
@@ -123,6 +123,6 @@ public class BotDeliveryDroneOffense extends BotDeliveryDrone {
 ////            }
 ////        }
 //        return;
-//    }
+    }
 
 }
