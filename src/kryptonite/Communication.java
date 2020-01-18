@@ -29,7 +29,7 @@ public class Communication extends Globals {
 	final public static int ENEMY_HQ_LOCATION_SIGNAL = 11;
 	final public static int LARGE_WALL_FULL_SIGNAL = 12;
 	final public static int SOUP_ZONE_SIGNAL = 13;
-	final public static int SOUP_FOUND_SIGNAL = 14;
+	final public static int SOUP_STATUS_SIGNAL = 14;
 
 	// used to alter our own data
 	public static int secretKey;
@@ -132,10 +132,10 @@ public class Communication extends Globals {
 
 	public static void readOldBlocks() throws GameActionException {
 		if (oldBlocksIndex >= oldBlocksLength) {
-			log("No old blocks");
+			log("NO OLD BLOCKS");
 			return;
 		} else {
-			log("Has old blocks");
+			log("READING OLD BLOCKS");
 		}
 		int startBlockIndex = oldBlocksIndex;
 		int startTransactionsIndex = oldTransactionsIndex;
@@ -154,9 +154,9 @@ public class Communication extends Globals {
 				oldTransactionsIndex = 0;
 			}
 		}
-		log("Read old blocks from " + startBlockIndex + "-" + startTransactionsIndex + " to " +
+		tlog("Read old blocks from " + startBlockIndex + "-" + startTransactionsIndex + " to " +
 				oldBlocksIndex + "-" + oldTransactionsIndex);
-		tlog("Read " + totalReadTransactions + " transactions");
+		ttlog("Read " + totalReadTransactions + " transactions");
 	}
 
 	/*
@@ -182,7 +182,7 @@ public class Communication extends Globals {
 
 			int submitterID = decryptID(message[0]);
 			if (submitterID == -1) {
-				log("Found opponent's transaction");
+				tlog("Found opponent's transaction");
 				continue; // not submitted by our team
 			} else {
 				switch (message[1] % (1 << 8)) {
@@ -252,12 +252,12 @@ public class Communication extends Globals {
 							readTransactionZoneStatus(message, round);
 						}
 
-					case SOUP_FOUND_SIGNAL:
+					case SOUP_STATUS_SIGNAL:
 						if (myType == RobotType.MINER) {
 							if (Clock.getBytecodesLeft() < READ_BIG_TRANSACTION_MIN_BYTECODE && round != roundNum - 1) {
 								return -(index + 1);
 							}
-							readTransactionSoupFound(message, round);
+							readTransactionSoupStatus(message, round);
 						}
 				}
 			}
@@ -287,19 +287,19 @@ public class Communication extends Globals {
 			rc.submitTransaction(message, dynamicCost);
 
 		} else {
-			log("Could not afford transaction");
+			tlog("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
 	public static void readTransactionHQFirstTurn (int[] message, int round) {
-		log("Reading 'HQ First Turn' transaction");
+		tlog("Reading 'HQ First Turn' transaction");
 		HQLocation = new MapLocation(message[2], message[3]);
 		HQElevation = message[4];
-		tlog("Submitter ID: " + decryptID(message[0]));
-		tlog("Location: " + HQLocation);
-		tlog("Elevation: " + HQElevation);
-		tlog("Posted round: " + round);
+		ttlog("Submitter ID: " + decryptID(message[0]));
+		ttlog("Location: " + HQLocation);
+		ttlog("Elevation: " + HQElevation);
+		ttlog("Posted round: " + round);
 	}
 
 	/*
@@ -318,16 +318,16 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 
 		} else {
-			log("Could not afford transaction");
+			tlog("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
 	public static void readTransactionSmallWallComplete (int[] message, int round) {
-		log("Reading 'Small Wall Complete' transaction");
+		tlog("Reading 'Small Wall Complete' transaction");
 		smallWallFinished = true;
-		tlog("Submitter ID: " + decryptID(message[0]));
-		tlog("Posted round: " + round);
+		ttlog("Submitter ID: " + decryptID(message[0]));
+		ttlog("Posted round: " + round);
 	}
 
 	/*
@@ -348,7 +348,7 @@ message[3] = y coordinate of our HQ
 //			rc.submitTransaction(message, dynamicCost);
 //
 //		} else {
-//			log("Could not afford transaction");
+//			tlog("Could not afford transaction");
 //			saveUnsentTransaction(message, dynamicCost);
 //		}
 //	}
@@ -381,7 +381,7 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 
 		} else {
-			log("Could not afford transaction");
+			tlog("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
@@ -416,7 +416,7 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 
 		} else {
-			log("Could not afford transaction");
+			tlog("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
@@ -452,7 +452,7 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 
 		} else {
-			log("Could not afford transaction");
+			tlog("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
@@ -481,7 +481,7 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 
 		} else {
-			log("Could not afford transaction");
+			tlog("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 
@@ -511,7 +511,7 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 
 		} else {
-			log("Could not afford transaction");
+			tlog("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 
@@ -540,7 +540,7 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 
 		} else {
-			log("Could not afford transaction");
+			tlog("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
@@ -566,7 +566,7 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 
 		} else {
-			log("Could not afford transaction");
+			tlog("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
@@ -596,7 +596,7 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 
 		} else {
-			log("Could not afford transaction");
+			tlog("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
@@ -627,7 +627,7 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 
 		} else {
-			log("Could not afford transaction");
+			tlog("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
@@ -659,7 +659,7 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 
 		} else {
-			log("Could not afford transaction");
+			tlog("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
@@ -688,7 +688,7 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 
 		} else {
-			log("Could not afford transaction");
+			tlog("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
@@ -700,27 +700,27 @@ message[3] = y coordinate of our HQ
 
 		zoneStatus[xZone][yZone] = status;
 
-		log("Reading transaction for 'Zone Status'");
-		log("Submitter ID: " + decryptID(message[0]));
-		log("[xZone, yZone]: " + xZone + " " + yZone);
-		log("status: " + status);
-		log("Posted round: " + round);
+		tlog("Reading transaction for 'Zone Status'");
+		ttlog("Submitter ID: " + decryptID(message[0]));
+		ttlog("[xZone, yZone]: " + xZone + " " + yZone);
+		ttlog("status: " + status);
+		ttlog("Posted round: " + round);
 	}
 
 	/*
 	soupAmount -> soup is <= 0, 10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240, infinity
 	soupAmount indices       1   2   3   4    5   6    7    8     9     10   11,    12,       13
 	message[1] = signal & number of locations
-	max 8 locations reported
+	Can report up to 10 zones
 	 */
-	public static void writeTransactionSoupFound(MapLocation[] soupLocs, int index, int locsLength) throws GameActionException {
-		log("Writing transaction for 'Soup Found'");
+	public static void writeTransactionSoupStatus(int[] soupZoneIndices, int[] statuses, int index, int length) throws GameActionException {
+		log("Writing transaction for 'Soup Status'");
 		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
-		message[1] = SOUP_FOUND_SIGNAL;
+		message[1] = SOUP_STATUS_SIGNAL;
 		int i_message = 4;
-		for (; index < locsLength && (i_message / 2) < message.length; index++) {
-			int temp = soupLocs[index].x + (soupLocs[index].y << 6) + (soupToIndex(rc.senseSoup(soupLocs[index])) << 12);
+		for (; index < length && (i_message / 2) < message.length; index++) {
+			int temp = soupZoneIndices[index] + (statuses[index] << 8);
 			if (i_message % 2 == 1) {
 				temp = temp << 16;
 			}
@@ -734,35 +734,30 @@ message[3] = y coordinate of our HQ
 			rc.submitTransaction(message, dynamicCost);
 
 		} else {
-			log("Could not afford transaction");
+			tlog("Could not afford transaction");
 			saveUnsentTransaction(message, dynamicCost);
-		}
-
-		if (index < locsLength) {
-			writeTransactionSoupFound(soupLocs, index, locsLength);
 		}
 	}
 
-	public static void readTransactionSoupFound(int[] message, int round) throws GameActionException {
-		log("Reading transaction for 'Soup Found'");
-		tlog("Submitter ID: " + decryptID(message[0]));
-		int numLocs = message[1] >>> 8;
+	public static void readTransactionSoupStatus(int[] message, int round) throws GameActionException {
+		tlog("Reading transaction for 'Soup Status'");
+		ttlog("Submitter ID: " + decryptID(message[0]));
+		int numZones = message[1] >>> 8;
 		int i_message = 4;
-		for (int i = 0; i < numLocs; i++) {
+		for (int i = 0; i < numZones; i++) {
 			int m = message[i_message / 2];
 			if (i_message % 2 == 0) {
 				m = m & ((1 << 16) - 1);
 			} else {
 				m = m >>> 16;
 			}
-			MapLocation loc = new MapLocation(m & ((1 << 6) - 1), (m >>> 6) & ((1 << 6) - 1));
-			int soupAmount = m >>> 12;
-			tlog(loc + " " + soupAmount);
-			updateSoupZones(loc, soupAmount, false);
+			int zoneIndex = m & ((1 << 8) - 1);
+			int status = m >>> 12;
+			updateKnownSoupZones(zoneIndex, status, false);
 
 			i_message++;
 		}
 
-		tlog("Posted round: " + round);
+		ttlog("Posted round: " + round);
 	}
 }

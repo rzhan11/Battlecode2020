@@ -42,8 +42,8 @@ public class BotFulfillmentCenter extends Globals {
 				if (ri.type == RobotType.LANDSCAPER) {
 					if (rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost) {
 						log("Landscapers detected, building drones");
-						boolean didBuild = tryBuild(RobotType.DELIVERY_DRONE, dirToEnemyHQ);
-						if (didBuild) {
+						Direction buildDir = tryBuild(RobotType.DELIVERY_DRONE, dirToEnemyHQ);
+						if (buildDir != null) {
 							dronesMade++;
 							if (dronesMade >= droneCheckpoints[0] && !checkpointSent[0]) {
 								writeTransactionDroneCheckpoint(0);
@@ -65,8 +65,8 @@ public class BotFulfillmentCenter extends Globals {
 			// leave enough to build a refinery
 			if (rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost) {
 				log("Trying to build delivery drone");
-				boolean didBuild = tryBuild(RobotType.DELIVERY_DRONE, dirToEnemyHQ);
-				if (didBuild) {
+				Direction buildDir = tryBuild(RobotType.DELIVERY_DRONE, dirToEnemyHQ);
+				if (buildDir != null) {
 					dronesMade++;
 					if (dronesMade >= droneCheckpoints[0] && !checkpointSent[0]) {
 						writeTransactionDroneCheckpoint(0);
@@ -92,8 +92,8 @@ public class BotFulfillmentCenter extends Globals {
 			// leave enough to build a refinery
 			if (rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost) {
 				log("Trying to build delivery drone");
-				boolean didBuild = tryBuild(RobotType.DELIVERY_DRONE, dirToEnemyHQ);
-				if (didBuild) {
+				Direction buildDir = tryBuild(RobotType.DELIVERY_DRONE, dirToEnemyHQ);
+				if (buildDir != null) {
 					dronesMade++;
 					if (dronesMade >= droneCheckpoints[1] && !checkpointSent[1]) {
 						writeTransactionDroneCheckpoint(1);
@@ -128,8 +128,8 @@ public class BotFulfillmentCenter extends Globals {
 
 		if (rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost) {
 			log("Trying to build delivery drone");
-			boolean didBuild = tryBuild(RobotType.DELIVERY_DRONE, directions);
-			if (didBuild) {
+			Direction buildDir = tryBuild(RobotType.DELIVERY_DRONE, directions);
+			if (buildDir != null) {
 				dronesMade++;
 			}
 		} else {

@@ -18,6 +18,8 @@ public class BotHQ extends Globals {
 
 	private static boolean madeBuilderMiner = false;
 
+	public static MapLocation closestHQVisibleSoup;
+
 
 	public static void loop() throws GameActionException {
 		while (true) {
@@ -212,12 +214,12 @@ public class BotHQ extends Globals {
 	*/
 	public static void locateClosestSoup() throws GameActionException {
 		int minDist = P_INF;
-		closestSoupLocation = null;
+		closestHQVisibleSoup = null;
 		for (MapLocation loc: visibleSoupLocations) {
 			int dist = here.distanceSquaredTo(loc);
 			if (rc.senseSoup(loc) > 0 && dist < minDist) {
 				minDist = dist;
-				closestSoupLocation = loc;
+				closestHQVisibleSoup = loc;
 			}
 		}
 	}
@@ -229,13 +231,13 @@ public class BotHQ extends Globals {
 	*/
 	public static boolean buildMiner() throws GameActionException {
 		Direction[] orderedDirections;
-		if (closestSoupLocation == null) {
+		if (closestHQVisibleSoup == null) {
 			orderedDirections = getCloseDirections(here.directionTo(getSymmetryLocation()));
 		} else {
-			orderedDirections = getCloseDirections(here.directionTo(closestSoupLocation));
+			orderedDirections = getCloseDirections(here.directionTo(closestHQVisibleSoup));
 		}
 
-		for (Direction dir: directions) {
+		for (Direction dir: orderedDirections) {
 			MapLocation loc = rc.adjacentLocation(dir);
 			if (isDirDryFlatEmpty(dir)) {
 				log("Building explorer miner in " + dir);

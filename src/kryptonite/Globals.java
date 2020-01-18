@@ -38,6 +38,7 @@ public class Globals {
 	public static int roundNum;
 
 	public static MapLocation here;
+	public static int[] myZone;
 	public static int myElevation;
 	public static int waterLevel;
 
@@ -54,7 +55,15 @@ public class Globals {
 	public static RobotInfo[] adjacentCows = null;
 
 	public static MapLocation[] visibleSoupLocations = null;
-	public static MapLocation closestSoupLocation = null;
+
+	public static MapLocation closestVisibleSoupLoc = null;
+	public static MapLocation targetVisibleSoupLoc = null;
+	public static MapLocation closestSoupZone = null;
+	public static MapLocation targetSoupZone = null;
+	public static MapLocation closestUnexploredZone = null;
+	public static MapLocation targetUnexploredZone = null;
+
+	public static MapLocation targetNavLoc = null;
 
 	public static boolean[] isDirMoveable = new boolean[8];
 	public static boolean[] isDirDanger = new boolean[8];
@@ -110,6 +119,7 @@ public class Globals {
 		}
 
 		here = rc.getLocation();
+		myZone = locToZonePair(here);
 		roundNum = rc.getRoundNum();
 		spawnRound = roundNum;
 
@@ -121,6 +131,7 @@ public class Globals {
 	public static void update() throws GameActionException {
 		int startByte = Clock.getBytecodesLeft();
 		here = rc.getLocation();
+		myZone = locToZonePair(here);
 		roundNum = rc.getRoundNum();
 
 
@@ -140,7 +151,7 @@ public class Globals {
 			logi("WARNING: Extreme pollution has made actualSensorRadiusSquared < 2, so errors may occur. Ask Richard.");
 		}
 
-		newSoupLocsLength = 0;
+		newSoupStatusesLength = 0;
 
 		printMyInfo();
 
@@ -185,7 +196,7 @@ public class Globals {
 		// read previous round's transactions
 		if (!firstTurn) {
 			if (oldBlocksLength == -1) {
-				oldBlocksIndex = Math.max(1, roundNum - RESUBMIT_INTERVAL);
+				oldBlocksIndex = Math.max(oldBlocksIndex, roundNum - RESUBMIT_INTERVAL);
 				oldBlocksLength = roundNum - 1;
 			}
 			log("Reading the previous round's transactions");
@@ -334,8 +345,7 @@ public class Globals {
 	}
 
 	public static Direction moveLog(MapLocation loc) throws GameActionException {
-		Direction move = null;
-		move = Nav.bugNavigate(loc);
+		Direction move = Nav.bugNavigate(loc);
 		if (move != null) {
 			tlog("Moved " + move);
 		} else {
@@ -421,7 +431,7 @@ public class Globals {
 		while (isSymmetryHQLocation[symmetryHQLocationsIndex] == 0) {
 			symmetryHQLocationsIndex++;
 			symmetryHQLocationsIndex %= symmetryHQLocations.length;
-			log("Retargetting symmetry that we are exploring to " + symmetryHQLocations[symmetryHQLocationsIndex]);
+			log("Retargeting symmetry that we are exploring to " + symmetryHQLocations[symmetryHQLocationsIndex]);
 		}
 	}
 
@@ -585,20 +595,21 @@ public class Globals {
 
 	/*
 	Assumes cost is already checked
-	Tries to build a given robot type in any direction
-	 */
-	public static boolean tryBuild (RobotType rt, Direction[] dir) throws GameActionException {
-		for (Direction d : dir) {
-			MapLocation loc = rc.adjacentLocation(d);
-			if (!rc.senseFlooding(loc) && isLocFlat(loc) && rc.senseRobotAtLocation(loc) == null) {
-				Actions.doBuildRobot(rt, d);
+	Tries to build a given robot type in the given direction
 
+	Returns direction that built in
+	Returns null if nothing was built
+	 */
+	public static Direction tryBuild (RobotType rt, Direction[] givenDirections) throws GameActionException {
+		for (Direction dir : givenDirections) {
+			if (isDirDryFlatEmpty(dir)) {
+				Actions.doBuildRobot(rt, dir);
 				tlog("Success");
-				return true;
+				return dir;
 			}
 		}
 		tlog("No open spots found");
-		return false;
+		return null;
 	}
 
 

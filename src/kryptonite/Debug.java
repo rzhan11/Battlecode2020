@@ -125,6 +125,12 @@ public class Debug extends Globals {
 		System.out.println("\n-- " + str);
 	}
 
+	public static void logByte (String tag) {
+		if (isDisplayLogs()) {
+			System.out.println("\nBYTECODE LEFT - " + tag + ": " + Clock.getBytecodesLeft());
+		}
+	}
+
 	public static void drawLine(MapLocation loc1, MapLocation loc2, int[] color) {
 		if (isDisplayIndicators()) {
 			rc.setIndicatorLine(loc1, loc2, color[0], color[1], color[2]);

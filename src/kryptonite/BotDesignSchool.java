@@ -39,8 +39,8 @@ public class BotDesignSchool extends Globals {
 			log("Enemies detected");
 			if (rc.getTeamSoup() >= RobotType.LANDSCAPER.cost) {
 				log("Trying to build protection landscapers");
-				boolean didBuild = tryBuild(RobotType.LANDSCAPER, directions);
-				if (didBuild) {
+				Direction buildDir = tryBuild(RobotType.LANDSCAPER, directions);
+				if (buildDir != null) {
 					landscapersMade++;
 					if (landscapersMade >= landscaperCheckpoints[0] && !checkpointReached[0]) {
 						writeTransactionLandscaperCheckpoint(0);
@@ -60,8 +60,8 @@ public class BotDesignSchool extends Globals {
 			// leave enough to build a refinery
 			if (rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost) {
 				log("Trying to build landscaper");
-				boolean didBuild = tryBuild(RobotType.LANDSCAPER, directions);
-				if (didBuild) {
+				Direction buildDir = tryBuild(RobotType.LANDSCAPER, directions);
+				if (buildDir != null) {
 					landscapersMade++;
 					if (landscapersMade >= landscaperCheckpoints[0] && !checkpointReached[0]) {
 						writeTransactionLandscaperCheckpoint(0);
@@ -85,8 +85,8 @@ public class BotDesignSchool extends Globals {
 		if (landscapersMade < landscaperCheckpoints[1]) {
 			if (rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost) {
 				log("Trying to build landscaper");
-				boolean didBuild = tryBuild(RobotType.LANDSCAPER, directions);
-				if (didBuild) {
+				Direction buildDir = tryBuild(RobotType.LANDSCAPER, directions);
+				if (buildDir != null) {
 					landscapersMade++;
 				}
 				if (landscapersMade >= landscaperCheckpoints[1] && !checkpointReached[1]) {
@@ -111,8 +111,8 @@ public class BotDesignSchool extends Globals {
 //		if (landscapersMade < landscaperCheckpoints[2]) {
 //			if (rc.getTeamSoup() >= RobotType.LANDSCAPER.cost) {
 //				log("Trying to build landscaper");
-//				boolean didBuild = tryBuild(RobotType.LANDSCAPER, directions);
-//				if (didBuild) {
+//				Direction buildDir = tryBuild(RobotType.LANDSCAPER, directions);
+//				if (buildDir != null) {
 //					landscapersMade++;
 //				}
 //				if (landscapersMade >= landscaperCheckpoints[2] && !checkpointReached[1]) {
