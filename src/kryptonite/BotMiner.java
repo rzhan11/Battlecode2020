@@ -14,7 +14,7 @@ public class BotMiner extends Globals {
 	final private static int EXPLORER_EDGE_DISTANCE = 4;
 
 	// distance at which we try to use refineries
-	final private static int REFINERY_DISTANCE_LIMIT = 18;
+	final private static int REFINERY_DISTANCE_LIMIT = 32;
 	final private static int MIN_SOUP_BUILD_REFINERY = 1000;
 	final private static int MIN_SOUP_RETURN_REFINERY = 20;
 

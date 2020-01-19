@@ -117,12 +117,11 @@ public class BotMinerBuilder extends BotMiner {
 		if (!designSchoolBuilt) {
 			log("Trying for designSchool");
 			if (rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost + RobotType.REFINERY.cost) {
-				// potential bug - what if we are already on the designSchoolLocation?
-				//find a spot in the 5x5 where it can build fulfillment center
+				//find a spot in the 7x7 where it can build fulfillment center
 				boolean built = false;
 				for (Direction dir: directions) {
 					MapLocation loc = rc.adjacentLocation(dir);
-					if (maxXYDistance(HQLocation, loc) == 2 && !isDigLocation(loc)) {
+					if (maxXYDistance(HQLocation, loc) == 3 && !isDigLocation(loc)) {
 						if (isDirDryFlatEmpty(dir)) {
 							Actions.doBuildRobot(RobotType.DESIGN_SCHOOL, dir);
 							designSchoolBuilt = true;
@@ -140,8 +139,8 @@ public class BotMinerBuilder extends BotMiner {
 						continue;
 					}
 					MapLocation buildLocation = here.translate(dir[0], dir[1]);
-					// forces it to be on 2x2 ring
-					if (maxXYDistance(HQLocation, buildLocation) == 2 && !isDigLocation(buildLocation)) {
+					// forces it to be on 7x7 ring
+					if (maxXYDistance(HQLocation, buildLocation) == 3 && !isDigLocation(buildLocation)) {
 						if (isLocDryEmpty(buildLocation)) {
 							log("Moving to build design school");
 							moveLog(buildLocation);
@@ -158,13 +157,17 @@ public class BotMinerBuilder extends BotMiner {
 			return;
 		}
 
+		// unsets role as builder miner
+		builderMinerID = -1;
+
+
+		/*
 		if (reachedLandscaperCheckpoint >= 0) {
 			log("Continuing: Landscaper checkpoint 0 reached");
 		} else {
 			log("Returning: Landscaper checkpoint 0 not reached");
 			return;
 		}
-		/*
 		// now building the 4 net guns
 		if (netGunsBuilt < maxNetGuns[0]) {
 			log("Attempting net guns phase 0");
