@@ -126,12 +126,14 @@ public class BotMiner extends Globals {
 		/*
 		If we are full of soup, try to deposit at a refinery
 		 */
-		if (refineriesIndex == -1 && rc.getSoupCarrying() == RobotType.MINER.soupLimit) {
+		if (buildRefineryLocation == null && refineriesIndex == -1 && rc.getSoupCarrying() == RobotType.MINER.soupLimit) {
 			// does not reset targetVisibleSoupLoc since the soup location is not depleted
 			log("Full of soup, looking for refineries");
 			pickRefinery();
 		}
 
+		log ("refineriesindex " + refineriesIndex);
+		log ("brl " + buildRefineryLocation);
 		/*
 		If targetSoupZone has been denied of soup, reset it
 		 */
@@ -183,6 +185,8 @@ public class BotMiner extends Globals {
 			if (refineriesIndex != -1) {
 				if (closestRefineryDist < here.distanceSquaredTo(refineries[refineriesIndex])) {
 					refineriesIndex = closestRefineryIndex;
+					buildRefineryLocation = null;
+					buildRefineryVisibleSoup = -1;
 					log("Retargeting from 'move' to new refinery at " + refineries[refineriesIndex]);
 				}
 			}
@@ -297,6 +301,9 @@ public class BotMiner extends Globals {
 				log("Path to buildRefineryLocation is blocked");
 				Direction newDir = tryBuild(RobotType.REFINERY, directions);
 				if (newDir != null) {
+					buildRefineryLocation = null;
+					buildRefineryVisibleSoup = -1;
+
 					MapLocation newLoc = rc.adjacentLocation(newDir);
 					tlog("Built far sub-optimal refinery at " + newLoc);
 					writeTransactionRefineryBuilt(newLoc);
