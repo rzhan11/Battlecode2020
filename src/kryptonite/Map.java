@@ -45,6 +45,10 @@ public class Map extends Globals {
         return rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null;
     }
 
+    public static boolean isLocDry (MapLocation loc) throws GameActionException {
+        return !rc.senseFlooding(loc);
+    }
+
     public static boolean isLocDryEmpty (MapLocation loc) throws GameActionException {
         return !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null;
     }
@@ -55,15 +59,6 @@ public class Map extends Globals {
     */
     public static boolean isDirFlat(Direction dir) throws GameActionException {
         return Math.abs(rc.senseElevation(rc.adjacentLocation(dir)) - myElevation) <= GameConstants.MAX_DIRT_DIFFERENCE;
-    }
-
-    /*
-    Assumes that we can sense this tile
-    Returns true if this tile's elevation is within +/-3 of our tile's elevation
-    Returns false otherwise
-    */
-    public static boolean isLocDry(MapLocation loc) throws GameActionException {
-        return !rc.senseFlooding(loc);
     }
 
     /*

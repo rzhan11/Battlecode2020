@@ -6,6 +6,7 @@ import static kryptonite.Communication.*;
 import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
+import static kryptonite.Zones.*;
 
 public class BotHQ extends Globals {
 
@@ -18,13 +19,12 @@ public class BotHQ extends Globals {
 
 	private static boolean madeBuilderMiner = false;
 
-	public static MapLocation closestHQVisibleSoup;
-
 
 	public static void loop() throws GameActionException {
 		while (true) {
 			try {
 				Globals.update();
+				log("Bytecode left " + Clock.getBytecodesLeft());
 				if (firstTurn) {
 					log("Possible enemy HQ locations");
 					tlog("" + symmetryHQLocations[0]);
@@ -34,7 +34,9 @@ public class BotHQ extends Globals {
 					writeTransactionHQFirstTurn(here);
 
 					// finds visible soup locations
-					locateClosestSoup();
+
+					closestVisibleSoupLoc = findClosestVisibleSoupLoc(true);
+					log("closestVisibleSoupLocation: " + closestVisibleSoupLoc);
 
 				}
 			    turn();
@@ -129,42 +131,27 @@ public class BotHQ extends Globals {
 	}
 
 	/*
-	Finds closest soup location out of visible soup
-	*/
-	public static void locateClosestSoup() throws GameActionException {
-		int minDist = P_INF;
-		closestHQVisibleSoup = null;
-		for (MapLocation loc: visibleSoupLocations) {
-			int dist = here.distanceSquaredTo(loc);
-			if (rc.senseSoup(loc) > 0 && dist < minDist) {
-				minDist = dist;
-				closestHQVisibleSoup = loc;
-			}
-		}
-	}
-
-	/*
 	Tries to build a miner in an unexplored direction
 	Returns true if built a miner
 	Returns false if did not build a miner
 	*/
 	public static boolean buildMiner() throws GameActionException {
 		Direction[] orderedDirections;
-		if (closestHQVisibleSoup == null) {
-			orderedDirections = getCloseDirections(here.directionTo(getSymmetryLocation()));
+		MapLocation target = null;
+		if (closestVisibleSoupLoc == null) {
+			target = getSymmetryLocation();
 		} else {
-			orderedDirections = getCloseDirections(here.directionTo(closestHQVisibleSoup));
+			target = closestVisibleSoupLoc;
 		}
+		orderedDirections = getCloseDirections(here.directionTo(target));
 
-		for (Direction dir: orderedDirections) {
-			MapLocation loc = rc.adjacentLocation(dir);
-			if (isDirDryFlatEmpty(dir)) {
-				log("Building explorer miner in " + dir);
-				Actions.doBuildRobot(RobotType.MINER, dir);
+		log("Building explorer miner towards " + target);
+		Direction buildDir = tryBuild(RobotType.MINER, orderedDirections);
+		if (buildDir != null) {
+			log("Built in " + buildDir);
 
-				explorerMinerCount++;
-				return true;
-			}
+			explorerMinerCount++;
+			return true;
 		}
 
 		return false;

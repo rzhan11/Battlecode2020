@@ -2,10 +2,8 @@ package kryptonite;
 
 import battlecode.common.*;
 
-import static kryptonite.Communication.*;
 import static kryptonite.Constants.*;
-import static kryptonite.Debug.*;
-import static kryptonite.Map.*;
+import static kryptonite.Zones.*;
 
 public class Debug extends Globals {
 
@@ -140,6 +138,30 @@ public class Debug extends Globals {
 	public static void drawDot(MapLocation loc, int[] color) {
 		if (isDisplayIndicators()) {
 			rc.setIndicatorDot(loc, color[0], color[1], color[2]);
+		}
+	}
+
+	public static void drawZoneStatus () {
+		if (roundNum == 1 || us == Team.B) {
+			return;
+		}
+		for (int i = 0; i < numXZones; i++) {
+			for (int j = 0; j < numYZones; j++) {
+				MapLocation loc = new MapLocation(i * zoneSize, j * zoneSize);
+				MapLocation loc2 = loc.translate(1, 0);
+				if (exploredZoneStatus[i][j] == 0) {
+					drawDot(loc, BLACK);
+				} else if (exploredZoneStatus[i][j] == 1) {
+					drawDot(loc, WHITE);
+				}
+				if (hasSoupZones[i][j] == 0) {
+					drawDot(loc2, YELLOW);
+				} else if (hasSoupZones[i][j] == 1) {
+					drawDot(loc2, CYAN);
+				} else if (hasSoupZones[i][j] == 2) {
+					drawDot(loc2, RED);
+				}
+			}
 		}
 	}
 }
