@@ -29,9 +29,9 @@ public class Debug extends Globals {
 					return true;
 				}
 				return true;
-			case NET_GUN: return false;
-			case REFINERY: return false;
-			case VAPORATOR: return false;
+			case NET_GUN: return true;
+			case REFINERY: return true;
+			case VAPORATOR: return true;
 			default:
 				logi("ERROR: Sanity check failed - unknown class " + myType);
 				return false;

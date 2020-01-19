@@ -10,8 +10,7 @@ import static kryptonite.Zones.*;
 
 public class BotMiner extends Globals {
 
-	// the explorer's target location will be this far from the map edge
-	final private static int EXPLORER_EDGE_DISTANCE = 4;
+	final private static int MIN_MINER_BYTECODE_TURN = 3000;
 
 	// distance at which we try to use refineries
 	final private static int REFINERY_DISTANCE_LIMIT = 32;
@@ -69,7 +68,12 @@ public class BotMiner extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
-		log("byte start " + Clock.getBytecodesLeft());
+		int startByte = Clock.getBytecodesLeft();
+		log("Bytecode at turn start " + startByte);
+		if (startByte < MIN_MINER_BYTECODE_TURN) {
+			log("Not enough bytecode for turn, returning");
+			return;
+		}
 
 		locateCenterOfVisibleSoup();
 		// updates known refineries based on what we can sense this turn

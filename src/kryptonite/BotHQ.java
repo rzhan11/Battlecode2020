@@ -68,7 +68,11 @@ public class BotHQ extends Globals {
 			boolean flag = true;
 			for(int i = 2; i >= -2; i--) for(int j = 2; j >= -2; j--) {
 				if(Math.abs(i) != 2 && Math.abs(j) != 2) continue;
-				if(!isDigLocation(here.translate(i, j)) && rc.senseRobotAtLocation(here.translate(i, j)) == null) {
+				MapLocation loc = here.translate(i, j);
+				if (!rc.onTheMap(loc)) {
+					continue;
+				}
+				if(!isDigLocation(loc) && rc.senseRobotAtLocation(loc) == null) {
 					flag = false;
 					break;
 				}
