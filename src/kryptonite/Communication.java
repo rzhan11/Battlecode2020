@@ -692,6 +692,17 @@ message[3] = y coordinate of our HQ
 				temp = temp << 16;
 			}
 			message[i_message / 2] |= temp;
+			//
+			int m = message[i_message / 2];
+			if (i_message % 2 == 0) {
+				m = m & ((1 << 16) - 1);
+			} else {
+				m = m >>> 16;
+			}
+			int zoneIndex = m & ((1 << 8) - 1);
+			int status = m >>> 8;
+			log("yo " + zoneIndex + " " + status + " v " + statuses[index]);
+			//
 			i_message++;
 		}
 		message[1] += (i_message - 4) << 8;
@@ -719,7 +730,7 @@ message[3] = y coordinate of our HQ
 				m = m >>> 16;
 			}
 			int zoneIndex = m & ((1 << 8) - 1);
-			int status = m >>> 12;
+			int status = m >>> 8;
 			updateKnownSoupZones(zoneIndex, status, false);
 
 			i_message++;

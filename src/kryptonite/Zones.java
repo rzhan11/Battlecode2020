@@ -24,9 +24,9 @@ public class Zones extends Globals {
     public static int[] newSoupStatuses = null;
     public static int newSoupStatusesLength = 0;
 
-    // 0 is unknown, 1 is confirmed soup, -1 is denied soup
+    // 0 is unknown, 1 is confirmed soup, 2 is denied soup
     public static int[][] hasSoupLocs = null;
-    // 0 is unknown, 1 is confirmed soup, -1 is denied soup
+    // 0 is unknown, 1 is confirmed soup, 2 is denied soup
     public static int[][] hasSoupZones = null;
     // number of tiles in this zone that contains soup
     public static int[][] numSoupLocsInZones = null;
@@ -136,7 +136,7 @@ public class Zones extends Globals {
 
     /*
     Updates based on vision
-    status = -1 means no soup
+    status = 2 means no soup
     status = 1 means soup
      */
     public static void updateKnownSoupLocs(MapLocation loc, int status) throws GameActionException {
@@ -147,26 +147,26 @@ public class Zones extends Globals {
 
         int[] zone = locToZonePair(loc);
 
-        if (status == -1) {
+        if (status == 2) {
             // no soup confirmed
-            if (hasSoupLocs[loc.x][loc.y] != -1) {
+            if (hasSoupLocs[loc.x][loc.y] != 2) {
                 if (hasSoupLocs[loc.x][loc.y] == 0) {
                     // this tile was previously unknown
-                    hasSoupLocs[loc.x][loc.y] = -1;
+                    hasSoupLocs[loc.x][loc.y] = 2;
                     numNoSoupLocsInZones[zone[0]][zone[1]]++;
                 } else if (hasSoupLocs[loc.x][loc.y] == 1) {
                     // this tile previously had soup, but now is empty
-                    hasSoupLocs[loc.x][loc.y] = -1;
+                    hasSoupLocs[loc.x][loc.y] = 2;
                     numNoSoupLocsInZones[zone[0]][zone[1]]++;
                     numSoupLocsInZones[zone[0]][zone[1]]--;
                 }
 
                 if (numNoSoupLocsInZones[zone[0]][zone[1]] == numLocsinZone) {
                     // zone is completely devoid of soup
-                    if (hasSoupZones[zone[0]][zone[1]] != -1) {
+                    if (hasSoupZones[zone[0]][zone[1]] != 2) {
                         // this information is new and worth communicating
                         newSoupStatusIndices[newSoupStatusesLength] = zonePairToIndex(zone);
-                        newSoupStatuses[newSoupStatusesLength] = -1;
+                        newSoupStatuses[newSoupStatusesLength] = 2;
                         newSoupStatusesLength++;
                     }
                 }
@@ -174,7 +174,7 @@ public class Zones extends Globals {
         } else if (status == 1) {
             // tile has soup confirmed
             if (hasSoupLocs[loc.x][loc.y] == 1) {
-                if (hasSoupLocs[loc.x][loc.y] == -1) {
+                if (hasSoupLocs[loc.x][loc.y] == 2) {
                     // this tile was previously confirmed to not have soup
                     logi("ERROR: Sanity check failed - tile without soup now has soup");
                 } else if (hasSoupLocs[loc.x][loc.y] == 0) {
@@ -204,9 +204,9 @@ public class Zones extends Globals {
 
         int[] zone = zoneIndexToPair(index);
 
-        if (status == -1) {
+        if (status == 2) {
             if (hasSoupZones[zone[0]][zone[1]] != 1) {
-                hasSoupZones[zone[0]][zone[1]] = -1;
+                hasSoupZones[zone[0]][zone[1]] = 2;
             }
         } else if (status == 1) {
             // ignore if we have confirmed no soup or if we already know that there is soup in this zone

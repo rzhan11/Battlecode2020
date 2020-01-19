@@ -459,7 +459,7 @@ public class BotMiner extends Globals {
 		Updates soup locations where there is 0 soup left
 		Only updates if this zone has not been denied of soup
 		 */
-		if (hasSoupZones[myZone[0]][myZone[1]] != -1) {
+		if (hasSoupZones[myZone[0]][myZone[1]] != 2) {
 			int count = 0;
 			for (MapLocation loc: visibleSoupLocations) {
 				if (myZone.equals(locToZonePair(loc))) {
@@ -469,7 +469,7 @@ public class BotMiner extends Globals {
 			}
 			if (count == 0) {
 				if (canSenseEntireCurrentZone()) {
-					updateKnownSoupZones(zonePairToIndex(myZone), -1, true);
+					updateKnownSoupZones(zonePairToIndex(myZone), 2, true);
 				} else {
 					// @todo: update all of the sensed locations in my current zone (none have soup)
 					int x_lower = myZone[0] * zoneSize;
@@ -480,7 +480,7 @@ public class BotMiner extends Globals {
 						for (int y = y_lower; y < y_upper; y++) {
 							MapLocation loc = new MapLocation(x, y);
 							if (rc.canSenseLocation(loc)) {
-								updateKnownSoupLocs(loc, -1);
+								updateKnownSoupLocs(loc, 2);
 							}
 						}
 					}
