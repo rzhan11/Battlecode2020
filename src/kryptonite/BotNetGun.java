@@ -9,6 +9,9 @@ import static kryptonite.Map.*;
 
 public class BotNetGun extends Globals {
 
+	public static int[] IDS = new int[5000];
+	public static int dronesSeen = 0;
+
 	public static void loop() throws GameActionException {
 		while (true) {
 			try {
@@ -43,6 +46,8 @@ public class BotNetGun extends Globals {
 				if(dist < closestDist){
 					closestDist = dist;
 					id = ri.ID;
+					IDS[dronesSeen++] = id;
+					dronesSeen %= 5000;
 				}
 			}
 		}
@@ -52,6 +57,16 @@ public class BotNetGun extends Globals {
 			Actions.doShootUnit(id);
 			log("Shooting unit");
 			return;
+		} else {
+			for (int i : IDS) {
+				if (rc.canShootUnit(i)) {
+					if (Clock.getBytecodesLeft() > 0) {
+						Actions.doShootUnit(i);
+						log("Shooting unit");
+					}
+					return;
+				}
+			}
 		}
 	}
 
