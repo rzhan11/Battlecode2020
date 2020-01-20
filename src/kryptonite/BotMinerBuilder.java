@@ -54,96 +54,85 @@ public class BotMinerBuilder extends BotMiner {
 			return;
 		}
 
-		for (int i = 0; i < directions.length; i++) {
-			if (isDigLoc(rc.adjacentLocation(directions[i]))) {
-				isDirDanger[i] = true;
-				isDirMoveable[i] = false;
-			}
-		}
-
-		log("checkpoints: ");
-		tlog("drone " + reachedDroneCheckpoint);
-		tlog("landscaper " + reachedLandscaperCheckpoint);
-		tlog("netgun " + reachedNetgunCheckpoint);
-		tlog("vaporator " + reachedVaporatorCheckpoint);
+//		log("checkpoints: ");
+//		tlog("drone " + reachedDroneCheckpoint);
+//		tlog("landscaper " + reachedLandscaperCheckpoint);
+//		tlog("netgun " + reachedNetgunCheckpoint);
+//		tlog("vaporator " + reachedVaporatorCheckpoint);
 
 		// build design school if possible
 		if (!designSchoolBuilt) {
 			log("Trying for designSchool");
-			if (rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost) {
-				//find a spot in the 7x7 where it can build fulfillment center
-				for (Direction dir: directions) {
-					MapLocation loc = rc.adjacentLocation(dir);
-					if (maxXYDistance(HQLoc, loc) == 3 && isBuildLocation(loc)) {
-						if (isDirDryFlatEmpty(dir)) {
+			for (Direction dir : directions) {
+				MapLocation loc = rc.adjacentLocation(dir);
+				if (maxXYDistance(HQLoc, loc) == 3 && isBuildLocation(loc)) {
+					if (isDirDryFlatEmpty(dir)) {
+						if (rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost) {
 							Actions.doBuildRobot(RobotType.DESIGN_SCHOOL, dir);
 							designSchoolBuilt = true;
 							tlog("Design School Built");
-							return;
+						} else {
+							tlog("In position for Design School, not enough soup");
 						}
+						// return if in position/built it
+						return;
 					}
 				}
+			}
 
-				for (int[] dir: senseDirections) {
-					// ignore locs that are out of sensor range or within build range (since they are not flat)
-					if (dir[2] <= 2 || actualSensorRadiusSquared < dir[2]) {
-						continue;
-					}
-					MapLocation buildLocation = here.translate(dir[0], dir[1]);
-					// forces it to be on 7x7 ring
-					if (maxXYDistance(HQLoc, buildLocation) == 3 && isBuildLocation(buildLocation)) {
-						if (isLocDryEmpty(buildLocation)) {
-							log("Moving to build design school");
-							moveLog(buildLocation);
-							return;
-						}
+			//find a spot in the 7x7 where it can build design school
+			for (int[] dir : senseDirections) {
+				// ignore locs that are out of sensor range or within build range (since they are not flat)
+				if (dir[2] <= 2 || actualSensorRadiusSquared < dir[2]) {
+					continue;
+				}
+				MapLocation buildLocation = here.translate(dir[0], dir[1]);
+				// forces it to be on 7x7 ring
+				if (maxXYDistance(HQLoc, buildLocation) == 3 && isBuildLocation(buildLocation)) {
+					if (isLocDryEmpty(buildLocation)) {
+						log("Moving to build design school");
+						moveLog(buildLocation);
+						return;
 					}
 				}
-				tlog("Design School Not Built");
-			} else {
-				log("Not enough soup for Design School");
 			}
 			return;
 		}
 
-		// builds fulfillment center
-
 		if (!fulfillmentCenterBuilt) {
-			log("Trying for fulfillmentCenter");
-			if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost + RobotType.REFINERY.cost) {
-
-				//find a spot in the 7x7 where it can build fulfillment center
-				for (Direction dir: directions) {
-					MapLocation loc = rc.adjacentLocation(dir);
-					if (maxXYDistance(HQLoc, loc) == 3 && isBuildLocation(loc)) {
-						if (isDirDryFlatEmpty(dir)) {
+			log("Trying for fulfillment center");
+			for (Direction dir : directions) {
+				MapLocation loc = rc.adjacentLocation(dir);
+				if (maxXYDistance(HQLoc, loc) == 3 && isBuildLocation(loc)) {
+					if (isDirDryFlatEmpty(dir)) {
+						if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost) {
 							Actions.doBuildRobot(RobotType.FULFILLMENT_CENTER, dir);
 							fulfillmentCenterBuilt = true;
-							tlog("Fulfillment Center Built");
-							return;
+							tlog("Fulfillment center built");
+						} else {
+							tlog("In position for fulfillment center, not enough soup");
 						}
+						// return if in position/built it
+						return;
 					}
 				}
+			}
 
-				for (int[] dir: senseDirections) {
-					// ignore locs that are out of sensor range or within build range (since they are not flat)
-					if (dir[2] <= 2 || actualSensorRadiusSquared < dir[2]) {
-						continue;
-					}
-					MapLocation buildLocation = here.translate(dir[0], dir[1]);
-					// forces it to be on 7x7 ring
-					if (maxXYDistance(HQLoc, buildLocation) == 3 && isBuildLocation(buildLocation)) {
-						if (isLocDryEmpty(buildLocation)) {
-							log("Moving to build fulfillment center");
-							moveLog(buildLocation);
-							return;
-						}
+			//find a spot in the 7x7 where it can build fulfillment center
+			for (int[] dir : senseDirections) {
+				// ignore locs that are out of sensor range or within build range (since they are not flat)
+				if (dir[2] <= 2 || actualSensorRadiusSquared < dir[2]) {
+					continue;
+				}
+				MapLocation buildLocation = here.translate(dir[0], dir[1]);
+				// forces it to be on 7x7 ring
+				if (maxXYDistance(HQLoc, buildLocation) == 3 && isBuildLocation(buildLocation)) {
+					if (isLocDryEmpty(buildLocation)) {
+						log("Moving to build fulfillment center");
+						moveLog(buildLocation);
+						return;
 					}
 				}
-
-				tlog("Fulfillment Center Not Built");
-			} else {
-				log("Not enough soup for Fulfillment Center + Refinery");
 			}
 			return;
 		}

@@ -107,27 +107,6 @@ public class BotMiner extends Globals {
 			}
 		}
 
-		//
-		if (rc.getSoupCarrying() == 0) {
-			int myRing = maxXYDistance(HQLoc, here);
-			for (int i = 0; i < directions.length; i++) {
-				MapLocation loc = rc.adjacentLocation(directions[i]);
-				if (!rc.onTheMap(loc)) {
-					continue;
-				}
-				int curRing = maxXYDistance(HQLoc, loc);
-				if (curRing == 1) {
-					isDirMoveable[i] = false;
-				}
-				if (myRing > 2 && curRing == 2) {
-					isDirMoveable[i] = false;
-				}
-			}
-		}
-		/*for (int i = 0; i < directions.length; i++) {
-			log("dir " + directions[i] + " " + isDirMoveable[i]);
-		}*/
-
 		// create vaporators
 		while (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
 			//checks to see if there are too many adjacent allies/vaporators

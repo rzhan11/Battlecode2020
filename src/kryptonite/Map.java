@@ -77,12 +77,15 @@ public class Map extends Globals {
         return ri != null && ri.type == RobotType.LANDSCAPER && ri.team == us;
     }
 
-    public static boolean isLocBuilding(MapLocation ml) throws GameActionException {
-        if(!rc.canSenseLocation(ml)) return false;
-        if(rc.senseRobotAtLocation(ml) == null) return false;
-        return rc.senseRobotAtLocation(ml).type.isBuilding();
+    public static boolean isLocBuilding(MapLocation loc) throws GameActionException {
+        RobotInfo ri = rc.senseRobotAtLocation(loc);
+        return ri != null && ri.type.isBuilding();
     }
 
+    public static boolean isLocEnemyBuilding(MapLocation loc) throws GameActionException {
+        RobotInfo ri = rc.senseRobotAtLocation(loc);
+        return ri != null && ri.type.isBuilding() && ri.team == them;
+    }
 
     public static boolean isLocDryEmpty (MapLocation loc) throws GameActionException {
         return !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null;
@@ -126,6 +129,24 @@ public class Map extends Globals {
                 }
             }
             isDirMoveable[i] = true;
+        }
+
+        // Miners avoid rings
+        if (myType == RobotType.MINER && rc.getSoupCarrying() == 0) {
+            int myRing = maxXYDistance(HQLoc, here);
+            for (int i = 0; i < directions.length; i++) {
+                MapLocation loc = rc.adjacentLocation(directions[i]);
+                if (!rc.onTheMap(loc)) {
+                    continue;
+                }
+                int curRing = maxXYDistance(HQLoc, loc);
+                if (myRing > 1 && curRing == 1) {
+                    isDirMoveable[i] = false;
+                }
+                if (myRing > 2 && curRing == 2) {
+                    isDirMoveable[i] = false;
+                }
+            }
         }
     }
 
