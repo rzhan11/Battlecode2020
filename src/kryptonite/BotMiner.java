@@ -119,14 +119,14 @@ public class BotMiner extends Globals {
 				if (curRing == 1) {
 					isDirMoveable[i] = false;
 				}
-				if (myRing >= 2 && curRing == 2) {
+				if (myRing > 2 && curRing == 2) {
 					isDirMoveable[i] = false;
 				}
 			}
 		}
-		for (int i = 0; i < directions.length; i++) {
+		/*for (int i = 0; i < directions.length; i++) {
 			log("dir " + directions[i] + " " + isDirMoveable[i]);
-		}
+		}*/
 
 		// create vaporators
 		while (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
@@ -279,6 +279,7 @@ public class BotMiner extends Globals {
 					refineriesIndex = closestRefineryIndex;
 					buildRefineryLocation = null;
 					buildRefineryVisibleSoup = -1;
+					mustBuild = false;
 					log("Retargeting from 'move' to new refinery at " + refineries[refineriesIndex]);
 				}
 			}
@@ -289,6 +290,7 @@ public class BotMiner extends Globals {
 					refineriesIndex = closestRefineryIndex;
 					buildRefineryLocation = null;
 					buildRefineryVisibleSoup = -1;
+					mustBuild = false;
 					log("Retargeting from 'build' to new refinery at " + refineries[refineriesIndex]);
 				}
 			}

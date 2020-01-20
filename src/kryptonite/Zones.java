@@ -262,6 +262,9 @@ public class Zones extends Globals {
                     if (ignoreSelf && loc.equals(here)) {
                         continue;
                     }
+                    if (!isLocDry(loc)) {
+                        continue;
+                    }
                     return loc;
                 }
             }
@@ -275,12 +278,13 @@ public class Zones extends Globals {
             if (ignoreSelf && loc.equals(here)) {
                 continue;
             }
-            if (!rc.senseFlooding(loc)) {
-                int dist = here.distanceSquaredTo(loc);
-                if (dist < closestDist) {
-                    closestDist = dist;
-                    closestLoc = loc;
-                }
+            if (!isLocDry(loc)) {
+                continue;
+            }
+            int dist = here.distanceSquaredTo(loc);
+            if (dist < closestDist) {
+                closestDist = dist;
+                closestLoc = loc;
             }
         }
         return closestLoc;

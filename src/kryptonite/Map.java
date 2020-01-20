@@ -72,6 +72,11 @@ public class Map extends Globals {
         return rc.senseRobotAtLocation(loc) == null;
     }
 
+    public static boolean isLocAllyLandscaper(MapLocation loc) throws GameActionException {
+        RobotInfo ri = rc.senseRobotAtLocation(loc);
+        return ri != null && ri.type == RobotType.LANDSCAPER && ri.team == us;
+    }
+
     public static boolean isLocBuilding(MapLocation ml) throws GameActionException {
         if(!rc.canSenseLocation(ml)) return false;
         if(rc.senseRobotAtLocation(ml) == null) return false;

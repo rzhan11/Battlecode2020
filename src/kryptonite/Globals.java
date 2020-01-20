@@ -91,7 +91,7 @@ public class Globals {
 	public static MapLocation[] symmetryHQLocations = new MapLocation[3];
 	public static int[] isSymmetryHQLocation = {-1, -1, -1}; // -1 is unknown, 0 is false, 1 is true
 	public static int symmetryHQLocationsIndex; // current symmetry that we are exploring
-	public static MapLocation enemyHQLocation = null;
+	public static MapLocation enemyHQLoc = null;
 
 	/*
 	CHECKPOINTS
@@ -392,7 +392,7 @@ public class Globals {
 
 	public static void updateSymmetry () throws GameActionException {
 
-		if (enemyHQLocation != null) {
+		if (enemyHQLoc != null) {
 			return;
 		}
 
@@ -402,7 +402,8 @@ public class Globals {
 			isSymmetryHQLocation[0] = 1;
 			isSymmetryHQLocation[1] = -1;
 			isSymmetryHQLocation[2] = -1;
-			enemyHQLocation = symmetryHQLocations[0];
+			enemyHQLoc = symmetryHQLocations[0];
+			symmetryHQLocationsIndex = 0;
 			return;
 		}
 
@@ -414,10 +415,11 @@ public class Globals {
 				if (ri != null && ri.type == RobotType.HQ) {
 					//STATE == enemy FOUND
 
-					enemyHQLocation = loc;
+					enemyHQLoc = loc;
 					isSymmetryHQLocation[i] = 1;
+					symmetryHQLocationsIndex = i;
 
-					log("Found enemy HQ at " + enemyHQLocation);
+					log("Found enemy HQ at " + enemyHQLoc);
 
 					writeTransactionEnemyHQLocation(i, 1);
 				} else {
@@ -454,9 +456,10 @@ public class Globals {
 			}
 		}
 		if (denyCount == 2) {
-			enemyHQLocation = symmetryHQLocations[notDenyIndex];
+			enemyHQLoc = symmetryHQLocations[notDenyIndex];
 			isSymmetryHQLocation[notDenyIndex] = 1;
-			log("Determined through 2 denials that enemy HQ is at " + enemyHQLocation);
+			symmetryHQLocationsIndex = notDenyIndex;
+			log("Determined through 2 denials that enemy HQ is at " + enemyHQLoc);
 			return;
 		}
 
@@ -472,10 +475,10 @@ public class Globals {
 	Else, return the current symmetry that we are exploring
 	 */
 	public static MapLocation getSymmetryLoc() {
-		if (enemyHQLocation == null) {
+		if (enemyHQLoc == null) {
 			return symmetryHQLocations[symmetryHQLocationsIndex];
 		} else {
-			return enemyHQLocation;
+			return enemyHQLoc;
 		}
 	}
 

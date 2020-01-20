@@ -10,11 +10,6 @@ import static kryptonite.Zones.*;
 
 public class BotHQ extends Globals {
 
-	final public static int RELAX_LARGE_WALL_FULL_ROUND_NUM = 1000;
-	final public static int RELAX_LARGE_WALL_FULL_AMOUNT = 4;
-
-	final private static int BLOCK_LANDSCAPER_DIST = 13;
-
 	private static int explorerMinerCount = 0;
 
 	private static boolean madeBuilderMiner = false;
@@ -48,6 +43,8 @@ public class BotHQ extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
+		Communication.resubmitImportantTransactions();
+
 		if (!rc.isReady()) {
 			return;
 		}
@@ -59,9 +56,7 @@ public class BotHQ extends Globals {
 				if (!rc.onTheMap(loc)) {
 					continue;
 				}
-				if(rc.senseRobotAtLocation(loc) == null ||
-					rc.senseRobotAtLocation(loc).type != RobotType.LANDSCAPER ||
-					rc.senseRobotAtLocation(loc).team != us) {
+				if(!isLocAllyLandscaper(loc)) {
 					flag = false;
 					break;
 				}
@@ -78,15 +73,19 @@ public class BotHQ extends Globals {
 				if (!rc.onTheMap(loc)) {
 					continue;
 				}
-				if(!isDigLoc(loc) && rc.senseRobotAtLocation(loc) == null) {
+				if (isDigLoc(loc)) {
+					continue;
+				}
+				if(!isLocAllyLandscaper(loc)) {
 					flag = false;
 					break;
 				}
 			}
 			if(flag) {
-				Communication.writeTransactionSupportWallComplete();
+				Communication.writeTransactionSupportWallFull();
 			}
 		}
+
 		// try to shoot the closest visible enemy units
 		int closestDist = P_INF;
 		int id = -1;

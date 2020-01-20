@@ -7,7 +7,8 @@ import static kryptonite.Zones.*;
 
 public class Communication extends Globals {
 
-	final public static int RESUBMIT_INTERVAL = 200;
+	final public static int RESUBMIT_INTERVAL = 100;
+
 	final public static int MAX_UNSENT_TRANSACTIONS_LENGTH = 100;
 	final public static int READ_TRANSACTION_MIN_BYTECODE = 500; // how many bytecodes required to read a transaction
 	final public static int READ_BIG_TRANSACTION_MIN_BYTECODE = 1500; // how many bytecodes required to read a costly transaction
@@ -126,6 +127,23 @@ public class Communication extends Globals {
 				log("Submitted unsent transaction with signal of " + message[1]);
 			} else {
 				break;
+			}
+		}
+	}
+
+	/*
+	Every interval of rounds, resend important messages
+	 */
+	public static void resubmitImportantTransactions () throws GameActionException {
+		if (roundNum % RESUBMIT_INTERVAL == RESUBMIT_INTERVAL - 5) {
+			if (wallFull) {
+				Communication.writeTransactionWallFull();
+			}
+			if (supportFull) {
+				Communication.writeTransactionSupportWallFull();
+			}
+			if (enemyHQLoc != null) {
+				 Communication.writeTransactionEnemyHQLocation(symmetryHQLocationsIndex, 1);
 			}
 		}
 	}
@@ -310,13 +328,13 @@ message[3] = y coordinate of our HQ
 */
 	public static void readTransactionSupportWallFull(int[] message, int round) throws GameActionException {
 		supportFull = true;
-		log("Reading transaction for 'Large Wall Full'");
+		log("Reading transaction for 'Support Wall Full'");
 		log("Submitter ID: " + decryptID(message[0]));
 		log("Posted round: " + round);
 	}
 
-	public static void writeTransactionSupportWallComplete() throws GameActionException {
-		log("Writing transaction for 'Small Wall Complete'");
+	public static void writeTransactionSupportWallFull() throws GameActionException {
+		log("Writing transaction for 'Support Wall Full'");
 		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = SUPPORT_WALL_FULL_SIGNAL;
@@ -603,7 +621,7 @@ message[3] = y coordinate of our HQ
 
 	public static void readTransactionEnemyHQLocation (int[] message, int round) throws GameActionException {
 		if (message[3] == 1) {
-			BotDeliveryDroneOffense.enemyHQLocation = symmetryHQLocations[message[2]];
+			BotDeliveryDroneOffense.enemyHQLoc = symmetryHQLocations[message[2]];
 		}
 		BotDeliveryDroneOffense.isSymmetryHQLocation[message[2]] = message[3];
 		log("Reading transaction for 'Enemy HQ Location'");
@@ -617,7 +635,7 @@ message[3] = y coordinate of our HQ
 	none
 	 */
 	public static void writeTransactionWallFull() throws GameActionException {
-		log("Writing transaction for 'Large Wall Full'");
+		log("Writing transaction for 'Wall Full'");
 		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = WALL_FULL_SIGNAL;
@@ -676,8 +694,6 @@ message[3] = y coordinate of our HQ
 	}
 
 	/*
-	soupAmount -> soup is <= 0, 10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240, infinity
-	soupAmount indices       1   2   3   4    5   6    7    8     9     10   11,    12,       13
 	message[1] = signal & number of locations
 	Can report up to 10 zones
 	 */

@@ -64,7 +64,7 @@ public class BotFulfillmentCenter extends Globals {
 		}
 
 		if (dronesMade < 4) {
-			if (rc.getTeamSoup() > RobotType.DELIVERY_DRONE.cost) {
+			if (rc.getTeamSoup() > RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost) {
 				Direction res = tryBuild(RobotType.DELIVERY_DRONE, directions);
 				if (res != null) {
 					dronesMade++;
@@ -80,7 +80,7 @@ public class BotFulfillmentCenter extends Globals {
 			return;
 		}
 
-		if (rc.getTeamSoup() > RobotType.DELIVERY_DRONE.cost) {
+		if (rc.getTeamSoup() > RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost) {
 			Direction res = tryBuild(RobotType.DELIVERY_DRONE, directions);
 			if (res != null) {
 				dronesMade++;

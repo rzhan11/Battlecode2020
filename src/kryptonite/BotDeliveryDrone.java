@@ -6,6 +6,7 @@ import static kryptonite.Communication.*;
 import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
+import static kryptonite.Zones.*;
 
 public class BotDeliveryDrone extends Globals {
 
@@ -62,6 +63,9 @@ public class BotDeliveryDrone extends Globals {
 				}
 				if (roundNum % 500 == 0) {
 					isDroneSwarming = true;
+				}
+				if (roundNum % 500 == 50) {
+					isDroneSwarming = false;
 				}
 
 				if (isOffenseDrone) {
@@ -383,7 +387,9 @@ public class BotDeliveryDrone extends Globals {
 				}
 				return;
 			}
+
 			log("Inner and outer dig locations are visibly occupied or occupied in memory");
+			isOffenseDrone = true;
 		}
 	}
 
@@ -526,24 +532,14 @@ public class BotDeliveryDrone extends Globals {
 					}
 
 					log("Moving to drop into water " + floodingMemory);
-					Direction move = Nav.bugNavigate(floodingMemory);
-					if (move != null) {
-						tlog("Moved " + move);
-					} else {
-						tlog("But no move found");
-					}
+					moveLog(floodingMemory);
 					return true;
 				}
 
-				// move away from hq
-				log("Moving away from HQ to look for water");
-				Direction dirFromHQ = HQLoc.directionTo(here);
-				Direction move = Nav.tryMoveInGeneralDirection(dirFromHQ);
-				if (move != null) {
-					tlog("Moved " + move);
-				} else {
-					tlog("But no move found");
-				}
+				// explore
+				MapLocation loc = findClosestUnexploredZone();
+				log("Moving to unexplored zones to find water");
+				moveLog(loc);
 				return true;
 
 			}

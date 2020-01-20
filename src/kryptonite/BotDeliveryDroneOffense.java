@@ -99,11 +99,11 @@ public class BotDeliveryDroneOffense extends BotDeliveryDrone {
 
         // if enemyHQLocation not found, go to exploreSymmetryLocation
         MapLocation targetLoc = getSymmetryLoc();
-        if (enemyHQLocation == null) {
+        if (enemyHQLoc == null) {
             log("Moving towards symmetry location at " + targetLoc);
         } else {
             // STATE == enemyHQLocation found (AKA not null)
-            log("Moving towards enemyHQLocation at " + enemyHQLocation);
+            log("Moving towards enemyHQLocation at " + enemyHQLoc);
         }
 
         Direction move = moveLog(targetLoc);
