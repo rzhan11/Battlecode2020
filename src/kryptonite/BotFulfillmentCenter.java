@@ -34,13 +34,26 @@ public class BotFulfillmentCenter extends Globals {
 			return;
 		}
 
+		if (visibleEnemies.length > 0 && dronesMade < 5) {
+			if (rc.getTeamSoup() > RobotType.DELIVERY_DRONE.cost) {
+				Direction res = tryBuild(RobotType.DELIVERY_DRONE, directions);
+				if (res != null) {
+					dronesMade++;
+					log("Built emergency drone");
+				}
+			}
+			return;
+		}
+
 		if (dronesMade < 1) {
 			if (rc.getTeamSoup() > RobotType.DELIVERY_DRONE.cost) {
 				Direction res = tryBuild(RobotType.DELIVERY_DRONE, directions);
 				if (res != null) {
 					dronesMade++;
+					log("Built first drone");
 				}
 			}
+			return;
 		}
 
 		if (wallFull) {
@@ -57,6 +70,7 @@ public class BotFulfillmentCenter extends Globals {
 					dronesMade++;
 				}
 			}
+			return;
 		}
 
 		if (supportFull) {
@@ -71,9 +85,10 @@ public class BotFulfillmentCenter extends Globals {
 			if (res != null) {
 				dronesMade++;
 			}
+			return;
 		}
 
-		// one type of fufillmentcenter
+		// one type of fulfillment center
 //		if (roundParity == 0) {
 //
 //		} else {
