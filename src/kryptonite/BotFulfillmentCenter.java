@@ -72,7 +72,7 @@ public class BotFulfillmentCenter extends Globals {
 		}
 
 		if (dronesMade < 4) {
-			if (rc.getTeamSoup() > RobotType.DELIVERY_DRONE.cost + RobotType.VAPORATOR.cost) {
+			if (rc.getTeamSoup() > RobotType.DELIVERY_DRONE.cost) {
 				Direction res = tryBuild(RobotType.DELIVERY_DRONE, directions);
 				if (res != null) {
 					dronesMade++;

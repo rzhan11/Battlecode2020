@@ -35,11 +35,16 @@ public class BotDesignSchool extends Globals {
 		if (landscapersBuilt < 5) {
 			designBuild(getCloseDirections(here.directionTo(HQLoc)), RobotType.LANDSCAPER.cost);
 			return;
-		} else {
-			if (roundNum % 10 == spawnRound % 10) {
-				designBuild(getCloseDirections(here.directionTo(getSymmetryLoc())), RobotType.LANDSCAPER.cost + RobotType.VAPORATOR.cost);
-				return;
-			}
+		}
+
+		if (landscapersBuilt < 8) {
+			designBuild(getCloseDirections(here.directionTo(HQLoc)), RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost);
+			return;
+		}
+
+		if (roundNum % 25 == spawnRound % 25) {
+			designBuild(getCloseDirections(here.directionTo(getSymmetryLoc())), RobotType.LANDSCAPER.cost);
+			return;
 		}
 
 //		// close to hq one

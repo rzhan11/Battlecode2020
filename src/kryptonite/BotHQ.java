@@ -43,6 +43,8 @@ public class BotHQ extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
+		log("ene " + enemyHQLoc);
+		log("index " + symmetryHQLocationsIndex);
 		Communication.resubmitImportantTransactions();
 
 		if (!rc.isReady()) {

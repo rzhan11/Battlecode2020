@@ -119,7 +119,7 @@ public class BotMiner extends Globals {
 					count++;
 				}
 			}
-			if (count >= 5) {
+			if (count >= 3) {
 				break;
 			}
 
@@ -131,7 +131,6 @@ public class BotMiner extends Globals {
 				if (!rc.onTheMap(loc)) {
 					continue;
 				}
-				log("dir " + loc + " " + isDirDryFlatEmpty(dir) + " " + isBuildLocation(loc) + " " + maxXYDistance(HQLoc, loc));
 				if (isDirDryFlatEmpty(dir) && isBuildLocation(loc) && maxXYDistance(HQLoc, loc) >= 2) {
 					int elevation = rc.senseElevation(loc);
 					if (elevation > highestElevation) {
@@ -140,11 +139,9 @@ public class BotMiner extends Globals {
 					}
 				}
 			}
-			log("betty");
 			// checks to make sure it is worth it
 			if (highestDir != null) {
 				int minRevenue = (getRoundFlooded(highestElevation) - roundNum) * RobotType.VAPORATOR.maxSoupProduced;
-				log("sa " + minRevenue);
 				if (minRevenue >= 2 * RobotType.VAPORATOR.cost) {
 					log("Built vaporator with revenue " + minRevenue);
 					Actions.doBuildRobot(RobotType.VAPORATOR, highestDir);

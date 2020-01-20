@@ -143,6 +143,8 @@ public class Communication extends Globals {
 				Communication.writeTransactionSupportWallFull();
 			}
 			if (enemyHQLoc != null) {
+				log("ene " + enemyHQLoc);
+				log("index " + symmetryHQLocationsIndex);
 			 	Communication.writeTransactionEnemyHQLocation(symmetryHQLocationsIndex, 1);
 			}
 		}

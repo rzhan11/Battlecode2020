@@ -19,19 +19,19 @@ public class Debug extends Globals {
 			return false;
 		}
 		switch (myType) {
-			case DELIVERY_DRONE: return true;
-			case DESIGN_SCHOOL: return true;
-			case FULFILLMENT_CENTER: return true;
+			case DELIVERY_DRONE: return false;
+			case DESIGN_SCHOOL: return false;
+			case FULFILLMENT_CENTER: return false;
 			case HQ: return true;
-			case LANDSCAPER: return true;
+			case LANDSCAPER: return false;
 			case MINER:
 				if (isBuilderMiner(myID)) {
 					return true;
 				}
 				return true;
-			case NET_GUN: return true;
-			case REFINERY: return true;
-			case VAPORATOR: return true;
+			case NET_GUN: return false;
+			case REFINERY: return false;
+			case VAPORATOR: return false;
 			default:
 				logi("ERROR: Sanity check failed - unknown class " + myType);
 				return false;
