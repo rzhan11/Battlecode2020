@@ -2,19 +2,14 @@ package kryptonite;
 
 import battlecode.common.*;
 
-import static kryptonite.Communication.*;
-import static kryptonite.Constants.*;
-import static kryptonite.Debug.*;
-import static kryptonite.Map.*;
-
 public class Map extends Globals {
 
-    public static boolean isDigLocation(MapLocation ml) {
-        return (ml.x - HQLocation.x) % 2 == 0 && (ml.y - HQLocation.y) % 2 == 0;
+    public static boolean isDigLoc(MapLocation ml) {
+        return (ml.x - HQLoc.x) % 2 == 0 && (ml.y - HQLoc.y) % 2 == 0;
     }
 
     public static boolean isBuildLocation(MapLocation ml) {
-        return (ml.x - HQLocation.x) % 2 == 1 && (ml.y - HQLocation.y) % 2 == 1;
+        return (ml.x - HQLoc.x) % 2 == 1 && (ml.y - HQLoc.y) % 2 == 1;
     }
 
     /*
@@ -71,6 +66,10 @@ public class Map extends Globals {
 
     public static boolean isLocDry (MapLocation loc) throws GameActionException {
         return !rc.senseFlooding(loc);
+    }
+
+    public static boolean isLocEmpty (MapLocation loc) throws GameActionException {
+        return rc.senseRobotAtLocation(loc) == null;
     }
 
     public static boolean isLocBuilding(MapLocation ml) throws GameActionException {

@@ -85,7 +85,7 @@ public class Globals {
 	public static int builderMinerID = -1;
 
 	// symmetry
-	public static MapLocation HQLocation = null;
+	public static MapLocation HQLoc = null;
 	public static int HQElevation;
 
 	public static MapLocation[] symmetryHQLocations = new MapLocation[3];
@@ -216,7 +216,7 @@ public class Globals {
 		}
 
 		// find HQ location and symmetries if not already found
-		if (HQLocation == null) {
+		if (HQLoc == null) {
 			findHQLocation();
 			symmetryHQLocationsIndex = myID % symmetryHQLocations.length;
 			log("Initial exploreSymmetryLocation: " + symmetryHQLocations[symmetryHQLocationsIndex]);
@@ -311,7 +311,7 @@ public class Globals {
 		// tries to find our HQLocation and HQElevation by reading messages
 		// will skip turn if not found
 		if (myType == RobotType.HQ) {
-			HQLocation = here;
+			HQLoc = here;
 			HQElevation = myElevation;
 		} else {
 			int res = readBlock(oldBlocksIndex, oldTransactionsIndex);
@@ -321,7 +321,7 @@ public class Globals {
 				oldBlocksIndex++;
 				oldTransactionsIndex = 0;
 			}
-			while (HQLocation == null) {
+			while (HQLoc == null) {
 				log("Did not find HQLocation before block " + oldBlocksIndex + "-" + oldTransactionsIndex);
 				if (oldBlocksIndex >= spawnRound) {
 					Globals.endTurn(true);
@@ -338,9 +338,9 @@ public class Globals {
 		}
 
 		// calculates possible enemy HQ locations
-		symmetryHQLocations[0] = new MapLocation(mapWidth - 1 - HQLocation.x, HQLocation.y);
-		symmetryHQLocations[1] = new MapLocation(HQLocation.x, mapHeight - 1 - HQLocation.y);
-		symmetryHQLocations[2] = new MapLocation(mapWidth - 1 - HQLocation.x, mapHeight - 1 - HQLocation.y);
+		symmetryHQLocations[0] = new MapLocation(mapWidth - 1 - HQLoc.x, HQLoc.y);
+		symmetryHQLocations[1] = new MapLocation(HQLoc.x, mapHeight - 1 - HQLoc.y);
+		symmetryHQLocations[2] = new MapLocation(mapWidth - 1 - HQLoc.x, mapHeight - 1 - HQLoc.y);
 	}
 
 	public static boolean inArray(Object[] arr, Object item, int length) {
@@ -376,10 +376,6 @@ public class Globals {
 		}
 	}
 
-	public static boolean canBePickedUpType(RobotType rt) {
-		return rt == RobotType.MINER || rt == RobotType.LANDSCAPER || rt == RobotType.COW;
-	}
-
 	public static boolean canShootType (RobotType rt) {
 		return rt == RobotType.NET_GUN || rt == RobotType.HQ;
 	}
@@ -401,8 +397,8 @@ public class Globals {
 		}
 
 		// if the HQ is on a horizontal/vertical/rotational symmetry that generates the same symmetryHQLOcations
-		if ((mapWidth % 2 == 1 && mapWidth / 2 == HQLocation.x) ||
-				(mapHeight % 2 == 1 && mapHeight / 2 == HQLocation.y)) {
+		if ((mapWidth % 2 == 1 && mapWidth / 2 == HQLoc.x) ||
+				(mapHeight % 2 == 1 && mapHeight / 2 == HQLoc.y)) {
 			isSymmetryHQLocation[0] = 1;
 			isSymmetryHQLocation[1] = -1;
 			isSymmetryHQLocation[2] = -1;
@@ -475,7 +471,7 @@ public class Globals {
 	If found which symmetry the enemy HQ location is on, return that location
 	Else, return the current symmetry that we are exploring
 	 */
-	public static MapLocation getSymmetryLocation () {
+	public static MapLocation getSymmetryLoc() {
 		if (enemyHQLocation == null) {
 			return symmetryHQLocations[symmetryHQLocationsIndex];
 		} else {

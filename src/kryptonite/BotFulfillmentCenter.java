@@ -34,6 +34,15 @@ public class BotFulfillmentCenter extends Globals {
 			return;
 		}
 
+		if (dronesMade < 1) {
+			if (rc.getTeamSoup() > RobotType.DELIVERY_DRONE.cost) {
+				Direction res = tryBuild(RobotType.DELIVERY_DRONE, directions);
+				if (res != null) {
+					dronesMade++;
+				}
+			}
+		}
+
 		if (wallFull) {
 			log("Continuing: Wall full checkpoint reached");
 		} else {
@@ -41,26 +50,28 @@ public class BotFulfillmentCenter extends Globals {
 			return;
 		}
 
-		int minSoup = RobotType.DELIVERY_DRONE.cost;
-//		if (roundNum < 100) {
-//			minSoup += RobotType.VAPORATOR.cost;
-//		}
-//		if (roundNum < 500) {
-//			minSoup += RobotType.REFINERY.cost;
-//		}
 		if (dronesMade < 4) {
-			minSoup = RobotType.DELIVERY_DRONE.cost;
-		} else {
-			minSoup = P_INF;
+			if (rc.getTeamSoup() > RobotType.DELIVERY_DRONE.cost) {
+				Direction res = tryBuild(RobotType.DELIVERY_DRONE, directions);
+				if (res != null) {
+					dronesMade++;
+				}
+			}
 		}
 
-		if (rc.getTeamSoup() > minSoup) {
+		if (supportFull) {
+			log("Continuing: Support full checkpoint reached");
+		} else {
+			log("Returning: Support full checkpoint not reached");
+			return;
+		}
+
+		if (rc.getTeamSoup() > RobotType.DELIVERY_DRONE.cost) {
 			Direction res = tryBuild(RobotType.DELIVERY_DRONE, directions);
 			if (res != null) {
 				dronesMade++;
 			}
 		}
-
 
 		// one type of fufillmentcenter
 //		if (roundParity == 0) {

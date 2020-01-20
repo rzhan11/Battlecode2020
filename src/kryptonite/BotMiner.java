@@ -28,6 +28,7 @@ public class BotMiner extends Globals {
 	private static int visibleSoup;
 	private static MapLocation centerOfVisibleSoup = null;
 
+	public static boolean mustBuild = false;
 	public static MapLocation[] refineries = new MapLocation[BIG_ARRAY_SIZE];
 	public static boolean[] deadRefineries = new boolean[BIG_ARRAY_SIZE];
 	public static int refineriesSize = 0;
@@ -46,12 +47,12 @@ public class BotMiner extends Globals {
 				// Do first turn code here
 				if (firstTurn) {
 
-					spawnDirection = HQLocation.directionTo(here);
+					spawnDirection = HQLoc.directionTo(here);
 
 
 					// store HQ as a refinery
 					log("Saving HQ as a refinery");
-					addToRefineries(HQLocation);
+					addToRefineries(HQLoc);
 
 					loadZoneInformation();
 				}
@@ -87,6 +88,28 @@ public class BotMiner extends Globals {
 			return;
 		}
 
+		//
+		if (rc.getSoupCarrying() == 0) {
+			int myRing = maxXYDistance(HQLoc, here);
+			for (int i = 0; i < directions.length; i++) {
+				MapLocation loc = rc.adjacentLocation(directions[i]);
+				if (!rc.onTheMap(loc)) {
+					continue;
+				}
+				int curRing = maxXYDistance(HQLoc, loc);
+				if (curRing == 1) {
+					isDirMoveable[i] = false;
+				}
+				if (myRing >= 2 && curRing == 2) {
+					isDirMoveable[i] = false;
+				}
+			}
+		}
+		for (int i = 0; i < directions.length; i++) {
+			log("dir " + directions[i] + " " + isDirMoveable[i]);
+		}
+
+		// create vaporators
 		while (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
 			//checks to see if there are too many adjacent allies/vaporators
 			if (visibleAllies.length >= 25) {
@@ -110,7 +133,7 @@ public class BotMiner extends Globals {
 				if (!rc.onTheMap(loc)) {
 					continue;
 				}
-				if (isDirDryFlatEmpty(dir) && isBuildLocation(loc) && maxXYDistance(HQLocation, loc) >= 2) {
+				if (isDirDryFlatEmpty(dir) && isBuildLocation(loc) && maxXYDistance(HQLoc, loc) >= 2) {
 					int elevation = rc.senseElevation(loc);
 					if (elevation > highestElevation) {
 						highestDir = dir;
@@ -205,6 +228,11 @@ public class BotMiner extends Globals {
 					pickRefinery();
 				}
 			}
+			// if HQ is walled off, force a new refinery to be built
+			if (wallFull && refineries[refineriesIndex].equals(HQLoc)) {
+				deadRefineries[refineriesIndex] = true;
+				pickRefinery();
+			}
 		}
 
 		/*
@@ -252,13 +280,17 @@ public class BotMiner extends Globals {
 		*/
 		while (buildRefineryLocation != null) { // this only ever runs one time, it is a while look to take advantage of break;
 			if (rc.getTeamSoup() < RobotType.REFINERY.cost) {
-				buildRefineryLocation = null;
-				buildRefineryVisibleSoup = -1;
-				log("Cannot afford to build refinery");
+				if (!mustBuild) {
+					buildRefineryLocation = null;
+					buildRefineryVisibleSoup = -1;
+					log("Cannot afford to build refinery");
 
-				refineriesIndex = findClosestRefinery();
-				log("Reverting to known refinery at " + refineries[refineriesIndex]);
-				break;
+					refineriesIndex = findClosestRefinery();
+					log("Reverting to known refinery at " + refineries[refineriesIndex]);
+					break;
+				} else {
+					return;
+				}
 			}
 
 			// if centerOfVisibleSoup is better than buildRefineryLocation, replace it
@@ -273,13 +305,15 @@ public class BotMiner extends Globals {
 			// build buildRefineryLocation to any adjacent tile
 			// otherwise revert to closest refinery
 			if (rc.canSenseLocation(buildRefineryLocation) && !isLocDry(buildRefineryLocation)) {
-				buildRefineryLocation = null;
-				buildRefineryVisibleSoup = -1;
 				log("Refinery build location at " + buildRefineryLocation + " is flooded.");
 
 				log("Trying to build refinery in adjacent tile.");
 				Direction buildDir = tryBuild(RobotType.REFINERY, directions);
 				if (buildDir != null) {
+					buildRefineryLocation = null;
+					buildRefineryVisibleSoup = -1;
+					mustBuild = false;
+
 					MapLocation newLoc = rc.adjacentLocation(buildDir);
 					writeTransactionRefineryBuilt(newLoc);
 					addToRefineries(newLoc);
@@ -287,8 +321,15 @@ public class BotMiner extends Globals {
 				}
 
 				// STATE == did not build refinery
-				refineriesIndex = findClosestRefinery();
-				log("Reverting to known refinery at " + refineries[refineriesIndex]);
+				if (!mustBuild) {
+					buildRefineryLocation = null;
+					buildRefineryVisibleSoup = -1;
+
+					refineriesIndex = findClosestRefinery();
+					log("Reverting to known refinery at " + refineries[refineriesIndex]);
+				} else {
+					return;
+				}
 				break;
 			}
 
@@ -304,12 +345,12 @@ public class BotMiner extends Globals {
 					return;
 				}
 
-				log("Refinery build location at " + buildRefineryLocation + " is not dry & flat & empty.");
-				buildRefineryLocation = null;
-				buildRefineryVisibleSoup = -1;
-
 				Direction newDir = tryBuild(RobotType.REFINERY, directions);
 				if (newDir != null) {
+					buildRefineryLocation = null;
+					buildRefineryVisibleSoup = -1;
+					mustBuild = false;
+
 					MapLocation newLoc = rc.adjacentLocation(newDir);
 					tlog("Built close sub-optimal refinery at " + newLoc);
 					writeTransactionRefineryBuilt(newLoc);
@@ -317,10 +358,18 @@ public class BotMiner extends Globals {
 					return;
 				}
 
-				// resorting to known refineries
-				refineriesIndex = findClosestRefinery();
-				tlog("Reverting to known refinery at " + refineries[refineriesIndex]);
-				break;
+				if (!mustBuild) {
+					log("Refinery build location at " + buildRefineryLocation + " is not dry & flat & empty.");
+					buildRefineryLocation = null;
+					buildRefineryVisibleSoup = -1;
+
+					// resorting to known refineries
+					refineriesIndex = findClosestRefinery();
+					tlog("Reverting to known refinery at " + refineries[refineriesIndex]);
+					break;
+				} else {
+					return;
+				}
 			}
 
 			/*
@@ -335,6 +384,7 @@ public class BotMiner extends Globals {
 				if (newDir != null) {
 					buildRefineryLocation = null;
 					buildRefineryVisibleSoup = -1;
+					mustBuild = false;
 
 					MapLocation newLoc = rc.adjacentLocation(newDir);
 					tlog("Built far sub-optimal refinery at " + newLoc);
@@ -403,11 +453,11 @@ public class BotMiner extends Globals {
 		}
 
 		// if HQ is surrounded by allies, try to move away from HQ to give it space
-		if (here.isAdjacentTo(HQLocation) && rc.senseNearbyRobots(HQLocation, 2, us).length == 8) {
+		if (here.isAdjacentTo(HQLoc) && rc.senseNearbyRobots(HQLoc, 2, us).length == 8) {
 			log("Trying to move away from HQ to unclog it");
 			for (Direction dir: directions) {
 				MapLocation loc = rc.adjacentLocation(dir);
-				if (isDirDryFlatEmpty(dir) && !loc.isAdjacentTo(HQLocation)) {
+				if (isDirDryFlatEmpty(dir) && !loc.isAdjacentTo(HQLoc)) {
 					Actions.doMove(dir);
 					tlog("Moved " + dir);
 					return;
@@ -498,6 +548,8 @@ public class BotMiner extends Globals {
 
 		if (visibleSoup > 0) {
 			centerOfVisibleSoup = new MapLocation(totalX / visibleSoup, totalY / visibleSoup);
+		} else {
+			centerOfVisibleSoup = here;
 		}
 	}
 
@@ -580,10 +632,6 @@ public class BotMiner extends Globals {
 
 		int closestIndex = findClosestRefinery();
 
-		if (closestIndex == -1) {
-			log("No refineries found");
-		}
-
 		// if there is a close enough refinery, target it
 		if (closestIndex != -1 && here.distanceSquaredTo(refineries[closestIndex]) <= REFINERY_DISTANCE_LIMIT) {
 			refineriesIndex = closestIndex;
@@ -592,6 +640,16 @@ public class BotMiner extends Globals {
 		}
 
 		// try to build a refinery
+		if (closestIndex == -1) {
+			mustBuild = true;
+			log("Must build refinery, HQ is walled off");
+
+			buildRefineryLocation = centerOfVisibleSoup;
+			buildRefineryVisibleSoup = visibleSoup;
+			log("Targeting refinery build location at " + buildRefineryLocation + " with " + buildRefineryVisibleSoup + " soup");
+			return;
+		}
+
 		if (rc.getTeamSoup() >= RobotType.REFINERY.cost) {
 			if (visibleSoup >= MIN_SOUP_BUILD_REFINERY) { // enough soup to warrant a refinery
 				if (isLocDry(centerOfVisibleSoup)) { // centerOfVisibleSoup is not flooded

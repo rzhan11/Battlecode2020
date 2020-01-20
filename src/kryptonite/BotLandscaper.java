@@ -53,7 +53,7 @@ public class BotLandscaper extends Globals {
 			return;
 		}
 		for (int i = 0; i < directions.length; i++) {
-			if (isDigLocation(rc.adjacentLocation(directions[i]))) {
+			if (isDigLoc(rc.adjacentLocation(directions[i]))) {
 				isDirDanger[i] = true;
 				isDirMoveable[i] = false;
 			}
@@ -66,11 +66,11 @@ public class BotLandscaper extends Globals {
 				}
 			}
 		}
-		if(maxXYDistance(HQLocation, here) == 1) {
+		if(maxXYDistance(HQLoc, here) == 1) {
 			role = WALL_ROLE;
 			wallBuildLocation = here;
 		}
-		if(maxXYDistance(HQLocation, here) == 2 && wallFull) {
+		if(maxXYDistance(HQLoc, here) == 2 && wallFull) {
 			role = SUPPORT_WALL_ROLE;
 			supportWallBuildLocation = here;
 		}
@@ -97,7 +97,7 @@ public class BotLandscaper extends Globals {
 								int minDirt = 100000;
 								Direction minDir = null;
 								for(Direction d : Globals.allDirections) {
-									if(maxXYDistance(HQLocation, here.add(d)) == 1) {
+									if(maxXYDistance(HQLoc, here.add(d)) == 1) {
 										if(minDirt > rc.senseElevation(here.add(d))) {
 											minDirt = rc.senseElevation(here.add(d));
 											minDir = d;
@@ -169,7 +169,7 @@ public class BotLandscaper extends Globals {
 							int minDirt = 10000;
 							Direction minDir = null;
 							for(Direction d : Globals.directions) {
-								if(maxXYDistance(HQLocation, here.add(d)) == 1 && rc.senseElevation(here.add(d)) < minDirt) {
+								if(maxXYDistance(HQLoc, here.add(d)) == 1 && rc.senseElevation(here.add(d)) < minDirt) {
 									minDirt = rc.senseElevation(here.add(d));
 									minDir = d;
 								}
@@ -247,7 +247,7 @@ public class BotLandscaper extends Globals {
 					role = TERRA_ATTACK_ROLE;
 				}
 				if(role == TERRA_ATTACK_ROLE) {
-					terraTargetLocation = Globals.getSymmetryLocation();
+					terraTargetLocation = Globals.getSymmetryLoc();
 				}
 				break;
 
@@ -279,7 +279,7 @@ public class BotLandscaper extends Globals {
 						else {
 							for(Direction d : Direction.allDirections()) {
 								MapLocation adjLoc = rc.adjacentLocation(d);
-								if(rc.senseElevation(adjLoc) < terraDepth && !isDigLocation(adjLoc) && !Globals.isLocBuilding(adjLoc)) {
+								if(rc.senseElevation(adjLoc) < terraDepth && !isDigLoc(adjLoc) && !Globals.isLocBuilding(adjLoc)) {
 									if(rc.canDepositDirt(d)) Actions.doDepositDirt(d);
 								}
 							}
@@ -300,7 +300,7 @@ public class BotLandscaper extends Globals {
 
 	private static void landscaperDig() throws GameActionException {
 		for(Direction d : Globals.allDirections) {
-			if(isDigLocation(here.add(d))) {
+			if(isDigLoc(here.add(d))) {
 				Debug.ttlog("DIGGING IN DIRECTION: " + d);
 				if(rc.canDigDirt(d)) Actions.doDigDirt(d);
 			}
@@ -309,7 +309,7 @@ public class BotLandscaper extends Globals {
 
 	private static void rerollRole() throws GameActionException {
 		role = ATTACK_ROLE;
-		if(rc.canSenseLocation(HQLocation)) {
+		if(rc.canSenseLocation(HQLoc)) {
 			if(wallFull) {
 				if(supportFull) role = TERRA_ROLE;
 				else {
@@ -327,8 +327,8 @@ public class BotLandscaper extends Globals {
 		else if (role == WALL_ROLE) {
 			wallBuildLocation = null;
 			for(Direction d : landscaperDirections) {
-				if(!rc.canSenseLocation(HQLocation.add(d)) || rc.senseRobotAtLocation(HQLocation.add(d)) == null) {
-					wallBuildLocation = HQLocation.add(d);
+				if(!rc.canSenseLocation(HQLoc.add(d)) || rc.senseRobotAtLocation(HQLoc.add(d)) == null) {
+					wallBuildLocation = HQLoc.add(d);
 					break;
 				}
 			}
@@ -337,9 +337,9 @@ public class BotLandscaper extends Globals {
 		else if(role == SUPPORT_WALL_ROLE) {
 			for(int i = 2; i >= -2; i--) for(int j = 2; j >= -2; j--) {
 				if(Math.abs(i) != 2 && Math.abs(j) != 2) continue;
-				if(!isDigLocation(HQLocation.translate(i, j))) {
-					if (!rc.canSenseLocation(HQLocation.translate(i, j)) ||  rc.senseRobotAtLocation(HQLocation.translate(i, j)) == null) {
-						supportWallBuildLocation = HQLocation.translate(i, j);
+				if(!isDigLoc(HQLoc.translate(i, j))) {
+					if (!rc.canSenseLocation(HQLoc.translate(i, j)) ||  rc.senseRobotAtLocation(HQLoc.translate(i, j)) == null) {
+						supportWallBuildLocation = HQLoc.translate(i, j);
 						break;
 					}
 				}
@@ -351,7 +351,7 @@ public class BotLandscaper extends Globals {
 	private static boolean terraCheck() throws GameActionException {
 		for(Direction d : Globals.allDirections) {
 			MapLocation adjLoc = rc.adjacentLocation(d);
-			if(rc.senseElevation(adjLoc) < terraDepth && !isDigLocation(adjLoc) && !Globals.isLocBuilding(adjLoc)) {
+			if(rc.senseElevation(adjLoc) < terraDepth && !isDigLoc(adjLoc) && !Globals.isLocBuilding(adjLoc)) {
 				Debug.ttlog("TERRA CHECK: FAILED CHECK IN DIRECTION " + d);
 				return false;
 			}

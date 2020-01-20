@@ -12,28 +12,29 @@ public class BotDeliveryDrone extends Globals {
 	// roundNum where drones go onto offense
 	final public static int OFFENSE_DRONE_TRIGGER_ROUND = 2000;
 
-	// nearby pick-up-able robots
-	public static RobotInfo[] allyMoveableRobots;
-	public static int allyMoveableRobotsLength;
-
 	// flooding memory
 	// public static MapLocation[][] floodingMemoryZone;
 	public static MapLocation floodingMemory;
 
-	// what type of robot transport are we doing
-	public static boolean movingRobotToWater; // used to kill enemies
+	public static boolean[] isWallLocFull = new boolean[8];
 
-	public static boolean movingRobotToWall;
-	public static MapLocation movingToWallLocation = null;
+	// what type of robot transport are we doing
+	public static boolean transportRobotToWater; // used to kill enemies
+
+	public static boolean transportRobotToWall;
+	public static MapLocation transportWalLoc = null;
 	public static boolean foundWall = false;
 
-	public static boolean movingRobotInwards;
-	public static boolean movingRobotOutwards;
-	public static MapLocation movingOutwardsLocation = null;
+	public static boolean transportRobotToSupport;
+	public static MapLocation transportSupportLoc = null;
+	public static boolean foundSupport = false;
 
-	public static MapLocation[] campLocations;
-	public static boolean[] campLocationsOccupiedMemory; // the last time this campLocation was visible, was it occupied?
-	public static int campLocationsLength;
+	public static boolean transportRobotToOutwards;
+	public static MapLocation transportOutwardsLoc = null;
+
+	public static MapLocation[] campLocs;
+	public static boolean[] campLocsOccupied; // the last time this campLocation was visible, was it occupied?
+	public static int campLocsLength;
 
 	public static boolean isOffenseDrone = false;
 	public static boolean isDroneSwarming = false;
@@ -48,18 +49,21 @@ public class BotDeliveryDrone extends Globals {
 					log("LOADING CAMP LOCATIONS");
 
 					// determine campLocations
-					campLocations = new MapLocation[] {HQLocation.translate(2, 0), HQLocation.translate(-2, 0), HQLocation.translate(0, 2), HQLocation.translate(0,-2)};
+					campLocs = new MapLocation[] {HQLoc.translate(2, 0), HQLoc.translate(-2, 0), HQLoc.translate(0, 2), HQLoc.translate(0,-2)};
 
-					campLocationsOccupiedMemory = new boolean[campLocations.length];
-					campLocationsLength = 4;
-
-//					if(rc.getRoundNum() % 2 == 0) {
-//						isOffenseDrone = true;
-//					}
-
+					campLocsOccupied = new boolean[campLocs.length];
+					campLocsLength = 4;
 					Globals.endTurn(true);
 					Globals.update();
 				}
+
+				if (wallFull && supportFull) {
+					isOffenseDrone = true;
+				}
+				if (roundNum % 500 == 0) {
+					isDroneSwarming = true;
+				}
+
 				if (isOffenseDrone) {
 					BotDeliveryDroneOffense.turn();
 				} else {
@@ -74,9 +78,32 @@ public class BotDeliveryDrone extends Globals {
 	}
 	public static void turn() throws GameActionException {
 
-		/*
-		update drone specific parameters
-		*/
+		// tries to visually check whether wall is full or not
+		if (!wallFull) {
+			for (int i = 0; i < directions.length; i++) {
+				MapLocation loc = HQLoc.add(directions[i]);
+				if (!rc.onTheMap(loc)) {
+					isWallLocFull[i] = true;
+					continue;
+				}
+				if (rc.canSenseLocation(loc)) {
+					RobotInfo ri = rc.senseRobotAtLocation(loc);
+					if (ri != null && ri.team == us && ri.type == RobotType.LANDSCAPER) {
+						isWallLocFull[i] = true;
+					} else {
+						isWallLocFull[i] = false;
+					}
+				}
+			}
+
+			wallFull = true;
+			for (int i = 0; i < isWallLocFull.length; i++) {
+				if (!isWallLocFull[i]) {
+					wallFull = false;
+					break;
+				}
+			}
+		}
 
 		locateFlooding();
 		log("floodingMemory: " + floodingMemory);
@@ -91,16 +118,6 @@ public class BotDeliveryDrone extends Globals {
 			return;
 		}
 
-		allyMoveableRobots = new RobotInfo[69]; // for sensorRadiusSquared = 24
-		int index = 0;
-		for (RobotInfo ri: visibleAllies) {
-			if (canBePickedUpType(ri.type)) {
-				allyMoveableRobots[index] = ri;
-				index++;
-			}
-		}
-		allyMoveableRobotsLength = index;
-
 		// chase enemies and drop them into water
 		boolean sawEnemy = tryKillRobots(visibleEnemies, them);
 		if (sawEnemy) {
@@ -111,9 +128,15 @@ public class BotDeliveryDrone extends Globals {
 			return;
 		}
 
+		if (wallFull && supportFull) {
+			log("Wall and support full, swarming ally HQ");
+			moveLog(HQLoc);
+			return;
+		}
+
 		if (rc.isCurrentlyHoldingUnit()) {
 
-			if (movingRobotOutwards) { // moves miner to outside of wall/support
+			if (transportRobotToOutwards) { // moves miner to outside of wall/support
 
 				// check adjacent tiles for a tile outside the wall that is not occupied/flooded
 				for (Direction dir : directions) {
@@ -121,49 +144,58 @@ public class BotDeliveryDrone extends Globals {
 					if (!rc.onTheMap(loc)) {
 						continue;
 					}
-					if (maxXYDistance(HQLocation, loc) >= 3 && isLocDryEmpty(loc)) {
+					if (maxXYDistance(HQLoc, loc) >= 3 && isLocDryEmpty(loc)) {
 						log("Dropped robot outside the wall at " +  loc);
 						tlog("Dropped " +  dir);
 						Actions.doDropUnit(dir);
-						movingRobotOutwards = false;
-						movingOutwardsLocation = null;
+						transportRobotToOutwards = false;
+						transportOutwardsLoc = null;
 						return;
 					}
 				}
 
-				// if movingOutwardsLocation is flooded, revert to symmetry
-				if (rc.canSenseLocation(movingOutwardsLocation) && !isLocDry(movingOutwardsLocation)) {
-					log("movingOutwardsLocation is flooded, reverting to symmetry");
-					movingOutwardsLocation = getSymmetryLocation();
+				// if movingOutwardsLoc is flooded, revert to symmetry
+				if (rc.canSenseLocation(transportOutwardsLoc) && !isLocDry(transportOutwardsLoc)) {
+					log("movingOutwardsLoc is flooded, reverting to symmetry");
+					transportOutwardsLoc = getSymmetryLoc();
 				}
 
-				// go towards movingOutwardsLocation
-				log("Moving to drop outwards at " + movingOutwardsLocation);
-				moveLog(movingOutwardsLocation);
+				// go towards movingOutwardsLoc
+				log("Moving to drop outwards at " + transportOutwardsLoc);
+				moveLog(transportOutwardsLoc);
 				return;
 			}
 
-			if (movingRobotToWall) { // moves landscaper to wall
+			while (transportRobotToWall) { // moves landscaper to wall
+				if (wallFull) {
+					log("Wall is full, reverting to support role");
+					transportRobotToWall = false;
+					transportWalLoc = null;
+					foundWall = false;
+					transportRobotToSupport = true;
+					break;
+				}
+
 				// drop robot onto a wall tile that isn't occupied/flooded
 				for (Direction dir : directions) {
 					MapLocation loc = rc.adjacentLocation(dir);
-					if (rc.onTheMap(loc) && maxXYDistance(HQLocation, loc) == 2 && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
+					if (rc.onTheMap(loc) && maxXYDistance(HQLoc, loc) == 1 && isLocDryEmpty(loc)) {
 						log("Dropped robot on the wall at " +  loc);
-							tlog("Dropped " +  dir);
-							Actions.doDropUnit(dir);
-							movingRobotToWall = false;
-							movingToWallLocation = null;
-							foundWall = false;
+						tlog("Dropped " +  dir);
+						Actions.doDropUnit(dir);
+						transportRobotToWall = false;
+						transportWalLoc = null;
+						foundWall = false;
 						return;
 					}
 				}
 
-				// reset movingToWallLocation if flooded/occupied
-				if (movingToWallLocation != null && rc.canSenseLocation(movingToWallLocation)) {
-				 	if (!isLocDryEmpty(movingToWallLocation)) {
-						movingToWallLocation = null;
+				// reset movingToWallLoc if flooded/occupied
+				if (transportWalLoc != null && rc.canSenseLocation(transportWalLoc)) {
+					if (!isLocDryEmpty(transportWalLoc)) {
+						transportWalLoc = null;
 						foundWall = false;
-						log("movingToWallLocation is flooded/occupied, resetting it");
+						log("movingToWallLoc is flooded/occupied, resetting it");
 					}
 				}
 
@@ -174,29 +206,106 @@ public class BotDeliveryDrone extends Globals {
 							break;
 						}
 						MapLocation loc = here.translate(dir[0], dir[1]);
-						if (maxXYDistance(HQLocation, loc) == 2) {
+						if (maxXYDistance(HQLoc, loc) == 1) {
 							if (rc.canSenseLocation(loc) && isLocDryEmpty(loc)) {
-								movingToWallLocation = loc;
+								transportWalLoc = loc;
 								foundWall = true;
-								log("Setting movingToWallLocation to " + movingToWallLocation);
+								log("Setting movingToWallLoc to " + transportWalLoc);
 								break;
 							}
 						}
 					}
 				}
 
-				if (movingToWallLocation == null || here.equals(movingToWallLocation)) {
+				if (transportWalLoc == null || here.equals(transportWalLoc)) {
 					// if no visible open/nonflooded wall locations, try to move to the reflected position across the HQLocation
-					int dx = HQLocation.x - here.x;
-					int dy = HQLocation.y - here.y;
-					movingToWallLocation = new MapLocation(HQLocation.x + dx, HQLocation.y + dy);
+					int dx = HQLoc.x - here.x;
+					int dy = HQLoc.y - here.y;
+					transportWalLoc = new MapLocation(HQLoc.x + dx, HQLoc.y + dy);
 					foundWall = false;
-					log("Reflecting movingToWallLocation across HQ to " + movingToWallLocation);
+					log("Reflecting movingToWallLoc across HQ to " + transportWalLoc);
 				}
 
-				// moves towards movingToWallLocation
-				log("Moving to movingToWallLocation at " + movingToWallLocation);
-				moveLog(movingToWallLocation);
+				// moves towards movingToWallLoc
+				log("Moving to movingToWallLoc at " + transportWalLoc);
+				moveLog(transportWalLoc);
+				return;
+			}
+
+			while (transportRobotToSupport) { // moves landscaper to support
+				if (supportFull) {
+					log("Support role is full, reverting to movingRobotOutwards");
+
+					transportRobotToSupport = false;
+					transportSupportLoc = null;
+					foundSupport = false;
+
+					Direction dirFromHQ = HQLoc.directionTo(here);
+					transportRobotToOutwards = true;
+					transportOutwardsLoc = here.add(dirFromHQ).add(dirFromHQ);
+					if (!rc.onTheMap(transportOutwardsLoc)) {
+						tlog("Initial movingOutwardsLoc not in map, reverting to symmetry");
+						transportOutwardsLoc = getSymmetryLoc();
+					}
+					break;
+				}
+
+				// drop robot onto a support tile that isn't occupied/flooded
+				for (Direction dir : directions) {
+					MapLocation loc = rc.adjacentLocation(dir);
+					if (!rc.onTheMap(loc)) {
+						continue;
+					}
+					if (maxXYDistance(HQLoc, loc) == 2 && !isDigLoc(loc) && isLocDryEmpty(loc)) {
+						log("Dropped robot on the support wall at " +  loc);
+						tlog("Dropped " +  dir);
+						Actions.doDropUnit(dir);
+						transportRobotToSupport = false;
+						transportSupportLoc = null;
+						foundSupport = false;
+						return;
+					}
+				}
+
+				// reset movingToSupportLoc if flooded/occupied
+				if (transportSupportLoc != null && rc.canSenseLocation(transportSupportLoc)) {
+					if (!isLocDryEmpty(transportSupportLoc)) {
+						transportSupportLoc = null;
+						foundSupport = false;
+						log("movingToSupportLoc is flooded/occupied, resetting it");
+					}
+				}
+
+				// looks for an support location that is not flooded or occupied
+				if (!foundSupport) {
+					for (int[] dir: senseDirections) {
+						if (actualSensorRadiusSquared < dir[2]) {
+							break;
+						}
+						MapLocation loc = here.translate(dir[0], dir[1]);
+						if (maxXYDistance(HQLoc, loc) == 1) {
+							if (rc.canSenseLocation(loc) && isLocDryEmpty(loc)) {
+								transportSupportLoc = loc;
+								foundSupport = true;
+								log("Setting movingToSupportLoc to " + transportSupportLoc);
+								break;
+							}
+						}
+					}
+				}
+
+				if (transportSupportLoc == null || here.equals(transportSupportLoc)) {
+					// if no visible open/nonflooded support positions, try to move to the reflected position across the HQLocation
+					int dx = HQLoc.x - here.x;
+					int dy = HQLoc.y - here.y;
+					transportSupportLoc = new MapLocation(HQLoc.x + dx, HQLoc.y + dy);
+					foundSupport = false;
+					log("Reflecting movingToSupportLoc across HQ to " + transportSupportLoc);
+				}
+
+				// moves towards movingToSupportLoc
+				log("Moving to movingToSupportLoc at " + transportSupportLoc);
+				moveLog(transportSupportLoc);
 				return;
 			}
 
@@ -209,18 +318,60 @@ public class BotDeliveryDrone extends Globals {
 				}
 			}
 
+			for (RobotInfo ri: visibleAllies) {
+				if (ri.type.canBePickedUp()) {
+					if (here.isAdjacentTo(ri.location)) {
+						continue;
+					}
+
+					boolean shouldTransport = false;
+					int curRing = maxXYDistance(HQLoc, ri.location);
+
+					if (ri.type == RobotType.LANDSCAPER) {
+						if (isDigLoc(ri.location)) {
+							shouldTransport = true;
+						}
+						if (!wallFull) {
+							if (2 <= curRing && curRing <= 3) {
+								shouldTransport = true;
+							}
+						} else if (!supportFull) {
+							if (3 <= curRing && curRing <= 4) {
+								shouldTransport = true;
+							}
+						}
+					} else {
+						// STATE == 'ri' is a miner
+						if (curRing == 1 && ri.soupCarrying == 0) {
+							shouldTransport = true;
+						}
+						if (curRing == 2 && (wallFull || ri.soupCarrying == 0)) {
+							shouldTransport = true;
+						}
+						if (curRing <= 2 && isDigLoc(ri.location)) {
+							shouldTransport = true;
+						}
+					}
+					if (shouldTransport) {
+						log("Moving to transport ally at " + ri.location);
+						moveLog(ri.location);
+						return;
+					}
+				}
+			}
+
 
 			// STATE: no adjacent, pick-up-able ally robots are on inner/outer transport tiles or wall
 
 			// checks if we are already in an campLocation
 
-			if (inArray(campLocations, here, campLocationsLength)) {
+			if (inArray(campLocs, here, campLocsLength)) {
 				log("Already in an campLocation, just chilling here.");
 				return;
 			}
 
 			// STATE == not in an campLocation
-			MapLocation closestCampLocation = findClosestOpenLocation(campLocations, campLocationsOccupiedMemory, campLocationsLength);
+			MapLocation closestCampLocation = findClosestOpenLocation(campLocs, campLocsOccupied, campLocsLength);
 			if (closestCampLocation != null) {
 				// go to dig location
 				log("Moving to closestCampLocation at " + closestCampLocation);
@@ -240,31 +391,31 @@ public class BotDeliveryDrone extends Globals {
 	Given an array of MapLocations and memory of its prior occupation
 	Return the closest available one
 	*/
-	public static MapLocation findClosestOpenLocation (MapLocation[] targetLocations, boolean[] targetLocationsOccupiedMemory, int targetLocationsLength) throws GameActionException {
+	public static MapLocation findClosestOpenLocation (MapLocation[] targetLocs, boolean[] targetLocsOccupied, int targetLocsLength) throws GameActionException {
 
 		int closestTargetDist = P_INF;
-		MapLocation closestTargetLocation = null;
-		for (int i = 0; i < targetLocationsLength; i++) {
-			int dist = here.distanceSquaredTo(targetLocations[i]);
+		MapLocation closestTargetLoc = null;
+		for (int i = 0; i < targetLocsLength; i++) {
+			int dist = here.distanceSquaredTo(targetLocs[i]);
 			if (dist < closestTargetDist) {
-				if (rc.canSenseLocation(targetLocations[i])) { // prioritize visible targetLocations
-					if (rc.senseRobotAtLocation(targetLocations[i]) == null) {
-						targetLocationsOccupiedMemory[i] = false;
+				if (rc.canSenseLocation(targetLocs[i])) { // prioritize visible targetLocs
+					if (rc.senseRobotAtLocation(targetLocs[i]) == null) {
+						targetLocsOccupied[i] = false;
 						closestTargetDist = dist;
-						closestTargetLocation = targetLocations[i];
+						closestTargetLoc = targetLocs[i];
 					} else {
-						targetLocationsOccupiedMemory[i] = true;
+						targetLocsOccupied[i] = true;
 					}
-				} else if (closestTargetLocation == null && !targetLocationsOccupiedMemory[i]) {
-					// only check not visible targetLocations if we haven't found any visible ones yet
+				} else if (closestTargetLoc == null && !targetLocsOccupied[i]) {
+					// only check not visible targetLocs if we haven't found any visible ones yet
 					// this targetLocation also must not have been occupied (in previous turns)
 					closestTargetDist = dist;
-					closestTargetLocation = targetLocations[i];
+					closestTargetLoc = targetLocs[i];
 				}
 			}
 		}
 
-		return closestTargetLocation;
+		return closestTargetLoc;
 	}
 
 	/*
@@ -273,44 +424,62 @@ public class BotDeliveryDrone extends Globals {
 	Returns false otherwise
 	*/
 	public static boolean tryPickUpTransport (RobotInfo ri) throws GameActionException {
-		if (canBePickedUpType(ri.type)) {
-			int curRing = maxXYDistance(HQLocation, ri.location);
-			Direction dirFromHQ = HQLocation.directionTo(ri.location);
+		if (ri.type.canBePickedUp()) {
+			int curRing = maxXYDistance(HQLoc, ri.location);
+			Direction dirFromHQ = HQLoc.directionTo(ri.location);
 
 			if (ri.type == RobotType.LANDSCAPER) {
-				if (isDigLocation(ri.location)) {
+				if (isDigLoc(ri.location)) {
 					Actions.doPickUpUnit(ri.ID);
 
-					movingRobotToWall = true;
-					tlog("Moving landscaper from dig loc to wall");
+					if (!wallFull) {
+						transportRobotToWall = true;
+						tlog("Transporting landscaper from dig loc to wall");
+					} else if (supportFull) {
+						transportRobotToSupport = true;
+						tlog("Transporting landscaper from dig loc to support");
+					} else {
+						transportRobotToOutwards = true;
+						transportOutwardsLoc = ri.location.add(dirFromHQ).add(dirFromHQ);
+						tlog("Transporting landscaper from dig loc to outwards " + transportOutwardsLoc);
+						if (!rc.onTheMap(transportOutwardsLoc)) {
+							tlog("Initial movingOutwardsLoc not in map, reverting to symmetry");
+							transportOutwardsLoc = getSymmetryLoc();
+						}
+					}
 					return true;
 				}
-				if (!wallFull && 2 <= curRing && curRing <= 3) {
-					Actions.doPickUpUnit(ri.ID);
+				if (!wallFull) {
+					if (2 <= curRing && curRing <= 3) {
+						Actions.doPickUpUnit(ri.ID);
 
-					movingRobotToWall = true;
-					tlog("Moving landscaper to wall");
-					return true;
+						transportRobotToWall = true;
+						tlog("Transporting landscaper to wall");
+						return true;
+					}
+				} else if (!supportFull) {
+					if (3 <= curRing && curRing <= 4) {
+						Actions.doPickUpUnit(ri.ID);
+
+						transportRobotToSupport = true;
+						tlog("Transporting landscaper to support wall");
+						return true;
+					}
 				}
-//				if (!supportFull && 3 <= curRing && curRing <= 4) {
-//					movingRobotToSupport = true;
-//					tlog("Moving landscaper to support wall");
-//					return true;
-//				}
 				return false;
 			} else {
 				// STATE == 'ri' is a miner
-				if (isDigLocation(ri.location) ||
-						curRing == 1 ||
-						(curRing == 2 && wallFull)) {
+				if ((curRing == 1 && ri.soupCarrying == 0) ||
+						curRing == 2 && (wallFull || ri.soupCarrying == 0) ||
+						(curRing <= 2 && isDigLoc(ri.location))) {
 					Actions.doPickUpUnit(ri.ID);
 
-					movingRobotOutwards = true;
-					movingOutwardsLocation = ri.location.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
-					tlog("Moving robot outwards to " + movingOutwardsLocation);
-					if (!rc.onTheMap(movingOutwardsLocation)) {
-						tlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
-						movingOutwardsLocation = getSymmetryLocation();
+					transportRobotToOutwards = true;
+					transportOutwardsLoc = ri.location.add(dirFromHQ).add(dirFromHQ);
+					tlog("Transporting miner outwards to " + transportOutwardsLoc);
+					if (!rc.onTheMap(transportOutwardsLoc)) {
+						tlog("Initial movingOutwardsLoc not in map, reverting to symmetry");
+						transportOutwardsLoc = getSymmetryLoc();
 					}
 					return true;
 				}
@@ -326,7 +495,7 @@ public class BotDeliveryDrone extends Globals {
 	*/
 	public static boolean tryKillRobots (RobotInfo[] targetRobots, Team killTeam) throws GameActionException {
 		if (rc.isCurrentlyHoldingUnit()) {
-			if (!movingRobotToWater) {
+			if (!transportRobotToWater) {
 				return false;
 			} else {
 				// check for adjacent empty water
@@ -335,7 +504,7 @@ public class BotDeliveryDrone extends Globals {
 					if (rc.onTheMap(loc) && rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
 						log("Dropped unit into water at " + loc);
 						Actions.doDropUnit(dir);
-						movingRobotToWater = false;
+						transportRobotToWater = false;
 						return true;
 					}
 				}
@@ -368,7 +537,7 @@ public class BotDeliveryDrone extends Globals {
 
 				// move away from hq
 				log("Moving away from HQ to look for water");
-				Direction dirFromHQ = HQLocation.directionTo(here);
+				Direction dirFromHQ = HQLoc.directionTo(here);
 				Direction move = Nav.tryMoveInGeneralDirection(dirFromHQ);
 				if (move != null) {
 					tlog("Moved " + move);
@@ -384,9 +553,9 @@ public class BotDeliveryDrone extends Globals {
 				MapLocation loc = rc.adjacentLocation(dir);
 				if (rc.onTheMap(loc)) {
 					RobotInfo ri = rc.senseRobotAtLocation(loc);
-					if (ri != null && ri.team == killTeam && rc.canPickUpUnit(ri.ID)) {
+					if (ri != null && ri.team == killTeam && ri.type.canBePickedUp()) {
 						Actions.doPickUpUnit(ri.ID);
-						movingRobotToWater = true;
+						transportRobotToWater = true;
 						log("Picked up unit at " + loc);
 						return true;
 					}
@@ -398,7 +567,7 @@ public class BotDeliveryDrone extends Globals {
 			int closestEnemyIndex = -1;
 			int index = 0;
 			for (RobotInfo ri: targetRobots) {
-				if (canBePickedUpType(ri.type)) {
+				if (ri.type.canBePickedUp()) {
 					int dist = here.distanceSquaredTo(ri.location);
 					if (dist < closestEnemyDist) {
 						closestEnemyDist = dist;

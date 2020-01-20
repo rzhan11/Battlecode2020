@@ -2,10 +2,7 @@ package kryptonite;
 
 import battlecode.common.*;
 
-import static kryptonite.Communication.*;
-import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
-import static kryptonite.Map.*;
 
 public class BotDeliveryDroneOffense extends BotDeliveryDrone {
 
@@ -24,6 +21,9 @@ public class BotDeliveryDroneOffense extends BotDeliveryDrone {
 
     public static void turn() throws GameActionException {
         log("OFFENSE DRONE");
+        if (isDroneSwarming) {
+            tlog("SWARMING");
+        }
 
         if (!rc.isReady()) {
             log("Not ready");
@@ -98,7 +98,7 @@ public class BotDeliveryDroneOffense extends BotDeliveryDrone {
         }
 
         // if enemyHQLocation not found, go to exploreSymmetryLocation
-        MapLocation targetLoc = getSymmetryLocation();
+        MapLocation targetLoc = getSymmetryLoc();
         if (enemyHQLocation == null) {
             log("Moving towards symmetry location at " + targetLoc);
         } else {

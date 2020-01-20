@@ -8,7 +8,7 @@ import static kryptonite.Zones.*;
 public class Debug extends Globals {
 
 	public static boolean SILENCE_LOGS = false;
-	public static boolean SILENCE_INDICATORS = true;
+	public static boolean SILENCE_INDICATORS = false;
 
 	/*
 	Selectively turn off print logs for certain units
@@ -19,7 +19,7 @@ public class Debug extends Globals {
 			return false;
 		}
 		switch (myType) {
-			case DELIVERY_DRONE: return false;
+			case DELIVERY_DRONE: return true;
 			case DESIGN_SCHOOL: return true;
 			case FULFILLMENT_CENTER: return true;
 			case HQ: return true;
@@ -47,18 +47,18 @@ public class Debug extends Globals {
 		}
 		switch (myType) {
 			case DELIVERY_DRONE: return true;
-			case DESIGN_SCHOOL: return false;
-			case FULFILLMENT_CENTER: return false;
+			case DESIGN_SCHOOL: return true;
+			case FULFILLMENT_CENTER: return true;
 			case HQ: return true;
-			case LANDSCAPER: return false;
+			case LANDSCAPER: return true;
 			case MINER:
 				if (isBuilderMiner(myID)) {
 					return true;
 				}
 				return true;
 			case NET_GUN: return true;
-			case REFINERY: return false;
-			case VAPORATOR: return false;
+			case REFINERY: return true;
+			case VAPORATOR: return true;
 			default:
 				logi("ERROR: Sanity check failed - unknown class " + myType);
 				return false;
@@ -142,7 +142,7 @@ public class Debug extends Globals {
 	}
 
 	public static void drawZoneStatus () {
-		if (roundNum == 1 || us == Team.B) {
+		if (roundNum == 1 || us == Team.B || us == Team.A) {
 			return;
 		}
 		for (int i = 0; i < numXZones; i++) {

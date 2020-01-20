@@ -295,10 +295,10 @@ public class Communication extends Globals {
 
 	public static void readTransactionHQFirstTurn (int[] message, int round) {
 		tlog("Reading 'HQ First Turn' transaction");
-		HQLocation = new MapLocation(message[2], message[3]);
+		HQLoc = new MapLocation(message[2], message[3]);
 		HQElevation = message[4];
 		ttlog("Submitter ID: " + decryptID(message[0]));
-		ttlog("Location: " + HQLocation);
+		ttlog("Location: " + HQLoc);
 		ttlog("Elevation: " + HQElevation);
 		ttlog("Posted round: " + round);
 	}

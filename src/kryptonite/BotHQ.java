@@ -54,11 +54,14 @@ public class BotHQ extends Globals {
 
 		if(!wallFull) {
 			boolean flag = true;
-			for(Direction d : Globals.directions) {
-				if(rc.senseRobotAtLocation(here.add(d)) == null ||
-					rc.senseRobotAtLocation(here.add(d)).type != RobotType.LANDSCAPER ||
-					rc.senseRobotAtLocation(here.add(d)).team != us
-				) {
+			for(Direction d : directions) {
+				MapLocation loc = rc.adjacentLocation(d);
+				if (!rc.onTheMap(loc)) {
+					continue;
+				}
+				if(rc.senseRobotAtLocation(loc) == null ||
+					rc.senseRobotAtLocation(loc).type != RobotType.LANDSCAPER ||
+					rc.senseRobotAtLocation(loc).team != us) {
 					flag = false;
 					break;
 				}
@@ -75,7 +78,7 @@ public class BotHQ extends Globals {
 				if (!rc.onTheMap(loc)) {
 					continue;
 				}
-				if(!isDigLocation(loc) && rc.senseRobotAtLocation(loc) == null) {
+				if(!isDigLoc(loc) && rc.senseRobotAtLocation(loc) == null) {
 					flag = false;
 					break;
 				}
@@ -108,7 +111,7 @@ public class BotHQ extends Globals {
 		/*
 		build explorer miners that explore symmetries
 		*/
-		if (explorerMinerCount < 8) {
+		if (explorerMinerCount < 7) {
 			if (rc.getTeamSoup() >= RobotType.MINER.cost) {
 				buildMiner();
 			} else {
@@ -118,21 +121,30 @@ public class BotHQ extends Globals {
 		}
 
 		//if explorer miners have been build and have enough money, build a BuilderMiner
-		if (!madeBuilderMiner && rc.getTeamSoup() >= RobotType.MINER.cost) {
-			//try building
-			for (Direction dir: directions) {
-				if (isDirDryFlatEmpty(dir)) {
-					log("Building builder miner");
-					Actions.doBuildRobot(RobotType.MINER, dir);
+		if (!madeBuilderMiner) {
+			if(rc.getTeamSoup() >= RobotType.MINER.cost) {
+				//try building
+				log("Building builder miner");
+				Direction buildDir = tryBuild(RobotType.MINER, directions);
+				if (buildDir != null) {
 					madeBuilderMiner = true;
-
-					RobotInfo ri = rc.senseRobotAtLocation(rc.adjacentLocation(dir));
+					RobotInfo ri = rc.senseRobotAtLocation(rc.adjacentLocation(buildDir));
 					writeTransactionBuilderMinerBuilt(ri.ID);
-
-					return;
 				}
+			} else {
+				log("Not enough soup to build explorer miner");
 			}
+			return;
 		}
+
+//		if (explorerMinerCount < 8) {
+//			if (rc.getTeamSoup() >= RobotType.MINER.cost) {
+//				buildMiner();
+//			} else {
+//				log("Not enough soup to build 5-8 explorer miner");
+//			}
+//			return;
+//		}
 
 		// @todo: Create Attack Miners
 	}
@@ -146,7 +158,7 @@ public class BotHQ extends Globals {
 		Direction[] orderedDirections;
 		MapLocation target = null;
 		if (closestVisibleSoupLoc == null) {
-			target = getSymmetryLocation();
+			target = getSymmetryLoc();
 		} else {
 			target = closestVisibleSoupLoc;
 		}

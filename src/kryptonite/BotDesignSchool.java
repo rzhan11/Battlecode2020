@@ -2,8 +2,6 @@ package kryptonite;
 
 import battlecode.common.*;
 
-import static kryptonite.Communication.*;
-import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
 
@@ -11,14 +9,13 @@ public class BotDesignSchool extends Globals {
 
 	public static int landscapersBuilt = 0;
 	public static int roundParity = -1;
-	public static int roundNumBuilt = 0;
 
 	public static void loop() throws GameActionException {
 		while (true) {
 			try {
 				Globals.update();
 				if (firstTurn) {
-
+					roundParity = spawnRound % 2;
 				}
 				turn();
 			} catch (Exception e) {
@@ -34,25 +31,27 @@ public class BotDesignSchool extends Globals {
 			log("Not ready");
 			return;
 		}
-		if (roundNumBuilt == 0) {
-			roundNumBuilt = roundNum;
-			roundParity = roundNum % 2;
-		}
-		// close to hq one
-		if (roundParity < 0) {
-			if (landscapersBuilt < 5) {
-				designBuild(getCloseDirections(here.directionTo(HQLocation)));
-				return;
-			}
-		}
 
-		// other type of design school
-		else {
-			if (roundNum % 20 == roundNumBuilt % 20) {
+		if (landscapersBuilt < 5) {
+			designBuild(getCloseDirections(here.directionTo(HQLoc)));
+			return;
+		} else {
+			if (roundNum % 10 == spawnRound % 10) {
 				designBuild(directions);
 				return;
 			}
 		}
+
+//		// close to hq one
+//		if (roundParity < 0) {
+//
+//		} else {
+//			// other type of design school
+//			if (roundNum % 20 == roundNumBuilt % 20) {
+//				designBuild(directions);
+//				return;
+//			}
+//		}
 	}
 
 	private static void designBuild(Direction[] dirs) throws GameActionException{

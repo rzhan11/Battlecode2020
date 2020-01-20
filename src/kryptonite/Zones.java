@@ -187,7 +187,7 @@ public class Zones extends Globals {
 //		tlog("FIND CLOSEST ZONE BYTES: " + (startByte - Clock.getBytecodesLeft()));
         if (closestLoc == null) {
             log("Cannot find nearby unexplored zone, going to symmetry location zone");
-            return getSymmetryLocation();
+            return getSymmetryLoc();
         }
         return closestLoc;
     }

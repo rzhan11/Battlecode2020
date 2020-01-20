@@ -2,8 +2,6 @@ package kryptonite;
 
 import battlecode.common.*;
 
-import static kryptonite.Constants.*;
-import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
 
@@ -33,8 +31,8 @@ public class BotMinerBuilder extends BotMiner {
 
 	public static void init() throws GameActionException {
 		// hardcoded locations of design school and fulfillment center
-		designSchoolLocation = new MapLocation(HQLocation.x-1,HQLocation.y);
-		fulfillmentCenterLocation = new MapLocation(HQLocation.x+1,HQLocation.y);
+		designSchoolLocation = new MapLocation(HQLoc.x-1, HQLoc.y);
+		fulfillmentCenterLocation = new MapLocation(HQLoc.x+1, HQLoc.y);
 
 		dnetGunBuildLocations = new int[][]{{-2,2},{-2,-2},{2,-2},{2,2},{-2,2},{-2,-2},{2,-2},{2,2}};
 		dnetGunLocations = new int[][]{{-2,3},{-2,-3},{2,-3},{2,3},{-3,2},{-3,-2},{3,-2},{3,2}};
@@ -57,7 +55,7 @@ public class BotMinerBuilder extends BotMiner {
 		}
 
 		for (int i = 0; i < directions.length; i++) {
-			if (isDigLocation(rc.adjacentLocation(directions[i]))) {
+			if (isDigLoc(rc.adjacentLocation(directions[i]))) {
 				isDirDanger[i] = true;
 				isDirMoveable[i] = false;
 			}
@@ -76,7 +74,7 @@ public class BotMinerBuilder extends BotMiner {
 				//find a spot in the 7x7 where it can build fulfillment center
 				for (Direction dir: directions) {
 					MapLocation loc = rc.adjacentLocation(dir);
-					if (maxXYDistance(HQLocation, loc) == 3 && isBuildLocation(loc)) {
+					if (maxXYDistance(HQLoc, loc) == 3 && isBuildLocation(loc)) {
 						if (isDirDryFlatEmpty(dir)) {
 							Actions.doBuildRobot(RobotType.DESIGN_SCHOOL, dir);
 							designSchoolBuilt = true;
@@ -93,7 +91,7 @@ public class BotMinerBuilder extends BotMiner {
 					}
 					MapLocation buildLocation = here.translate(dir[0], dir[1]);
 					// forces it to be on 7x7 ring
-					if (maxXYDistance(HQLocation, buildLocation) == 3 && isBuildLocation(buildLocation)) {
+					if (maxXYDistance(HQLoc, buildLocation) == 3 && isBuildLocation(buildLocation)) {
 						if (isLocDryEmpty(buildLocation)) {
 							log("Moving to build design school");
 							moveLog(buildLocation);
@@ -112,12 +110,12 @@ public class BotMinerBuilder extends BotMiner {
 
 		if (!fulfillmentCenterBuilt) {
 			log("Trying for fulfillmentCenter");
-			if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost) {
+			if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost + RobotType.REFINERY.cost) {
 
 				//find a spot in the 7x7 where it can build fulfillment center
 				for (Direction dir: directions) {
 					MapLocation loc = rc.adjacentLocation(dir);
-					if (maxXYDistance(HQLocation, loc) == 3 && isBuildLocation(loc)) {
+					if (maxXYDistance(HQLoc, loc) == 3 && isBuildLocation(loc)) {
 						if (isDirDryFlatEmpty(dir)) {
 							Actions.doBuildRobot(RobotType.FULFILLMENT_CENTER, dir);
 							fulfillmentCenterBuilt = true;
@@ -134,7 +132,7 @@ public class BotMinerBuilder extends BotMiner {
 					}
 					MapLocation buildLocation = here.translate(dir[0], dir[1]);
 					// forces it to be on 7x7 ring
-					if (maxXYDistance(HQLocation, buildLocation) == 3 && isBuildLocation(buildLocation)) {
+					if (maxXYDistance(HQLoc, buildLocation) == 3 && isBuildLocation(buildLocation)) {
 						if (isLocDryEmpty(buildLocation)) {
 							log("Moving to build fulfillment center");
 							moveLog(buildLocation);
