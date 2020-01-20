@@ -369,27 +369,11 @@ public class BotDeliveryDrone extends Globals {
 
 			// checks if we are already in an campLocation
 
-			if (inArray(campLocs, here, campLocsLength)) {
-				log("Already in an campLocation, just chilling here.");
-				return;
-			}
-
-			// STATE == not in an campLocation
-			MapLocation closestCampLocation = findClosestOpenLocation(campLocs, campLocsOccupied, campLocsLength);
-			if (closestCampLocation != null) {
-				// go to dig location
-				log("Moving to closestCampLocation at " + closestCampLocation);
-				Direction move = Nav.bugNavigate(closestCampLocation);
-				if (move != null) {
-					tlog("Moved " + move);
-				} else {
-					tlog("But no move found");
-				}
-				return;
-			}
-
-			log("Inner and outer dig locations are visibly occupied or occupied in memory");
-			isOffenseDrone = true;
+			Direction dirToHQ = HQLoc.directionTo(here);
+			Direction targetDir = dirToHQ.rotateRight();
+			MapLocation targetLoc = HQLoc.add(targetDir).add(targetDir);
+			log("Rotating around ally HQ");
+			moveLog(targetLoc);
 		}
 	}
 

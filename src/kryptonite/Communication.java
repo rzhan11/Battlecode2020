@@ -143,7 +143,7 @@ public class Communication extends Globals {
 				Communication.writeTransactionSupportWallFull();
 			}
 			if (enemyHQLoc != null) {
-				 Communication.writeTransactionEnemyHQLocation(symmetryHQLocationsIndex, 1);
+			 	Communication.writeTransactionEnemyHQLocation(symmetryHQLocationsIndex, 1);
 			}
 		}
 	}
@@ -621,13 +621,14 @@ message[3] = y coordinate of our HQ
 
 	public static void readTransactionEnemyHQLocation (int[] message, int round) throws GameActionException {
 		if (message[3] == 1) {
-			BotDeliveryDroneOffense.enemyHQLoc = symmetryHQLocations[message[2]];
+			symmetryHQLocationsIndex = message[2];
+			BotDeliveryDroneOffense.enemyHQLoc = symmetryHQLocations[symmetryHQLocationsIndex];
 		}
-		BotDeliveryDroneOffense.isSymmetryHQLocation[message[2]] = message[3];
+		BotDeliveryDroneOffense.isSymmetryHQLocation[symmetryHQLocationsIndex] = message[3];
 		log("Reading transaction for 'Enemy HQ Location'");
 		log("Submitter ID: " + decryptID(message[0]));
-		log("Location: " + symmetryHQLocations[message[2]]);
-		log("Exists: " + BotDeliveryDroneOffense.isSymmetryHQLocation[message[2]]);
+		log("Location: " + symmetryHQLocations[symmetryHQLocationsIndex]);
+		log("Exists: " + BotDeliveryDroneOffense.isSymmetryHQLocation[symmetryHQLocationsIndex]);
 		log("Posted round: " + round);
 	}
 
