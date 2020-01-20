@@ -8,7 +8,7 @@ import static kryptonite.Zones.*;
 public class Debug extends Globals {
 
 	public static boolean SILENCE_LOGS = false;
-	public static boolean SILENCE_INDICATORS = false;
+	public static boolean SILENCE_INDICATORS = true;
 
 	/*
 	Selectively turn off print logs for certain units
