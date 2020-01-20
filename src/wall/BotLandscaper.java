@@ -31,8 +31,7 @@ public class BotLandscaper extends Globals {
 				checkSelfDestructed = true;
 				Direction dir = here.directionTo(getSymmetryLocation());
 				if (maxXYDistance(HQLocation, here) == 4 && manhattanDistance(HQLocation, here) == 4) {
-					int[] array = new int[1];
-					log("exception " + array[1]);
+					rc.disintegrate();
 				}
 			}
 			try {

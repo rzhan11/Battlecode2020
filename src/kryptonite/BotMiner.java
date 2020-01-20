@@ -88,6 +88,25 @@ public class BotMiner extends Globals {
 			return;
 		}
 
+		boolean seesAllyShoot = false;
+		for (RobotInfo ri: visibleAllies) {
+			if (ri.type.canShoot()) {
+				seesAllyShoot = true;
+			}
+		}
+
+		if (!seesAllyShoot && rc.getTeamSoup() >= RobotType.NET_GUN.cost) {
+			for (RobotInfo ri: visibleEnemies) {
+				if (ri.type == RobotType.DELIVERY_DRONE) {
+					Direction dir = tryBuild(RobotType.NET_GUN, directions);
+					if (dir != null) {
+						log("Built net gun");
+						return;
+					}
+				}
+			}
+		}
+
 		//
 		if (rc.getSoupCarrying() == 0) {
 			int myRing = maxXYDistance(HQLoc, here);
