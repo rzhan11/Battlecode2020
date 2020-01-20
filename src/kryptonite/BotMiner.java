@@ -5,6 +5,7 @@ import battlecode.common.*;
 import static kryptonite.Communication.*;
 import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
+import static kryptonite.HardCode.*;
 import static kryptonite.Map.*;
 import static kryptonite.Zones.*;
 
@@ -84,6 +85,49 @@ public class BotMiner extends Globals {
 		if (!rc.isReady()) {
 			log("Not ready");
 			return;
+		}
+
+		while (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
+			//checks to see if there are too many adjacent allies/vaporators
+			if (visibleAllies.length >= 25) {
+				break;
+			}
+			int count = 0;
+			for (RobotInfo ri: visibleAllies) {
+				if (ri.type == RobotType.VAPORATOR) {
+					count++;
+				}
+			}
+			if (count > 3) {
+				break;
+			}
+
+			// find the highest valid adjacent tile
+			Direction highestDir = null;
+			int highestElevation = N_INF;
+			for (Direction dir: directions) {
+				MapLocation loc = rc.adjacentLocation(dir);
+				if (!rc.onTheMap(loc)) {
+					continue;
+				}
+				if (isDirDryFlatEmpty(dir) && !isDigLocation(loc) && maxXYDistance(HQLocation, loc) >= 2) {
+					int elevation = rc.senseElevation(loc);
+					if (elevation > highestElevation) {
+						highestDir = dir;
+						highestElevation = elevation;
+					}
+				}
+			}
+			// checks to make sure it is worth it
+			if (highestDir != null) {
+				int minRevenue = (getRoundFlooded(highestElevation) - spawnRound) * RobotType.VAPORATOR.maxSoupProduced;
+				if (minRevenue >= 2 * RobotType.VAPORATOR.cost) {
+					log("Built vaporator with revenue " + minRevenue);
+					Actions.doBuildRobot(RobotType.VAPORATOR, highestDir);
+					return;
+				}
+			}
+			break;
 		}
 
 //		log("targetNavLoc: " + targetNavLoc);
