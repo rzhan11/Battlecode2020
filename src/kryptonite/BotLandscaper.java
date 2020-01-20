@@ -19,7 +19,7 @@ public class BotLandscaper extends Globals {
 	private static MapLocation buildingLocation;
 
 	// TERRA Variable
-	private static int terraDepth = 7;
+	private static int terraDepth = 4;
 
 	// TERRA_ATTACK_ROLE Variables
 	private static MapLocation terraTargetLocation;
@@ -66,6 +66,16 @@ public class BotLandscaper extends Globals {
 				}
 			}
 		}
+		if(maxXYDistance(HQLocation, here) == 1) {
+			role = WALL_ROLE;
+			wallBuildLocation = here;
+		}
+		if(maxXYDistance(HQLocation, here) == 2 && wallFull) {
+			role = SUPPORT_WALL_ROLE;
+			supportWallBuildLocation = here;
+		}
+
+
 		Debug.ttlog("MY ROLE IS: " + role);
 		switch(role) {
 			case WALL_ROLE:
@@ -350,6 +360,6 @@ public class BotLandscaper extends Globals {
 	}
 
 	private static void updateTerraDepth() {
-		terraDepth = Math.max(7, (int) Math.ceil(GameConstants.getWaterLevel(rc.getRoundNum()) + 3));
+		terraDepth = Math.max(4, (int) Math.ceil(GameConstants.getWaterLevel(rc.getRoundNum()) + 3));
 	}
 }
