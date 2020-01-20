@@ -39,11 +39,6 @@ public class BotDeliveryDroneOffense extends BotDeliveryDrone {
             if (avoidDangerResult == 1) {
                 return;
             }
-
-            // only move in cardinal directions
-            for (int i = 1; i < isDirMoveable.length; i+=2) {
-                isDirMoveable[i] = false;
-            }
         }
 
         if (!initialized) {

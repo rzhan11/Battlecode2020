@@ -65,6 +65,9 @@ public class BotMinerBuilder extends BotMiner {
 			log("Trying for designSchool");
 			for (Direction dir : directions) {
 				MapLocation loc = rc.adjacentLocation(dir);
+				if (!rc.onTheMap(loc)) {
+					continue;
+				}
 				if (maxXYDistance(HQLoc, loc) == 3 && isBuildLocation(loc)) {
 					if (isDirDryFlatEmpty(dir)) {
 						if (rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost) {
@@ -87,6 +90,9 @@ public class BotMinerBuilder extends BotMiner {
 					continue;
 				}
 				MapLocation buildLocation = here.translate(dir[0], dir[1]);
+				if (!rc.onTheMap(buildLocation)) {
+					continue;
+				}
 				// forces it to be on 7x7 ring
 				if (maxXYDistance(HQLoc, buildLocation) == 3 && isBuildLocation(buildLocation)) {
 					if (isLocDryEmpty(buildLocation)) {
@@ -103,6 +109,9 @@ public class BotMinerBuilder extends BotMiner {
 			log("Trying for fulfillment center");
 			for (Direction dir : directions) {
 				MapLocation loc = rc.adjacentLocation(dir);
+				if (!rc.onTheMap(loc)) {
+					continue;
+				}
 				if (maxXYDistance(HQLoc, loc) == 3 && isBuildLocation(loc)) {
 					if (isDirDryFlatEmpty(dir)) {
 						if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost) {
@@ -125,6 +134,9 @@ public class BotMinerBuilder extends BotMiner {
 					continue;
 				}
 				MapLocation buildLocation = here.translate(dir[0], dir[1]);
+				if (!rc.onTheMap(buildLocation)) {
+					continue;
+				}
 				// forces it to be on 7x7 ring
 				if (maxXYDistance(HQLoc, buildLocation) == 3 && isBuildLocation(buildLocation)) {
 					if (isLocDryEmpty(buildLocation)) {

@@ -121,6 +121,12 @@ public class Map extends Globals {
                     isDirMoveable[i] = false;
                     continue;
                 }
+                if (BotDeliveryDrone.isOffenseDrone && !BotDeliveryDrone.isDroneSwarming) {
+                    // only move in cardinal directions
+                    for (int d = 1; d < isDirMoveable.length; d+=2) {
+                        isDirMoveable[d] = false;
+                    }
+                }
             } else {
                 // STATE == I am a miner/landscaper
                 if (!isDirDryFlatEmpty(directions[i])) {

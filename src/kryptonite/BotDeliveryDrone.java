@@ -121,6 +121,12 @@ public class BotDeliveryDrone extends Globals {
 		if (avoidDangerResult == 1) {
 			return;
 		}
+		if (avoidDangerResult == -1) {
+			log("Reverting to swarm mode");
+			isDroneSwarming = true;
+			updateIsDirMoveable();
+			updateIsDirDanger();
+		}
 
 		// chase enemies and drop them into water
 		boolean sawEnemy = tryKillRobots(visibleEnemies, them);

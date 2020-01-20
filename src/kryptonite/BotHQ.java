@@ -45,6 +45,12 @@ public class BotHQ extends Globals {
 	public static void turn() throws GameActionException {
 		log("ene " + enemyHQLoc);
 		log("index " + symmetryHQLocationsIndex);
+		log("horiz " + isSymmetryHQLocation[0]);
+		log("vert " + isSymmetryHQLocation[1]);
+		log("rotate " + isSymmetryHQLocation[2]);
+		log("horiz " + symmetryHQLocations[0]);
+		log("vert " + symmetryHQLocations[1]);
+		log("rotate " + symmetryHQLocations[2]);
 		Communication.resubmitImportantTransactions();
 
 		if (!rc.isReady()) {
@@ -112,7 +118,7 @@ public class BotHQ extends Globals {
 		/*
 		build explorer miners that explore symmetries
 		*/
-		if (explorerMinerCount < 7) {
+		if (explorerMinerCount < 3) {
 			if (rc.getTeamSoup() >= RobotType.MINER.cost) {
 				buildMiner();
 			} else {
