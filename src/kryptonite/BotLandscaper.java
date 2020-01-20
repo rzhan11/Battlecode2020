@@ -56,6 +56,9 @@ public class BotLandscaper extends Globals {
 			return;
 		}
 
+
+		landscaperDirections = getCloseDirections(HQLoc.directionTo(getSymmetryLoc()).opposite());
+
 		if(maxXYDistance(HQLoc, here) == 1) {
 			role = WALL_ROLE;
 			wallBuildLocation = here;

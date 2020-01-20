@@ -33,11 +33,11 @@ public class BotDesignSchool extends Globals {
 		}
 
 		if (landscapersBuilt < 5) {
-			designBuild(getCloseDirections(here.directionTo(HQLoc)));
+			designBuild(getCloseDirections(here.directionTo(HQLoc)), RobotType.LANDSCAPER.cost);
 			return;
 		} else {
 			if (roundNum % 10 == spawnRound % 10) {
-				designBuild(directions);
+				designBuild(getCloseDirections(here.directionTo(getSymmetryLoc())), RobotType.LANDSCAPER.cost + RobotType.VAPORATOR.cost);
 				return;
 			}
 		}
@@ -54,9 +54,9 @@ public class BotDesignSchool extends Globals {
 //		}
 	}
 
-	private static void designBuild(Direction[] dirs) throws GameActionException{
+	private static void designBuild(Direction[] dirs, int soupLimit) throws GameActionException{
 		for (Direction dir : dirs) {
-			if (rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + RobotType.REFINERY.cost && isDirDryFlatEmpty(dir)) {
+			if (rc.getTeamSoup() >= soupLimit && isDirDryFlatEmpty(dir)) {
 				Debug.tlog("We are building");
 				Actions.doBuildRobot(RobotType.LANDSCAPER, dir);
 				landscapersBuilt++;

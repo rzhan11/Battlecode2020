@@ -370,7 +370,7 @@ public class BotDeliveryDrone extends Globals {
 			// checks if we are already in an campLocation
 
 			Direction dirToHQ = HQLoc.directionTo(here);
-			Direction targetDir = dirToHQ.rotateRight();
+			Direction targetDir = dirToHQ.rotateRight().rotateRight();
 			MapLocation targetLoc = HQLoc.add(targetDir).add(targetDir);
 			log("Rotating around ally HQ");
 			moveLog(targetLoc);

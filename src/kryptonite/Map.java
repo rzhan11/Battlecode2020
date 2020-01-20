@@ -5,11 +5,11 @@ import battlecode.common.*;
 public class Map extends Globals {
 
     public static boolean isDigLoc(MapLocation ml) {
-        return (ml.x - HQLoc.x) % 2 == 0 && (ml.y - HQLoc.y) % 2 == 0;
+        return  Math.abs(ml.x - HQLoc.x) % 2 == 0 &&  Math.abs(ml.y - HQLoc.y) % 2 == 0;
     }
 
     public static boolean isBuildLocation(MapLocation ml) {
-        return (ml.x - HQLoc.x) % 2 == 1 && (ml.y - HQLoc.y) % 2 == 1;
+        return Math.abs(ml.x - HQLoc.x) % 2 == 1 &&  Math.abs(ml.y - HQLoc.y) % 2 == 1;
     }
 
     /*

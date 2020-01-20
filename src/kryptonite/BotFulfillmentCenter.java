@@ -9,8 +9,11 @@ import static kryptonite.Map.*;
 
 public class BotFulfillmentCenter extends Globals {
 
+	final public static int DRONE_MADE_COOLDOWN = 10;
+
 	public static int roundParity = -1;
 	public static int dronesMade = 0;
+	public static int lastDroneMadeTurn = 0;
 
 	public static void loop() throws GameActionException {
 		while (true) {
@@ -33,6 +36,11 @@ public class BotFulfillmentCenter extends Globals {
 			log("Not ready");
 			return;
 		}
+
+		/*if (roundNum - lastDroneMadeTurn < DRONE_MADE_COOLDOWN) {
+			log("Drone made cooldown not over");
+			return;
+		}*/
 
 		if (visibleEnemies.length > 0 && dronesMade < 5) {
 			if (rc.getTeamSoup() > RobotType.DELIVERY_DRONE.cost) {
@@ -64,7 +72,7 @@ public class BotFulfillmentCenter extends Globals {
 		}
 
 		if (dronesMade < 4) {
-			if (rc.getTeamSoup() > RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost) {
+			if (rc.getTeamSoup() > RobotType.DELIVERY_DRONE.cost + RobotType.VAPORATOR.cost) {
 				Direction res = tryBuild(RobotType.DELIVERY_DRONE, directions);
 				if (res != null) {
 					dronesMade++;
@@ -80,7 +88,7 @@ public class BotFulfillmentCenter extends Globals {
 			return;
 		}
 
-		if (rc.getTeamSoup() > RobotType.DELIVERY_DRONE.cost + RobotType.REFINERY.cost) {
+		if (rc.getTeamSoup() > RobotType.DELIVERY_DRONE.cost + RobotType.VAPORATOR.cost) {
 			Direction res = tryBuild(RobotType.DELIVERY_DRONE, directions);
 			if (res != null) {
 				dronesMade++;
