@@ -31,7 +31,7 @@ public class BotDeliveryDrone extends Globals {
 	public static boolean movingRobotOutwards;
 	public static MapLocation movingOutwardsLocation = null;
 
-	public static MapLocation[] campLocations = {HQLocation.translate(2, 0), HQLocation.translate(-2, 0), HQLocation.translate(0, 2), HQLocation.translate(0,-2)};
+	public static MapLocation[] campLocations;
 	public static boolean[] campLocationsOccupiedMemory; // the last time this campLocation was visible, was it occupied?
 	public static int campLocationsLength;
 
@@ -48,11 +48,15 @@ public class BotDeliveryDrone extends Globals {
 					log("LOADING CAMP LOCATIONS");
 
 					// determine campLocations
+					campLocations = new MapLocation[] {HQLocation.translate(2, 0), HQLocation.translate(-2, 0), HQLocation.translate(0, 2), HQLocation.translate(0,-2)};
+
 					campLocationsOccupiedMemory = new boolean[campLocations.length];
 					campLocationsLength = 4;
-					if(rc.getRoundNum() % 2 == 0) {
-						isOffenseDrone = true;
-					}
+
+//					if(rc.getRoundNum() % 2 == 0) {
+//						isOffenseDrone = true;
+//					}
+
 					Globals.endTurn(true);
 					Globals.update();
 				}
@@ -108,6 +112,37 @@ public class BotDeliveryDrone extends Globals {
 		}
 
 		if (rc.isCurrentlyHoldingUnit()) {
+
+			if (movingRobotOutwards) { // moves miner to outside of wall/support
+
+				// check adjacent tiles for a tile outside the wall that is not occupied/flooded
+				for (Direction dir : directions) {
+					MapLocation loc = rc.adjacentLocation(dir);
+					if (!rc.onTheMap(loc)) {
+						continue;
+					}
+					if (maxXYDistance(HQLocation, loc) >= 3 && isLocDryEmpty(loc)) {
+						log("Dropped robot outside the wall at " +  loc);
+						tlog("Dropped " +  dir);
+						Actions.doDropUnit(dir);
+						movingRobotOutwards = false;
+						movingOutwardsLocation = null;
+						return;
+					}
+				}
+
+				// if movingOutwardsLocation is flooded, revert to symmetry
+				if (rc.canSenseLocation(movingOutwardsLocation) && !isLocDry(movingOutwardsLocation)) {
+					log("movingOutwardsLocation is flooded, reverting to symmetry");
+					movingOutwardsLocation = getSymmetryLocation();
+				}
+
+				// go towards movingOutwardsLocation
+				log("Moving to drop outwards at " + movingOutwardsLocation);
+				moveLog(movingOutwardsLocation);
+				return;
+			}
+
 			if (movingRobotToWall) { // moves landscaper to wall
 				// drop robot onto a wall tile that isn't occupied/flooded
 				for (Direction dir : directions) {
@@ -125,7 +160,7 @@ public class BotDeliveryDrone extends Globals {
 
 				// reset movingToWallLocation if flooded/occupied
 				if (movingToWallLocation != null && rc.canSenseLocation(movingToWallLocation)) {
-				 	if (rc.senseFlooding(movingToWallLocation) || rc.senseRobotAtLocation(movingToWallLocation) != null) {
+				 	if (!isLocDryEmpty(movingToWallLocation)) {
 						movingToWallLocation = null;
 						foundWall = false;
 						log("movingToWallLocation is flooded/occupied, resetting it");
@@ -140,7 +175,7 @@ public class BotDeliveryDrone extends Globals {
 						}
 						MapLocation loc = here.translate(dir[0], dir[1]);
 						if (maxXYDistance(HQLocation, loc) == 2) {
-							if (rc.canSenseLocation(loc) && !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
+							if (rc.canSenseLocation(loc) && isLocDryEmpty(loc)) {
 								movingToWallLocation = loc;
 								foundWall = true;
 								log("Setting movingToWallLocation to " + movingToWallLocation);
@@ -161,25 +196,19 @@ public class BotDeliveryDrone extends Globals {
 
 				// moves towards movingToWallLocation
 				log("Moving to movingToWallLocation at " + movingToWallLocation);
-				Direction move = Nav.bugNavigate(movingToWallLocation);
-				if (move != null) {
-					tlog("Moved " + move);
-				} else {
-					tlog("But no move found");
-				}
-
+				moveLog(movingToWallLocation);
 				return;
 			}
 
 		} else { // STATE == not holding a unit
 
-			// check if adjacent robots are on transport tiles/wall
 			for (RobotInfo ri: adjacentAllies) {
 				boolean result = tryPickUpTransport(ri);
 				if (result) {
 					return;
 				}
 			}
+
 
 			// STATE: no adjacent, pick-up-able ally robots are on inner/outer transport tiles or wall
 
@@ -248,47 +277,44 @@ public class BotDeliveryDrone extends Globals {
 			int curRing = maxXYDistance(HQLocation, ri.location);
 			Direction dirFromHQ = HQLocation.directionTo(ri.location);
 
-			// if miner is on wall that has high elevation, move him outwards
-			if (curRing == 2 && ri.type == RobotType.MINER) {
-				MapLocation outerLoc = ri.location.add(dirFromHQ);
-				if (!rc.canSenseLocation(outerLoc) || rc.senseElevation(ri.location) > rc.senseElevation(HQLocation) + 3) {
-					log("Picking up miner on wall at " + ri.location);
+			if (ri.type == RobotType.LANDSCAPER) {
+				if (isDigLocation(ri.location)) {
 					Actions.doPickUpUnit(ri.ID);
-					if (isBuilderMiner(ri.ID)) {
-						movingRobotInwards = true;
-						tlog("Moving builder miner inwards from wall");
-					} else {
-						movingRobotOutwards = true;
-						movingOutwardsLocation = ri.location.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
-						tlog("Moving robot outwards to " + movingOutwardsLocation);
-						if (!rc.onTheMap(movingOutwardsLocation)) {
-							tlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
-							movingOutwardsLocation = getSymmetryLocation();
-						}
-					}
-					return true;
-				}
-			}
 
-			// if miner is on outer transport tile and is blocked by high elevation wall, move him inwards
-			// if landscaper is on outer transport tile and is blocked by high elevation wall, move onto wall
-			if (curRing == 3) {
-				MapLocation wallLoc = ri.location.subtract(dirFromHQ);
-				// if we cannot sense the wallLoc, assume it is high and pick up the miner
-				if (!rc.canSenseLocation(wallLoc) || !checkElevation(ri.location, wallLoc)) {
-					log("Picking up robot on outer transport tile at " + ri.location);
+					movingRobotToWall = true;
+					tlog("Moving landscaper from dig loc to wall");
+					return true;
+				}
+				if (!wallFull && 2 <= curRing && curRing <= 3) {
 					Actions.doPickUpUnit(ri.ID);
-					if (ri.type == RobotType.LANDSCAPER) {
-						// move landscapers to wall
-						movingRobotToWall = true;
-						tlog("Moving landscaper from outer to wall");
-					} else {
-						// move miners inside
-						movingRobotInwards = true;
-						tlog("Moving miner inwards");
+
+					movingRobotToWall = true;
+					tlog("Moving landscaper to wall");
+					return true;
+				}
+//				if (!supportFull && 3 <= curRing && curRing <= 4) {
+//					movingRobotToSupport = true;
+//					tlog("Moving landscaper to support wall");
+//					return true;
+//				}
+				return false;
+			} else {
+				// STATE == 'ri' is a miner
+				if (isDigLocation(ri.location) ||
+						curRing == 1 ||
+						(curRing == 2 && wallFull)) {
+					Actions.doPickUpUnit(ri.ID);
+
+					movingRobotOutwards = true;
+					movingOutwardsLocation = ri.location.add(dirFromHQ).add(dirFromHQ).add(dirFromHQ);
+					tlog("Moving robot outwards to " + movingOutwardsLocation);
+					if (!rc.onTheMap(movingOutwardsLocation)) {
+						tlog("Initial movingOutwardsLocation not in map, reverting to symmetry");
+						movingOutwardsLocation = getSymmetryLocation();
 					}
 					return true;
 				}
+				return false;
 			}
 		}
 		return false;

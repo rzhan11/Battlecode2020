@@ -110,7 +110,7 @@ public class BotMiner extends Globals {
 				if (!rc.onTheMap(loc)) {
 					continue;
 				}
-				if (isDirDryFlatEmpty(dir) && !isBuildLocation(loc) && maxXYDistance(HQLocation, loc) >= 2) {
+				if (isDirDryFlatEmpty(dir) && isBuildLocation(loc) && maxXYDistance(HQLocation, loc) >= 2) {
 					int elevation = rc.senseElevation(loc);
 					if (elevation > highestElevation) {
 						highestDir = dir;

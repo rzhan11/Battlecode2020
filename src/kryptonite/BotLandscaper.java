@@ -95,7 +95,7 @@ public class BotLandscaper extends Globals {
 									}
 								}
 								Debug.ttlog("DEPOSITING DIRT IN DIRECTION: " + minDir);
-								if(rc.canDepositDirt(minDir)) rc.depositDirt(minDir);
+								if(rc.canDepositDirt(minDir)) Actions.doDepositDirt(minDir);
 							}
 							else {
 								currentStep = 0;
@@ -115,7 +115,7 @@ public class BotLandscaper extends Globals {
 						if(currentStep == 1) {
 							if(rc.getDirtCarrying() > 0) {
 								Debug.ttlog("DEPOSITING DIRT IN DIRECTION: " + Direction.CENTER);
-								if(rc.canDepositDirt(Direction.CENTER)) rc.depositDirt(Direction.CENTER);
+								if(rc.canDepositDirt(Direction.CENTER)) Actions.doDepositDirt(Direction.CENTER);
 							}
 							else {
 								currentStep = 0;
@@ -154,7 +154,7 @@ public class BotLandscaper extends Globals {
 						if(rc.getDirtCarrying() > 0) {
 							if(rc.senseElevation(here) - GameConstants.getWaterLevel(rc.getRoundNum()) < 1 && rc.senseElevation(here) < 15) {
 								Debug.ttlog("DEPOSITING DIRT IN DIRECTION: " + Direction.CENTER);
-								if(rc.canDepositDirt(Direction.CENTER)) rc.depositDirt(Direction.CENTER);
+								if(rc.canDepositDirt(Direction.CENTER)) Actions.doDepositDirt(Direction.CENTER);
 							}
 							int minDirt = 10000;
 							Direction minDir = null;
@@ -165,7 +165,7 @@ public class BotLandscaper extends Globals {
 								}
 							}
 							Debug.ttlog("DEPOSITING DIRT IN DIRECTION: " + minDir);
-							if(rc.canDepositDirt(minDir)) rc.depositDirt(minDir);
+							if(rc.canDepositDirt(minDir)) Actions.doDepositDirt(minDir);
 						}
 						else {
 							currentStep = 0;
@@ -206,7 +206,7 @@ public class BotLandscaper extends Globals {
 							if(rc.getDirtCarrying() > 0) {
 								Direction dropLoc = here.directionTo(buildingLocation);
 								Debug.ttlog("DEPOSITING DIRT IN DIRECTION: " + dropLoc);
-								if(rc.canDepositDirt(dropLoc)) rc.depositDirt(dropLoc);
+								if(rc.canDepositDirt(dropLoc)) Actions.doDepositDirt(dropLoc);
 							}
 							else {
 								currentStep = 0;
@@ -292,7 +292,7 @@ public class BotLandscaper extends Globals {
 		for(Direction d : Globals.allDirections) {
 			if(isDigLocation(here.add(d))) {
 				Debug.ttlog("DIGGING IN DIRECTION: " + d);
-				if(rc.canDigDirt(d)) rc.digDirt(d);
+				if(rc.canDigDirt(d)) Actions.doDigDirt(d);
 			}
 		}
 	}
