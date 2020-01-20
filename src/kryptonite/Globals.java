@@ -488,4 +488,10 @@ public class Globals {
 		dirs[7] = dir.opposite();;
 		return dirs;
 	}
+
+	public static boolean isBuilding(MapLocation ml) throws GameActionException {
+		if(!rc.canSenseLocation(ml)) return false;
+		if(rc.senseRobotAtLocation(ml) == null) return false;
+		return rc.senseRobotAtLocation(ml).type.isBuilding();
+	}
 }

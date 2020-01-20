@@ -53,7 +53,10 @@ public class BotHQ extends Globals {
 		if(!wallFull) {
 			boolean flag = true;
 			for(Direction d : Globals.directions) {
-				if(rc.senseRobotAtLocation(here.add(d)) == null) {
+				if(rc.senseRobotAtLocation(here.add(d)) == null ||
+					rc.senseRobotAtLocation(here.add(d)).type != RobotType.LANDSCAPER ||
+					rc.senseRobotAtLocation(here.add(d)).team != us
+				) {
 					flag = false;
 					break;
 				}
