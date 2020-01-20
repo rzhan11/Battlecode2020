@@ -26,4 +26,6 @@ public class Constants {
     final public static int[] WHITE = {255, 255, 255}; // dig dirt
     final public static int[] BLACK = {0, 0, 0}; //  deposit dirt
 
+    final public static int[] RED = {255, 0, 0};
+
 }

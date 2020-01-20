@@ -2,6 +2,8 @@ package kryptonite;
 
 import battlecode.common.*;
 
+import java.util.Random;
+
 import static kryptonite.Communication.*;
 import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
@@ -29,11 +31,14 @@ public class Globals {
 	public static Direction[] cardinalDirections = {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST}; // four cardinal directions
 	public static Direction[] diagonalDirections = {Direction.NORTHEAST, Direction.SOUTHEAST, Direction.SOUTHWEST, Direction.NORTHWEST}; // four diagonals
 
+	public static Random rand;
+
 	/*
 	Values that might change each turn
 	*/
 
 	public static boolean firstTurn = true;
+	public static boolean prevTurnEarlyEnd = false;
 
 	public static int roundNum;
 
@@ -54,7 +59,7 @@ public class Globals {
 	public static RobotInfo[] adjacentEnemies = null;
 	public static RobotInfo[] adjacentCows = null;
 
-	public static MapLocation[] visibleSoupLocations = null;
+	public static MapLocation[] visibleSoupLocs = null;
 
 	public static MapLocation closestVisibleSoupLoc = null;
 	public static MapLocation targetVisibleSoupLoc = null;
@@ -99,6 +104,9 @@ public class Globals {
 
 	public static void init(RobotController theRC) throws GameActionException {
 		int startByte = Clock.getBytecodesLeft();
+
+		rand = new Random(1);
+
 		rc = theRC;
 
 		us = rc.getTeam();
@@ -164,7 +172,7 @@ public class Globals {
 			adjacentEnemies = rc.senseNearbyRobots(2, them);
 			adjacentCows = rc.senseNearbyRobots(2, cowTeam);
 
-			visibleSoupLocations = rc.senseNearbySoup();
+			visibleSoupLocs = rc.senseNearbySoup();
 		}
 
 		// update moveable directions
@@ -185,6 +193,27 @@ public class Globals {
 		// visually checks for enemy HQ location at target explore symmetry point
 
 		calculateDynamicCost();
+
+		log("Update cost: " + (startByte - Clock.getBytecodesLeft()));
+		if (!prevTurnEarlyEnd) {
+			updateExtras();
+		}
+	}
+
+	/*
+	Only performed it turn was not skipped last turn
+	 */
+	public static void updateExtras () throws GameActionException {
+		int startByte = Clock.getBytecodesLeft();
+
+		// for HQ, miner, landscaper, and drone
+		if (!isLowBytecodeLimit(myType)) {
+			loadZoneInformation();
+			if (!firstTurn || myType == RobotType.HQ) {
+				checkZone();
+				locateSoup();
+			}
+		}
 
 		// find HQ location and symmetries if not already found
 		if (HQLocation == null) {
@@ -208,17 +237,16 @@ public class Globals {
 			}
 		}
 
-
 		updateSymmetry();
 
 		// tries to submit unsent messages from previous turns
 		submitUnsentTransactions();
 
-		log("Update cost: " + (startByte - Clock.getBytecodesLeft()));
+		log("Extra update cost: " + (startByte - Clock.getBytecodesLeft()));
 	}
 
 	/*
-	Prints various useful debuggin information
+	Prints various useful debugging information
 	*/
 	final public static boolean noTurnLog = false;
 
@@ -243,9 +271,16 @@ public class Globals {
 	earlyEnd should be true, unless this method was called at the end of the loop() method
 	*/
 	public static void endTurn (boolean earlyEnd) throws GameActionException {
+		if (myType == RobotType.HQ) {
+			drawZoneStatus();
+		}
+
+		prevTurnEarlyEnd = earlyEnd;
 		firstTurn &= earlyEnd; // if early end, do not count as full turn
+
 		lastActiveTurn = roundNum;
 		readOldBlocks();
+
 		// check if we went over the bytecode limit
 		int endTurn = rc.getRoundNum();
 		if (roundNum != endTurn) {
@@ -279,10 +314,15 @@ public class Globals {
 			HQLocation = here;
 			HQElevation = myElevation;
 		} else {
-			readBlock(oldBlocksIndex, 0);
-			oldBlocksIndex++;
+			int res = readBlock(oldBlocksIndex, oldTransactionsIndex);
+			if (res < 0) {
+				oldTransactionsIndex = -res - 1;
+			} else {
+				oldBlocksIndex++;
+				oldTransactionsIndex = 0;
+			}
 			while (HQLocation == null) {
-				log("Did not find HQLocation in block " + (oldBlocksIndex - 1));
+				log("Did not find HQLocation before block " + oldBlocksIndex + "-" + oldTransactionsIndex);
 				if (oldBlocksIndex >= spawnRound) {
 					Globals.endTurn(true);
 					Globals.update();
@@ -477,6 +517,10 @@ public class Globals {
 	that is ordered by how close they are to the given direction
 	 */
 	public static Direction[] getCloseDirections (Direction dir) {
+		if (dir == Direction.CENTER) {
+			logi("WARNING: Tried to getCloseDirections of center");
+			return null;
+		}
 		Direction[] dirs = new Direction[8];
 		dirs[0] = dir;
 		dirs[1] = dir.rotateRight();

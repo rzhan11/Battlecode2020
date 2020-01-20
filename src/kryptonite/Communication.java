@@ -12,7 +12,7 @@ public class Communication extends Globals {
 	final public static int READ_TRANSACTION_MIN_BYTECODE = 500; // how many bytecodes required to read a transaction
 	final public static int READ_BIG_TRANSACTION_MIN_BYTECODE = 1500; // how many bytecodes required to read a costly transaction
 
-	final public static int FIRST_TURN_DYNAMIC_COST = 3;
+	final public static int FIRST_TURN_DYNAMIC_COST = 1;
 
 	// each of these signals should be different
 	final public static int HQ_FIRST_TURN_SIGNAL = 0;
@@ -28,8 +28,8 @@ public class Communication extends Globals {
 	final public static int FLOODING_FOUND_SIGNAL = 10;
 	final public static int ENEMY_HQ_LOCATION_SIGNAL = 11;
 	final public static int WALL_FULL_SIGNAL = 12;
-	final public static int SOUP_ZONE_SIGNAL = 13;
-	final public static int SOUP_STATUS_SIGNAL = 14;
+	final public static int EXPLORED_ZONE_STATUS = 13;
+	final public static int SOUP_ZONE_STATUS_SIGNAL = 14;
 
 	// used to alter our own data
 	public static int secretKey;
@@ -247,18 +247,19 @@ public class Communication extends Globals {
 						readTransactionWallFull(message, round);
 						break;
 
-					case SOUP_ZONE_SIGNAL:
-						if (myType == RobotType.MINER) {
-							readTransactionZoneStatus(message, round);
+					case EXPLORED_ZONE_STATUS:
+						if (!isLowBytecodeLimit(myType)) {
+							readTransactionExploredZoneStatus(message, round);
 						}
-
-					case SOUP_STATUS_SIGNAL:
-						if (myType == RobotType.MINER) {
+						break;
+					case SOUP_ZONE_STATUS_SIGNAL:
+						if (!isLowBytecodeLimit(myType)) {
 							if (Clock.getBytecodesLeft() < READ_BIG_TRANSACTION_MIN_BYTECODE && round != roundNum - 1) {
 								return -(index + 1);
 							}
 							readTransactionSoupStatus(message, round);
 						}
+						break;
 				}
 			}
 
@@ -643,11 +644,11 @@ message[3] = y coordinate of our HQ
 	message[3] =
 
 	 */
-	public static void writeTransactionZoneStatus(int xZone, int yZone, int status) throws GameActionException {
-		log("Writing transaction for 'Zone Status'");
+	public static void writeTransactionExploredZoneStatus(int xZone, int yZone, int status) throws GameActionException {
+		log("Writing transaction for 'Explored Zone Status'");
 		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
-		message[1] = SOUP_ZONE_SIGNAL;
+		message[1] = EXPLORED_ZONE_STATUS;
 		message[2] = xZone + (yZone << 6) + (status << 12);
 
 		xorMessage(message);
@@ -660,14 +661,14 @@ message[3] = y coordinate of our HQ
 		}
 	}
 
-	public static void readTransactionZoneStatus(int[] message, int round) throws GameActionException {
+	public static void readTransactionExploredZoneStatus(int[] message, int round) throws GameActionException {
 		int xZone = message[2] & ((1 << 6) - 1);
 		int yZone = ((message[2] >>> 6) & ((1 << 6) - 1));
 		int status = message[2] >>> 12;
 
-		zoneStatus[xZone][yZone] = status;
+		exploredZoneStatus[xZone][yZone] = status;
 
-		tlog("Reading transaction for 'Zone Status'");
+		tlog("Reading transaction for 'Explored Zone Status'");
 		ttlog("Submitter ID: " + decryptID(message[0]));
 		ttlog("[xZone, yZone]: " + xZone + " " + yZone);
 		ttlog("status: " + status);
@@ -680,45 +681,36 @@ message[3] = y coordinate of our HQ
 	message[1] = signal & number of locations
 	Can report up to 10 zones
 	 */
-	public static void writeTransactionSoupStatus(int[] soupZoneIndices, int[] statuses, int index, int length) throws GameActionException {
-		log("Writing transaction for 'Soup Status'");
-		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
-		message[0] = encryptID(myID);
-		message[1] = SOUP_STATUS_SIGNAL;
-		int i_message = 4;
-		for (; index < length && (i_message / 2) < message.length; index++) {
-			int temp = soupZoneIndices[index] + (statuses[index] << 8);
-			if (i_message % 2 == 1) {
-				temp = temp << 16;
+	public static void writeTransactionSoupZoneStatus(int[] soupZoneIndices, int[] statuses, int index, int length) throws GameActionException {
+		while (index < length) {
+			log("Writing transaction for 'Soup Zone Status'");
+			int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
+			message[0] = encryptID(myID);
+			message[1] = SOUP_ZONE_STATUS_SIGNAL;
+			int i_message = 4;
+			for (; index < length && (i_message / 2) < message.length; index++) {
+				int temp = soupZoneIndices[index] + (statuses[index] << 8);
+				if (i_message % 2 == 1) {
+					temp = temp << 16;
+				}
+				message[i_message / 2] |= temp;
+				i_message++;
 			}
-			message[i_message / 2] |= temp;
-			//
-			int m = message[i_message / 2];
-			if (i_message % 2 == 0) {
-				m = m & ((1 << 16) - 1);
+			message[1] += (i_message - 4) << 8;
+
+			xorMessage(message);
+			if (rc.getTeamSoup() >= dynamicCost) {
+				rc.submitTransaction(message, dynamicCost);
+
 			} else {
-				m = m >>> 16;
+				tlog("Could not afford transaction");
+				saveUnsentTransaction(message, dynamicCost);
 			}
-			int zoneIndex = m & ((1 << 8) - 1);
-			int status = m >>> 8;
-			log("yo " + zoneIndex + " " + status + " v " + statuses[index]);
-			//
-			i_message++;
-		}
-		message[1] += (i_message - 4) << 8;
-
-		xorMessage(message);
-		if (rc.getTeamSoup() >= dynamicCost) {
-			rc.submitTransaction(message, dynamicCost);
-
-		} else {
-			tlog("Could not afford transaction");
-			saveUnsentTransaction(message, dynamicCost);
 		}
 	}
 
 	public static void readTransactionSoupStatus(int[] message, int round) throws GameActionException {
-		tlog("Reading transaction for 'Soup Status'");
+		tlog("Reading transaction for 'Soup Zone Status'");
 		ttlog("Submitter ID: " + decryptID(message[0]));
 		int numZones = message[1] >>> 8;
 		int i_message = 4;
@@ -731,6 +723,8 @@ message[3] = y coordinate of our HQ
 			}
 			int zoneIndex = m & ((1 << 8) - 1);
 			int status = m >>> 8;
+			int[] zone = zoneIndexToPair(zoneIndex);
+			ttlog("Zone " + zone[0] + " " + zone[1] + " status: " + status);
 			updateKnownSoupZones(zoneIndex, status, false);
 
 			i_message++;
