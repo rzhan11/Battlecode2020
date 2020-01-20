@@ -9,6 +9,14 @@ import static kryptonite.Map.*;
 
 public class Map extends Globals {
 
+    public static boolean isDigLocation(MapLocation ml) {
+        return (ml.x - HQLocation.x) % 2 == 0 && (ml.y - HQLocation.y) % 2 == 0;
+    }
+
+    public static boolean isBuildLocation(MapLocation ml) {
+        return (ml.x - HQLocation.x) % 2 == 1 && (ml.y - HQLocation.y) % 2 == 1;
+    }
+
     /*
     Reflects ml1 over ml2
      */
@@ -30,27 +38,8 @@ public class Map extends Globals {
         return Math.abs(ml1.x - ml2.x) + Math.abs(ml1.y - ml2.y);
     }
 
-    public static boolean isDirDryFlatEmpty (Direction dir) throws GameActionException {
-        MapLocation loc = rc.adjacentLocation(dir);
-        return !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null && Math.abs(rc.senseElevation(loc) - rc.senseElevation(here)) <= GameConstants.MAX_DIRT_DIFFERENCE;
-    }
-
     public static boolean isDirEmpty (Direction dir) throws GameActionException {
         return rc.senseRobotAtLocation(rc.adjacentLocation(dir)) == null;
-    }
-
-
-    public static boolean isDirWetEmpty (Direction dir) throws GameActionException {
-        MapLocation loc = rc.adjacentLocation(dir);
-        return rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null;
-    }
-
-    public static boolean isLocDry (MapLocation loc) throws GameActionException {
-        return !rc.senseFlooding(loc);
-    }
-
-    public static boolean isLocDryEmpty (MapLocation loc) throws GameActionException {
-        return !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null;
     }
 
     /*
@@ -61,6 +50,16 @@ public class Map extends Globals {
         return Math.abs(rc.senseElevation(rc.adjacentLocation(dir)) - myElevation) <= GameConstants.MAX_DIRT_DIFFERENCE;
     }
 
+    public static boolean isDirWetEmpty (Direction dir) throws GameActionException {
+        MapLocation loc = rc.adjacentLocation(dir);
+        return rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null;
+    }
+
+    public static boolean isDirDryFlatEmpty (Direction dir) throws GameActionException {
+        MapLocation loc = rc.adjacentLocation(dir);
+        return !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null && Math.abs(rc.senseElevation(loc) - rc.senseElevation(here)) <= GameConstants.MAX_DIRT_DIFFERENCE;
+    }
+
     /*
     Assumes that we can sense this tile
     Returns true if this tile's elevation is within +/-3 of our tile's elevation
@@ -68,6 +67,21 @@ public class Map extends Globals {
     */
     public static boolean isLocFlat(MapLocation loc) throws GameActionException {
         return Math.abs(rc.senseElevation(loc) - myElevation) <= GameConstants.MAX_DIRT_DIFFERENCE;
+    }
+
+    public static boolean isLocDry (MapLocation loc) throws GameActionException {
+        return !rc.senseFlooding(loc);
+    }
+
+    public static boolean isLocBuilding(MapLocation ml) throws GameActionException {
+        if(!rc.canSenseLocation(ml)) return false;
+        if(rc.senseRobotAtLocation(ml) == null) return false;
+        return rc.senseRobotAtLocation(ml).type.isBuilding();
+    }
+
+
+    public static boolean isLocDryEmpty (MapLocation loc) throws GameActionException {
+        return !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null;
     }
 
     public static boolean isLocDryFlatEmpty (MapLocation loc) throws GameActionException {
@@ -147,19 +161,19 @@ public class Map extends Globals {
             }
 
             if (myType == RobotType.DELIVERY_DRONE) {
-//                // checks for dangerous netguns
-//                // add check for if we are ignoring netguns
-//                if (!BotDeliveryDrone.isDroneSwarming) {
-//                    for (RobotInfo ri : nearbyEnemies) {
-//                        if (canShootType(ri.type)) {
-//                            if (adjLoc.distanceSquaredTo(ri.location) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
-//                                isDirMoveable[i] = false;
-//                                isDirDanger[i] = true;
-//                                continue outer;
-//                            }
-//                        }
-//                    }
-//                }
+                // checks for dangerous netguns
+                // add check for if we are ignoring netguns
+                if (!BotDeliveryDrone.isDroneSwarming) {
+                    for (RobotInfo ri : nearbyEnemies) {
+                        if (canShootType(ri.type)) {
+                            if (adjLoc.distanceSquaredTo(ri.location) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
+                                isDirMoveable[i] = false;
+                                isDirDanger[i] = true;
+                                continue outer;
+                            }
+                        }
+                    }
+                }
             } else {
                 // STATE == I am a miner/landscaper
                 // checks for dangerous drones

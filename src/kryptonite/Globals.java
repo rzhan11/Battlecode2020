@@ -394,10 +394,6 @@ public class Globals {
 		return move;
 	}
 
-	public static boolean isDigLocation(MapLocation ml) {
-		return (ml.x - HQLocation.x) % 2 == 0 && (ml.y - HQLocation.y) % 2 == 0;
-	}
-
 	public static void updateSymmetry () throws GameActionException {
 
 		if (enemyHQLocation != null) {
@@ -533,7 +529,7 @@ public class Globals {
 		return dirs;
 	}
 
-	public static boolean isBuilding(MapLocation ml) throws GameActionException {
+	public static boolean isLocBuilding(MapLocation ml) throws GameActionException {
 		if(!rc.canSenseLocation(ml)) return false;
 		if(rc.senseRobotAtLocation(ml) == null) return false;
 		return rc.senseRobotAtLocation(ml).type.isBuilding();

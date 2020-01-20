@@ -269,7 +269,7 @@ public class BotLandscaper extends Globals {
 						else {
 							for(Direction d : Direction.allDirections()) {
 								MapLocation adjLoc = rc.adjacentLocation(d);
-								if(rc.senseElevation(adjLoc) < terraDepth && !isDigLocation(adjLoc) && !Globals.isBuilding(adjLoc)) {
+								if(rc.senseElevation(adjLoc) < terraDepth && !isDigLocation(adjLoc) && !Globals.isLocBuilding(adjLoc)) {
 									if(rc.canDepositDirt(d)) Actions.doDepositDirt(d);
 								}
 							}
@@ -341,7 +341,7 @@ public class BotLandscaper extends Globals {
 	private static boolean terraCheck() throws GameActionException {
 		for(Direction d : Globals.allDirections) {
 			MapLocation adjLoc = rc.adjacentLocation(d);
-			if(rc.senseElevation(adjLoc) < terraDepth && !isDigLocation(adjLoc) && !Globals.isBuilding(adjLoc)) {
+			if(rc.senseElevation(adjLoc) < terraDepth && !isDigLocation(adjLoc) && !Globals.isLocBuilding(adjLoc)) {
 				Debug.ttlog("TERRA CHECK: FAILED CHECK IN DIRECTION " + d);
 				return false;
 			}
