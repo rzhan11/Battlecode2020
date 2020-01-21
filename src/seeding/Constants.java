@@ -1,4 +1,4 @@
-package kryptonite;
+package seeding;
 
 public class Constants {
     /*

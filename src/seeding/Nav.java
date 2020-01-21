@@ -1,10 +1,10 @@
-package kryptonite;
+package seeding;
 
 import battlecode.common.*;
 
-import static kryptonite.Constants.*;
-import static kryptonite.Debug.*;
-import static kryptonite.Map.*;
+import static seeding.Constants.*;
+import static seeding.Debug.*;
+import static seeding.Map.*;
 
 public class Nav extends Globals {
 

@@ -1,9 +1,9 @@
-package kryptonite;
+package seeding;
 
 import battlecode.common.*;
 
-import static kryptonite.Constants.*;
-import static kryptonite.Debug.*;
+import static seeding.Constants.*;
+import static seeding.Debug.*;
 
 public class Actions extends Globals {
 

@@ -1,8 +1,8 @@
-package kryptonite;
+package seeding;
 
 import battlecode.common.*;
 
-import static kryptonite.Debug.*;
+import static seeding.Debug.*;
 
 public class BotDeliveryDroneOffense extends BotDeliveryDrone {
 

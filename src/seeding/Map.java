@@ -1,4 +1,4 @@
-package kryptonite;
+package seeding;
 
 import battlecode.common.*;
 

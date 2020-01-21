@@ -1,14 +1,14 @@
-package kryptonite;
+package seeding;
 
 import battlecode.common.*;
 
 import java.util.Random;
 
-import static kryptonite.Communication.*;
-import static kryptonite.Constants.*;
-import static kryptonite.Debug.*;
-import static kryptonite.Map.*;
-import static kryptonite.Zones.*;
+import static seeding.Communication.*;
+import static seeding.Constants.*;
+import static seeding.Debug.*;
+import static seeding.Map.*;
+import static seeding.Zones.*;
 
 public class Globals {
 	/*

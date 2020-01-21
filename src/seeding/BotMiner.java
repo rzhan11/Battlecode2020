@@ -1,13 +1,13 @@
-package kryptonite;
+package seeding;
 
 import battlecode.common.*;
 
-import static kryptonite.Communication.*;
-import static kryptonite.Constants.*;
-import static kryptonite.Debug.*;
-import static kryptonite.HardCode.*;
-import static kryptonite.Map.*;
-import static kryptonite.Zones.*;
+import static seeding.Communication.*;
+import static seeding.Constants.*;
+import static seeding.Debug.*;
+import static seeding.HardCode.*;
+import static seeding.Map.*;
+import static seeding.Zones.*;
 
 public class BotMiner extends Globals {
 
