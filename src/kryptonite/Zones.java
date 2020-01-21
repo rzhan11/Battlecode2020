@@ -1,17 +1,14 @@
 package kryptonite;
 
-import battlecode.common.Clock;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotType;
-import kryptonite.Globals;
+import battlecode.common.*;
 
-import static kryptonite.Communication.writeTransactionExploredZoneStatus;
-import static kryptonite.Communication.writeTransactionSoupZoneStatus;
-import static kryptonite.Constants.P_INF;
-import static kryptonite.Debug.log;
-import static kryptonite.Debug.logi;
-import static kryptonite.Map.isLocDry;
+import static kryptonite.Actions.*;
+import static kryptonite.Communication.*;
+import static kryptonite.Debug.*;
+import static kryptonite.Map.*;
+import static kryptonite.Nav.*;
+import static kryptonite.Utils.*;
+import static kryptonite.Zones.*;
 
 public class Zones extends Globals {
 
@@ -58,8 +55,8 @@ public class Zones extends Globals {
         log("LOADING ZONE INFORMATION 0");
 
         if (myType != RobotType.HQ) {
-            Globals.endTurn(true);
-            Globals.update();
+            Clock.yield();
+            Globals.updateBasic();
         }
 
         log("LOADING ZONE INFORMATION 1");
@@ -84,8 +81,8 @@ public class Zones extends Globals {
         hasLoadedZones = true;
 
         if (myType != RobotType.HQ) {
-            Globals.endTurn(true);
-            Globals.update();
+            Clock.yield();
+            Globals.updateBasic();
         }
     }
 

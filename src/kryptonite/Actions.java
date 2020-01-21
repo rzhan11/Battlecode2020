@@ -2,9 +2,13 @@ package kryptonite;
 
 import battlecode.common.*;
 
-import static kryptonite.Constants.*;
-import static kryptonite.Debug.drawDot;
-import static kryptonite.Debug.drawLine;
+import static kryptonite.Actions.*;
+import static kryptonite.Communication.*;
+import static kryptonite.Debug.*;
+import static kryptonite.Map.*;
+import static kryptonite.Nav.*;
+import static kryptonite.Utils.*;
+import static kryptonite.Zones.*;
 
 public class Actions extends Globals {
 

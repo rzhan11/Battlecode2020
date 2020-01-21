@@ -4,13 +4,15 @@ import battlecode.common.*;
 
 import java.util.Random;
 
+import static kryptonite.Actions.*;
 import static kryptonite.Communication.*;
-import static kryptonite.Constants.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
+import static kryptonite.Nav.*;
+import static kryptonite.Utils.*;
 import static kryptonite.Zones.*;
 
-public class Globals {
+public class Globals extends Constants {
     /*
     Constants that will never change
     */
@@ -90,9 +92,9 @@ public class Globals {
 
 
     public static void init(RobotController theRC) throws GameActionException {
-        int startByte = Clock.getBytecodesLeft();
 
         rc = theRC;
+        spawnRound = rc.getRoundNum();
 
         us = rc.getTeam();
         them = us.opponent();
@@ -112,18 +114,27 @@ public class Globals {
             Communication.secretKey = 7331;
         }
 
-        here = rc.getLocation();
-        myZone = locToZonePair(here);
-        roundNum = rc.getRoundNum();
-        spawnRound = roundNum;
+        lastActiveTurn = rc.getRoundNum() - 1;
 
-        lastActiveTurn = spawnRound - 1;
+        updateBasic();
 
-        log("Init cost: " + (startByte - Clock.getBytecodesLeft()));
+        // find HQ location and symmetries if not already found
+        findHQLocation();
+        symmetryHQLocationsIndex = myID % symmetryHQLocations.length;
+        log("Initial exploreSymmetryLocation: " + symmetryHQLocations[symmetryHQLocationsIndex]);
+
+        if (!isLowBytecodeLimit(myType)) {
+            loadZoneInformation();
+        }
+
+        oldBlocksIndex = Math.max(oldBlocksIndex, roundNum - RESUBMIT_INTERVAL);
+        oldBlocksLength = roundNum - 1;
     }
 
-    public static void update() throws GameActionException {
-        int startByte = Clock.getBytecodesLeft();
+    /*
+    These updates should be cheap and independent of other updates
+     */
+    public static void updateBasic () throws GameActionException {
         here = rc.getLocation();
         myZone = locToZonePair(here);
         roundNum = rc.getRoundNum();
@@ -140,7 +151,7 @@ public class Globals {
 
         newSoupStatusesLength = 0;
 
-        printMyInfo();
+        calculateDynamicCost();
 
         visibleAllies = rc.senseNearbyRobots(-1, us); // -1 uses all robots within sense radius
         visibleEnemies = rc.senseNearbyRobots(-1, them);
@@ -154,13 +165,7 @@ public class Globals {
             visibleSoupLocs = rc.senseNearbySoup();
         }
 
-        if (HQLoc != null) {
-            // update moveable directions
-            updateIsDirMoveable();
-            // updates dangerous directions and modifies isdirmoveable based on this
-            updateIsDirDanger();
-        }
-
+        // dropped by drone information
         if (roundNum == lastActiveTurn + 1) {
             droppedLastTurn = false;
         } else {
@@ -170,22 +175,38 @@ public class Globals {
             Nav.bugLastWall = null;
             Nav.bugClosestDistanceToTarget = P_INF;
         }
+        lastActiveTurn = rc.getRoundNum();
 
-        // visually checks for enemy HQ location at target explore symmetry point
-
-        calculateDynamicCost();
-
-        log("Update cost: " + (startByte - Clock.getBytecodesLeft()));
+        printMyInfo();
     }
 
-    /*
-    Only performed it turn was not skipped last turn
-     */
-    public static void updateExtras () throws GameActionException {
-        int startByte = Clock.getBytecodesLeft();
+    public static void update() throws GameActionException {
+        updateBasic();
 
+        if (roundNum > 1) {
+            log("Reading the previous round's transactions");
+            int result = readBlock(roundNum - 1, 0);
+            if (result < 0) {
+                logi("WARNING: Did not fully read the previous round's transactions");
+            } else {
+                log("Done reading the previous round's transactions");
+            }
+        }
 
-        log("Extra update cost: " + (startByte - Clock.getBytecodesLeft()));
+        if (!isLowBytecodeLimit(myType)) {
+            checkZone();
+            locateSoup();
+
+            // update moveable directions
+            updateIsDirMoveable();
+            // updates dangerous directions and modifies isDirMoveable based on this
+            updateIsDirDanger();
+        }
+
+        updateSymmetry();
+
+        // tries to submit unsent messages from previous turns
+        submitUnsentTransactions();
     }
 
     /*
@@ -214,7 +235,6 @@ public class Globals {
             drawZoneStatus();
         }
 
-        lastActiveTurn = roundNum;
         readOldBlocks();
 
         // check if we went over the bytecode limit
@@ -247,29 +267,32 @@ public class Globals {
         // tries to find our HQLocation and HQElevation by reading messages
         // will skip turn if not found
         if (myType == RobotType.HQ) {
-            HQLoc = here;
-            HQElevation = myElevation;
+            HQLoc = rc.getLocation();
+            HQElevation = rc.senseElevation(HQLoc);
         } else {
-            int res = readBlock(oldBlocksIndex, oldTransactionsIndex);
-            if (res < 0) {
-                oldTransactionsIndex = -res - 1;
-            } else {
-                oldBlocksIndex++;
-                oldTransactionsIndex = 0;
-            }
+            int index = 1;
             while (HQLoc == null) {
-                log("Did not find HQLocation before block " + oldBlocksIndex + "-" + oldTransactionsIndex);
-                if (oldBlocksIndex >= spawnRound) {
-                    Globals.endTurn(true);
-                    Globals.update();
+                while (index >= rc.getRoundNum()) {
+                    log("YIELDING TO FIND HQ LOC");
+                    Clock.yield();
+                    Globals.updateBasic();
                 }
-                if (isLowBytecodeLimit(myType)) {
-                    tlog("Low bytecode limit");
-                    Globals.endTurn(true);
-                    Globals.update();
+
+                Transaction[] block = rc.getBlock(index);
+                for (Transaction t : block) {
+                    int[] message = t.getMessage();
+                    xorMessage(message);
+                    int submitterID = decryptID(message[0]);
+                    if (submitterID == -1) {
+                        tlog("Found opponent's transaction");
+                        continue; // not submitted by our team
+                    } else {
+                        if (message[1] % (1 << 8) == HQ_FIRST_TURN_SIGNAL) {
+                            readTransactionHQFirstTurn(message, index);
+                        }
+                    }
                 }
-                readBlock(oldBlocksIndex, 0);
-                oldBlocksIndex++;
+                index++;
             }
         }
 
@@ -277,16 +300,6 @@ public class Globals {
         symmetryHQLocations[0] = new MapLocation(mapWidth - 1 - HQLoc.x, HQLoc.y);
         symmetryHQLocations[1] = new MapLocation(HQLoc.x, mapHeight - 1 - HQLoc.y);
         symmetryHQLocations[2] = new MapLocation(mapWidth - 1 - HQLoc.x, mapHeight - 1 - HQLoc.y);
-    }
-
-    public static boolean inArray(Object[] arr, Object item, int length) {
-        for(int i = 0; i < length; i++) if(arr[i].equals(item)) return true;
-        return false;
-    }
-
-    public static boolean inArray(int[] arr, int item, int length) {
-        for(int i = 0; i < length; i++) if(arr[i] == item) return true;
-        return false;
     }
 
     /*
@@ -405,26 +418,5 @@ public class Globals {
         } else {
             return enemyHQLoc;
         }
-    }
-
-    /*
-    Given a direction, return an array of 8 directions (excludes CENTER)
-    that is ordered by how close they are to the given direction
-     */
-    public static Direction[] getCloseDirections (Direction dir) {
-        if (dir == Direction.CENTER) {
-            logi("WARNING: Tried to getCloseDirections of center");
-            return null;
-        }
-        Direction[] dirs = new Direction[8];
-        dirs[0] = dir;
-        dirs[1] = dir.rotateRight();
-        dirs[2] = dir.rotateLeft();
-        dirs[3] = dirs[1].rotateRight();
-        dirs[4] = dirs[2].rotateLeft();
-        dirs[5] = dirs[3].rotateRight();
-        dirs[6] = dirs[4].rotateLeft();
-        dirs[7] = dir.opposite();;
-        return dirs;
     }
 }

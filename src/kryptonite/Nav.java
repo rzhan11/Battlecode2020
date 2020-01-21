@@ -1,15 +1,14 @@
 package kryptonite;
 
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotInfo;
-import kryptonite.Actions;
-import kryptonite.Globals;
+import battlecode.common.*;
 
-import static kryptonite.Constants.*;
-import static kryptonite.Debug.log;
-import static kryptonite.Debug.tlog;
+import static kryptonite.Actions.*;
+import static kryptonite.Communication.*;
+import static kryptonite.Debug.*;
+import static kryptonite.Map.*;
+import static kryptonite.Nav.*;
+import static kryptonite.Utils.*;
+import static kryptonite.Zones.*;
 
 public class Nav extends Globals {
 
@@ -110,6 +109,7 @@ public class Nav extends Globals {
 	Returns null if did not move
 	*/
 
+	final public static int MAX_BUG_HISTORY_LENGTH = 100;
 
 	public static MapLocation bugTarget = null;
 
@@ -118,7 +118,10 @@ public class Nav extends Globals {
 	public static int bugClosestDistanceToTarget = P_INF;
 	public static int bugTurnsWithoutWall = 0;
 	public static boolean bugRotateLeft = true; // whether we are rotating left or right
-	public static boolean[][] bugVisitedLocations;
+
+	public static MapLocation[] bugVisitedLocations = null;
+	public static int bugVisitedLocationsIndex;
+	public static int bugVisitedLocationsLength;
 
 	public static Direction bugNavigate (MapLocation target) throws GameActionException {
 		log("Bug navigating to " + target);
@@ -178,12 +181,11 @@ public class Nav extends Globals {
 	*/
 	public static void bugStartTracing() throws GameActionException {
 
-		// Ends turn early to avoid exceeding bytecode limit due to large array creation
-		Globals.endTurn(true);
-		Globals.update();
-
 		bugTracing = true;
-		bugVisitedLocations = new boolean[MAX_MAP_SIZE][MAX_MAP_SIZE];
+
+		bugVisitedLocations = new MapLocation[MAX_BUG_HISTORY_LENGTH];
+		bugVisitedLocationsIndex = 0;
+		bugVisitedLocationsLength = 0;
 
 		bugTurnsWithoutWall = 0;
 		bugClosestDistanceToTarget = P_INF;
@@ -234,15 +236,17 @@ public class Nav extends Globals {
 	public static Direction bugTraceMove(boolean recursed) throws GameActionException {
 
 		Direction curDir = here.directionTo(bugLastWall);
-		bugVisitedLocations[here.x][here.y] = true;
+
+		// adds to array
+		bugVisitedLocations[bugVisitedLocationsIndex] = here;
+		bugVisitedLocationsIndex = (bugVisitedLocationsIndex + 1) % MAX_BUG_HISTORY_LENGTH;
+		bugVisitedLocationsLength = Math.min(bugVisitedLocationsLength + 1, MAX_BUG_HISTORY_LENGTH);
+
 		if (rc.canMove(curDir)) {
 			bugTurnsWithoutWall += 1;
 		} else {
 			bugTurnsWithoutWall = 0;
 		}
-		// log("TRACING");
-		// tlog("bugRotateLeft: " + bugRotateLeft);
-		// tlog("bugLastWall: " + bugLastWall);
 
 		for (int i = 0; i < 8; ++i) {
 			if (bugRotateLeft) {
@@ -259,8 +263,8 @@ public class Nav extends Globals {
 			}
 			if (checkDirMoveable(curDir)) {
 				Actions.doMove(curDir);
-				if (bugVisitedLocations[curDest.x][curDest.y]) {
-					// log("Resetting bugTracing");
+				if (inArray(bugVisitedLocations, curDest, bugVisitedLocationsLength)) {
+					log("Resetting bugTracing");
 					bugTracing = false;
 				}
 				return curDir;

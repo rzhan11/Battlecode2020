@@ -1,25 +1,20 @@
 package kryptonite;
 
 import battlecode.common.*;
-import kryptonite.BotDesignSchool;
-import kryptonite.BotFulfillmentCenter;
-import kryptonite.Globals;
-import kryptonite.*;
 
+import static kryptonite.Actions.*;
+import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
+import static kryptonite.Map.*;
+import static kryptonite.Nav.*;
+import static kryptonite.Utils.*;
 import static kryptonite.Zones.*;
-import static kryptonite.Debug.log;
-import static kryptonite.Debug.tlog;
-import static kryptonite.Debug.ttlog;
-import static kryptonite.Zones.exploredZoneStatus;
-import static kryptonite.Zones.updateKnownSoupZones;
-import static kryptonite.Zones.zoneIndexToPair;
 
 public class Communication extends Globals {
 
 	final public static int RESUBMIT_INTERVAL = 100;
 
-	final public static int MAX_UNSENT_TRANSACTIONS_LENGTH = 100;
+	final public static int MAX_UNSENT_TRANSACTIONS_LENGTH = 25;
 	final public static int READ_TRANSACTION_MIN_BYTECODE = 500; // how many bytecodes required to read a transaction
 	final public static int READ_BIG_TRANSACTION_MIN_BYTECODE = 1500; // how many bytecodes required to read a costly transaction
 

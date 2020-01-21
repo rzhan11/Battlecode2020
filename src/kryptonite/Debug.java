@@ -1,11 +1,13 @@
 package kryptonite;
 
-import battlecode.common.Clock;
-import battlecode.common.MapLocation;
-import battlecode.common.Team;
-import kryptonite.Globals;
+import battlecode.common.*;
 
-import static kryptonite.Constants.*;
+import static kryptonite.Actions.*;
+import static kryptonite.Communication.*;
+import static kryptonite.Debug.*;
+import static kryptonite.Map.*;
+import static kryptonite.Nav.*;
+import static kryptonite.Utils.*;
 import static kryptonite.Zones.*;
 
 public class Debug extends Globals {
@@ -137,7 +139,7 @@ public class Debug extends Globals {
 	}
 
 	public static void drawZoneStatus () {
-		if (roundNum == 1 || us == Team.B || us == Team.A) {
+		if (roundNum == 1 || us == Team.B) {
 			return;
 		}
 		for (int i = 0; i < numXZones; i++) {
