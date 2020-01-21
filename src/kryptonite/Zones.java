@@ -86,6 +86,27 @@ public class Zones extends Globals {
         }
     }
 
+    public static int getExactNumLocsInZone (int[] zone) throws GameActionException {
+        int x, y;
+        if (zone[0] == numXZones - 1) {
+            x = mapWidth % zoneSize;
+            if (x == 0) {
+                x = zoneSize;
+            }
+        } else {
+            x = zoneSize;
+        }
+        if (zone[1] == numYZones - 1) {
+            y = mapHeight % zoneSize;
+            if (y == 0) {
+                y = zoneSize;
+            }
+        } else {
+            y = zoneSize;
+        }
+        return x * y;
+    }
+
     /*
     Returns the xZone and yZone of this MapLocation
      */
@@ -147,20 +168,6 @@ public class Zones extends Globals {
             if (canSenseEntireCurrentZone()) {
                 exploredZoneStatus[myZone[0]][myZone[1]] = 1;
                 writeTransactionExploredZoneStatus(myZone[0], myZone[1], exploredZoneStatus[myZone[0]][myZone[1]]);
-            } else {
-                int x_lower = myZone[0] * zoneSize;
-                int x_upper = Math.min(mapWidth, x_lower + zoneSize);
-                int y_lower = myZone[1] * zoneSize;
-                int y_upper = Math.min(mapHeight, y_lower + zoneSize);
-                for (int x = x_lower; x < x_upper; x++) {
-                    for (int y = y_lower; y < y_upper; y++) {
-                        MapLocation loc = new MapLocation(x, y);
-                        if (rc.canSenseLocation(loc)) {
-                            updateKnownSoupLocs(loc, 2);
-                        }
-                    }
-                }
-
             }
         }
     }
@@ -200,25 +207,39 @@ public class Zones extends Globals {
 
     public static void locateSoup () throws GameActionException {
 		/*
-		Updates soup locations where there is 0 soup left
+		Updates soup locations of this zone
 		Only updates if this zone has not been denied of soup
 		 */
-        if (hasSoupZones[myZone[0]][myZone[1]] != 2) {
-            int x_lower = myZone[0] * zoneSize;
-            int x_upper = Math.min(mapWidth, x_lower + zoneSize);
-            int y_lower = myZone[1] * zoneSize;
-            int y_upper = Math.min(mapHeight, y_lower + zoneSize);
-            for (int x = x_lower; x < x_upper; x++) {
-                for (int y = y_lower; y < y_upper; y++) {
-                    MapLocation loc = new MapLocation(x, y);
-                    if (rc.canSenseLocation(loc)) {
-                        if (rc.senseSoup(loc) > 0) {
+        int x_lower = myZone[0] * zoneSize;
+        int x_upper = Math.min(mapWidth, x_lower + zoneSize);
+        int y_lower = myZone[1] * zoneSize;
+        int y_upper = Math.min(mapHeight, y_lower + zoneSize);
+        for (int x = x_lower; x < x_upper; x++) {
+            for (int y = y_lower; y < y_upper; y++) {
+                MapLocation loc = new MapLocation(x, y);
+                if (rc.canSenseLocation(loc)) {
+                    if (rc.senseSoup(loc) > 0) {
+                        if (isLocDry(loc) || isAdjLocDry(loc)) {
                             updateKnownSoupLocs(loc, 1);
                         } else {
                             updateKnownSoupLocs(loc, 2);
                         }
+                    } else {
+                        updateKnownSoupLocs(loc, 2);
                     }
                 }
+            }
+        }
+
+        //
+        if (numNoSoupLocsInZones[myZone[0]][myZone[1]] == getExactNumLocsInZone(myZone)) {
+            // zone is completely devoid of soup
+            if (hasSoupZones[myZone[0]][myZone[1]] != 2) {
+                // this information is new and worth communicating
+                hasSoupZones[myZone[0]][myZone[1]] = 2;
+                newSoupStatusIndices[newSoupStatusesLength] = zonePairToIndex(myZone);
+                newSoupStatuses[newSoupStatusesLength] = 2;
+                newSoupStatusesLength++;
             }
         }
 
@@ -228,7 +249,7 @@ public class Zones extends Globals {
 
 		if (visibleSoupLocs.length <= VISIBLE_SOUP_LOCS_LIMIT) {
             for (MapLocation loc: visibleSoupLocs) {
-                if (isLocDry(loc)) {
+                if (isLocDry(loc) || isAdjLocDry(loc)) {
                     updateKnownSoupLocs(loc, 1);
                 }
             }
@@ -239,8 +260,8 @@ public class Zones extends Globals {
                     log("Checked " + i + " random soup locations");
                     break;
                 }
-                MapLocation loc = visibleSoupLocs[rand.nextInt(visibleSoupLocs.length)];
-                if (isLocDry(loc)) {
+                MapLocation loc = visibleSoupLocs[i];
+                if (isLocDry(loc) || isAdjLocDry(loc)) {
                     updateKnownSoupLocs(loc, 1);
                 }
             }
@@ -268,10 +289,9 @@ public class Zones extends Globals {
                     if (ignoreSelf && loc.equals(here)) {
                         continue;
                     }
-                    if (!isLocDry(loc)) {
-                        continue;
+                    if (isLocDry(loc) || isAdjLocDry(loc)) {
+                        return loc;
                     }
-                    return loc;
                 }
             }
             logi("ERROR: Sanity check failed - Number of soup locations greater than limit but could not approximate the closest soup location");
@@ -284,13 +304,12 @@ public class Zones extends Globals {
             if (ignoreSelf && loc.equals(here)) {
                 continue;
             }
-            if (!isLocDry(loc)) {
-                continue;
-            }
             int dist = here.distanceSquaredTo(loc);
             if (dist < closestDist) {
-                closestDist = dist;
-                closestLoc = loc;
+                if (isLocDry(loc) || isAdjLocDry(loc)) {
+                    closestDist = dist;
+                    closestLoc = loc;
+                }
             }
         }
         return closestLoc;
@@ -319,7 +338,7 @@ public class Zones extends Globals {
                     numSoupLocsInZones[zone[0]][zone[1]]--;
                 }
 
-                if (numNoSoupLocsInZones[zone[0]][zone[1]] == numLocsinZone) {
+                if (numNoSoupLocsInZones[zone[0]][zone[1]] == getExactNumLocsInZone(zone)) {
                     // zone is completely devoid of soup
                     if (hasSoupZones[zone[0]][zone[1]] != 2) {
                         // this information is new and worth communicating
@@ -335,7 +354,11 @@ public class Zones extends Globals {
             if (hasSoupLocs[loc.x][loc.y] != 1) {
                 if (hasSoupLocs[loc.x][loc.y] == 2) {
                     // this tile was previously confirmed to not have soup
-                    logi("ERROR: Sanity check failed - tile without soup now has soup");
+                    hasSoupZones[zone[0]][zone[1]] = 1;
+                    newSoupStatusIndices[newSoupStatusesLength] = zonePairToIndex(zone);
+                    newSoupStatuses[newSoupStatusesLength] = 1;
+                    newSoupStatusesLength++;
+                    logi("WARNING: Sanity check failed - tile without soup now has soup");
                 } else if (hasSoupLocs[loc.x][loc.y] == 0) {
                     // this tile was previously unknown
 

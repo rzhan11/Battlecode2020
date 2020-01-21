@@ -46,7 +46,7 @@ public class BotMiner extends Globals {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			Globals.endTurn(false);
+			Globals.endTurn();
 		}
 	}
 
@@ -59,6 +59,9 @@ public class BotMiner extends Globals {
 		addToRefineries(HQLoc);
 
 		initialized = true;
+
+		Globals.endTurn();
+		Globals.update();
 	}
 
 	public static void turn() throws GameActionException {
@@ -144,13 +147,13 @@ public class BotMiner extends Globals {
 		}
 
 		closestVisibleSoupLoc = findClosestVisibleSoupLoc(false);
-//		log("closestVisibleSoupLoc: " + closestVisibleSoupLoc);
+		log("closestVisibleSoupLoc: " + closestVisibleSoupLoc);
 
 		closestSoupZone = findClosestSoupZone();
-//		log("closestSoupZone: " + closestSoupZone);
+		log("closestSoupZone: " + closestSoupZone);
 
-//		log("closestUnexploredZone: " + closestUnexploredZone);
 		closestUnexploredZone = findClosestUnexploredZone();
+		log("closestUnexploredZone: " + closestUnexploredZone);
 
 		int avoidDangerResult = Nav.avoidDanger();
 		if (avoidDangerResult == 1) {
@@ -524,12 +527,10 @@ public class BotMiner extends Globals {
 
 		for (MapLocation loc: visibleSoupLocs) {
 			int soup = rc.senseSoup(loc);
-			if (!rc.senseFlooding(loc)) {
+			if (isLocDry(loc) || isAdjLocDry(loc)) {
 				visibleSoup += soup;
 				totalX += soup * loc.x;
 				totalY += soup * loc.y;
-
-				updateKnownSoupLocs(loc, 1);
 			}
 		}
 

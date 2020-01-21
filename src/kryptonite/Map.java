@@ -72,8 +72,22 @@ public class Map extends Globals {
         return Math.abs(rc.senseElevation(loc) - myElevation) <= GameConstants.MAX_DIRT_DIFFERENCE;
     }
 
+    public static boolean isLocWet (MapLocation loc) throws GameActionException {
+        return rc.senseFlooding(loc);
+    }
+
     public static boolean isLocDry (MapLocation loc) throws GameActionException {
         return !rc.senseFlooding(loc);
+    }
+
+    public static boolean isAdjLocDry (MapLocation loc) throws GameActionException {
+        for (Direction dir: directions) {
+            MapLocation adjLoc = loc.add(dir);
+            if (rc.canSenseLocation(adjLoc) && isLocDry(adjLoc)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static boolean isLocEmpty (MapLocation loc) throws GameActionException {

@@ -21,7 +21,7 @@ public class BotLandscaper extends Globals {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			Globals.endTurn(false);
+			Globals.endTurn();
 		}
 	}
 

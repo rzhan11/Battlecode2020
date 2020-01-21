@@ -27,7 +27,7 @@ public class BotHQ extends Globals {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			Globals.endTurn(false);
+			Globals.endTurn();
 		}
 	}
 
@@ -62,7 +62,7 @@ public class BotHQ extends Globals {
 			return;
 		}
 
-		if (minerMadeCount < 3) {
+		if (minerMadeCount < 8) {
 			if (rc.getTeamSoup() >= RobotType.MINER.cost) {
 				buildMiner();
 			} else {

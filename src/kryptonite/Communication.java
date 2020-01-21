@@ -27,6 +27,8 @@ public class Communication extends Globals {
 	final public static int SOUP_ZONE_STATUS_SIGNAL = 3;
 	final public static int REFINERY_BUILT_SIGNAL = 4;
 
+	final public static int REVIEW_ZONE_STATUS_SIGNAL = 103;
+
 	// used to alter our own data
 	public static int secretKey;
 	public static int[] secretXORKeys = {0B01011011101111011111011111101111,

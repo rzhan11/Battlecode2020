@@ -21,7 +21,7 @@ public class BotNetGun extends Globals {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			Globals.endTurn(false);
+			Globals.endTurn();
 		}
 	}
 

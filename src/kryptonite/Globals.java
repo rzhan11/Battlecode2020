@@ -166,7 +166,7 @@ public class Globals extends Constants {
         }
 
         // dropped by drone information
-        if (roundNum == lastActiveTurn + 1) {
+        if (roundNum <= lastActiveTurn + 1) {
             droppedLastTurn = false;
         } else {
             droppedLastTurn = true;
@@ -176,12 +176,12 @@ public class Globals extends Constants {
             Nav.bugClosestDistanceToTarget = P_INF;
         }
         lastActiveTurn = rc.getRoundNum();
-
-        printMyInfo();
     }
 
     public static void update() throws GameActionException {
         updateBasic();
+
+        printMyInfo();
 
         if (roundNum > 1) {
             log("Reading the previous round's transactions");
@@ -230,7 +230,7 @@ public class Globals extends Constants {
     /*
     earlyEnd should be true, unless this method was called at the end of the loop() method
     */
-    public static void endTurn (boolean earlyEnd) throws GameActionException {
+    public static void endTurn () throws GameActionException {
         if (myType == RobotType.HQ) {
             drawZoneStatus();
         }
@@ -253,9 +253,6 @@ public class Globals extends Constants {
         }
         if(!noTurnLog) {
             log("------------------------------\n");
-            if (earlyEnd) {
-                log("EARLY");
-            }
             log("END TURN");
             log("Bytecode left: " + Clock.getBytecodesLeft());
             log("------------------------------\n");
