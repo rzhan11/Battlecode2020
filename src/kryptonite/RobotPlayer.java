@@ -5,7 +5,6 @@ import battlecode.common.*;
 public strictfp class RobotPlayer {
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
-        System.out.println("I'm a " + rc.getType() + "! Location " + rc.getLocation());
         Globals.init(rc);
         switch (rc.getType()) {
             case HQ:                 BotHQ.loop();                break;

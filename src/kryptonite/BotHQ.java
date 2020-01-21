@@ -7,11 +7,13 @@ public class BotHQ extends Globals {
 	public static void loop() throws GameActionException {
 		while (true) {
 			try {
-			    turn();
+				Globals.update();
+
+				turn();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			Clock.yield();
+			Globals.endTurn(false);
 		}
 	}
 
