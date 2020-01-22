@@ -64,8 +64,10 @@ public class Globals extends Constants {
     public static MapLocation targetVisibleSoupLoc = null;
     public static MapLocation closestSoupZone = null;
     public static MapLocation targetSoupZone = null;
+
     public static MapLocation closestUnexploredZone = null;
     public static MapLocation targetUnexploredZone = null;
+    public static int unexploredZoneStartRound = -1;
 
     public static MapLocation targetNavLoc = null;
 
@@ -191,6 +193,7 @@ public class Globals extends Constants {
             } else {
                 log("Done reading the previous round's transactions");
             }
+            log("Bytecode after reading prev. transactions " + Clock.getBytecodesLeft());
         }
 
         if (!isLowBytecodeLimit(myType)) {

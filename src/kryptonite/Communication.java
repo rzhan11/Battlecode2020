@@ -26,6 +26,7 @@ public class Communication extends Globals {
 	final public static int EXPLORED_ZONE_STATUS = 2;
 	final public static int SOUP_ZONE_STATUS_SIGNAL = 3;
 	final public static int REFINERY_BUILT_SIGNAL = 4;
+	final public static int BUILD_INSTRUCTION_SIGNAL = 5;
 
 	final public static int REVIEW_ZONE_STATUS_SIGNAL = 103;
 
@@ -226,6 +227,11 @@ public class Communication extends Globals {
 								return -(index + 1);
 							}
 							readTransactionRefineryBuilt(message, round);
+						}
+						break;
+					case BUILD_INSTRUCTION_SIGNAL:
+						if (myType == RobotType.MINER) {
+							readTransactionBuildInstruction(message, round);
 						}
 						break;
 				}
@@ -430,5 +436,43 @@ public class Communication extends Globals {
 		tlog("Location: " + loc);
 		tlog("Posted round: " + round);
 		BotMiner.addToRefineries(loc);
+	}
+
+	final public static int BUILD_CLOSE_FULFILLMENT_CENTER = 1;
+	final public static int BUILD_CLOSE_DESIGN_SCHOOL = 2;
+
+	/*
+	message[2] = miner id
+	message[3] = build instruction
+
+	*/
+	public static void writeTransactionBuildInstruction (int minerID, int instruction) throws GameActionException {
+		// check money
+		log("Writing transaction for 'Build Instruction' at " + minerID + ": " + instruction);
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
+		message[0] = encryptID(myID);
+		message[1] = BUILD_INSTRUCTION_SIGNAL;
+		message[2] = minerID;
+		message[3] = instruction;
+
+		xorMessage(message);
+		if (rc.getTeamSoup() >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
+
+		} else {
+			tlog("Could not afford transaction");
+			saveUnsentTransaction(message, dynamicCost);
+		}
+	}
+
+	public static void readTransactionBuildInstruction (int[] message, int round) {
+		log("Reading 'Build Instruction' transaction");
+		tlog("Submitter ID: " + decryptID(message[0]));
+		tlog("Builder Miner ID: " + message[2]);
+		tlog("Instruction: " + message[3]);
+		tlog("Posted round: " + round);
+		if (myID == message[2]) {
+			BotMinerBuilder.buildInstruction = message[3];
+		}
 	}
 }

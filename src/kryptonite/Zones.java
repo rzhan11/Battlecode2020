@@ -172,37 +172,59 @@ public class Zones extends Globals {
         }
     }
 
-    public static MapLocation findClosestUnexploredZone() throws GameActionException {
+    public static MapLocation getRandomUnexploredZone () throws GameActionException {
+        for (int i = 0; i < 5; i++) {
+            int[] zone = new int[] {rand.nextInt(numXZones), rand.nextInt(numYZones)};
+            if (exploredZoneStatus[zone[0]][zone[1]] == 0) {
+                return new MapLocation(zone[0] * zoneSize, zone[1] * zoneSize);
+            }
+        }
+        log("Cannot find random unexplored zone, going to symmetry location zone");
+        return getSymmetryLoc();
+    }
+
+    /*
+    Based on hasSoupZones, find the closest soup zone that has been confirmed to contain soup
+    Also finds the closest unexplored zone
+    Returns a size two array that contains these two zones
+     */
+    public static MapLocation[] findClosestSoupAndUnexploredZone () throws GameActionException {
 //		int startByte = Clock.getBytecodesLeft();
-        int range = 2;
+        int range = 3;
         int x_lower = Math.max(0, myZone[0] - range);
         int x_upper = Math.min(numXZones - 1, myZone[0] + range);
         int y_lower = Math.max(0, myZone[1] - range);
         int y_upper = Math.min(numYZones - 1, myZone[1] + range);
 
-        int closestDist = P_INF;
-        MapLocation closestLoc = null;
+        int closestSoupDist = P_INF;
+        MapLocation closestSoupLoc = null;
+        int closestUnexploredDist = P_INF;
+        MapLocation closestUnexploredLoc = null;
         for (int x = x_lower; x <= x_upper; x++) {
             for (int y = y_lower; y <= y_upper; y++) {
-                if (exploredZoneStatus[x][y] == 0) {
-                    MapLocation targetLoc = new MapLocation(x * zoneSize + zoneSize / 2, y * zoneSize + zoneSize / 2);
+                MapLocation targetLoc = new MapLocation(x * zoneSize + zoneSize / 2, y * zoneSize + zoneSize / 2);
+                if (hasSoupZones[x][y] == 1) {
                     int dist = here.distanceSquaredTo(targetLoc);
-                    if (dist < closestDist) {
-                        closestDist = dist;
-                        closestLoc = targetLoc;
+                    if (dist < closestSoupDist) {
+                        closestSoupDist = dist;
+                        closestSoupLoc = targetLoc;
+                    }
+                }
+                if (exploredZoneStatus[x][y] == 0) {
+                    int dist = here.distanceSquaredTo(targetLoc);
+                    if (dist < closestUnexploredDist) {
+                        closestUnexploredDist = dist;
+                        closestUnexploredLoc = targetLoc;
                     }
                 }
             }
         }
-//		tlog("FIND CLOSEST ZONE BYTES: " + (startByte - Clock.getBytecodesLeft()));
-        if (closestLoc == null) {
+        if (closestUnexploredLoc == null) {
             log("Cannot find nearby unexplored zone, going to symmetry location zone");
-            log("enemy " + enemyHQLoc);
-            log ("index " + symmetryHQLocationsIndex);
-            log ("val " + isSymmetryHQLocation[symmetryHQLocationsIndex]);
-            return getSymmetryLoc();
+            closestUnexploredLoc = getSymmetryLoc();
         }
-        return closestLoc;
+//		tlog("FIND CLOSEST SOUP ZONE BYTES: " + (startByte - Clock.getBytecodesLeft()));
+        return new MapLocation[] {closestSoupLoc, closestUnexploredLoc};
     }
 
     public static void locateSoup () throws GameActionException {

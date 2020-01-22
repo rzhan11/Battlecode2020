@@ -19,6 +19,8 @@ public class BotMiner extends Globals {
 	final private static int MIN_SOUP_BUILD_REFINERY = 1000;
 	final private static int MIN_SOUP_RETURN_REFINERY = 20;
 
+	final private static int RANDOMIZE_ZONE_LIMIT = 25;
+
 	// a soup deposit is a single soup location
 	private static int visibleSoup;
 	private static MapLocation centerOfVisibleSoup = null;
@@ -42,7 +44,11 @@ public class BotMiner extends Globals {
 					initMiner();
 				}
 
-				turn();
+				if (BotMinerBuilder.buildInstruction == -1) {
+					turn();
+				} else {
+					BotMinerBuilder.turn();
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -145,15 +151,6 @@ public class BotMiner extends Globals {
 			}
 			break;
 		}
-
-		closestVisibleSoupLoc = findClosestVisibleSoupLoc(false);
-		log("closestVisibleSoupLoc: " + closestVisibleSoupLoc);
-
-		closestSoupZone = findClosestSoupZone();
-		log("closestSoupZone: " + closestSoupZone);
-
-		closestUnexploredZone = findClosestUnexploredZone();
-		log("closestUnexploredZone: " + closestUnexploredZone);
 
 		int avoidDangerResult = Nav.avoidDanger();
 		if (avoidDangerResult == 1) {
@@ -414,6 +411,9 @@ public class BotMiner extends Globals {
 		Does not retarget to task of similar priority
 		 */
 		if (targetVisibleSoupLoc == null) {
+			closestVisibleSoupLoc = findClosestVisibleSoupLoc(false);
+			log("closestVisibleSoupLoc: " + closestVisibleSoupLoc);
+
 			if (closestVisibleSoupLoc != null) {
 				targetVisibleSoupLoc = closestVisibleSoupLoc;
 				targetSoupZone = null;
@@ -421,6 +421,10 @@ public class BotMiner extends Globals {
 				targetNavLoc = targetVisibleSoupLoc;
 				log("Targeting visible soup at " + targetVisibleSoupLoc);
 			} else if (targetSoupZone == null) {
+				MapLocation[] twoZones = findClosestSoupAndUnexploredZone();
+				closestSoupZone = twoZones[0];
+				log("closestSoupZone: " + closestSoupZone);
+
 				if (closestSoupZone != null) {
 					targetVisibleSoupLoc = null;
 					targetSoupZone = closestSoupZone;
@@ -428,16 +432,25 @@ public class BotMiner extends Globals {
 					targetNavLoc = targetSoupZone;
 					log("Targeting soup zone at " + targetSoupZone);
 				} else if (targetUnexploredZone == null) {
+					closestUnexploredZone = twoZones[1];
+					log("closestUnexploredZone: " + closestUnexploredZone);
+
 					if (closestUnexploredZone != null) {
 						targetVisibleSoupLoc = null;
 						targetSoupZone = null;
 						targetUnexploredZone = closestUnexploredZone;
+						unexploredZoneStartRound = roundNum;
 						targetNavLoc = targetUnexploredZone;
 						log("Targeting unexplored zone at " + targetUnexploredZone);
-					} else {
-						logi("WARNING - Everything has been done. Ask Richard to check if this is actually possible");
-						return;
 					}
+				}
+				if (roundNum - unexploredZoneStartRound >= RANDOMIZE_ZONE_LIMIT) {
+					targetVisibleSoupLoc = null;
+					targetSoupZone = null;
+					targetUnexploredZone = getRandomUnexploredZone();
+					unexploredZoneStartRound = roundNum;
+					targetNavLoc = targetUnexploredZone;
+					log("Targeting random unexplored zone at " + targetUnexploredZone);
 				}
 			}
 		}
@@ -539,35 +552,6 @@ public class BotMiner extends Globals {
 		} else {
 			centerOfVisibleSoup = here;
 		}
-	}
-
-	/*
-	Based on hasSoupZones, find the closest soup zone that has been confirmed to contain soup
-	 */
-	public static MapLocation findClosestSoupZone () throws GameActionException {
-//		int startByte = Clock.getBytecodesLeft();
-		int range = 4;
-		int x_lower = Math.max(0, myZone[0] - range);
-		int x_upper = Math.min(numXZones - 1, myZone[0] + range);
-		int y_lower = Math.max(0, myZone[1] - range);
-		int y_upper = Math.min(numYZones - 1, myZone[1] + range);
-
-		int closestDist = P_INF;
-		MapLocation closestLoc = null;
-		for (int x = x_lower; x <= x_upper; x++) {
-			for (int y = y_lower; y <= y_upper; y++) {
-				if (hasSoupZones[x][y] == 1) {
-					MapLocation targetLoc = new MapLocation(x * zoneSize + zoneSize / 2, y * zoneSize + zoneSize / 2);
-					int dist = here.distanceSquaredTo(targetLoc);
-					if (dist < closestDist) {
-						closestDist = dist;
-						closestLoc = targetLoc;
-					}
-				}
-			}
-		}
-//		tlog("FIND CLOSEST SOUP ZONE BYTES: " + (startByte - Clock.getBytecodesLeft()));
-		return closestLoc;
 	}
 
 	/*

@@ -2,17 +2,22 @@ package kryptonite;
 
 import battlecode.common.*;
 
-import static kryptonite.Actions.*;
 import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
-import static kryptonite.Map.*;
-import static kryptonite.Nav.*;
 import static kryptonite.Utils.*;
 import static kryptonite.Zones.*;
 
 public class BotHQ extends Globals {
 
+	final public static int REASSIGN_ROUND_NUM = 25;
+
+	public static int maxMinerMadeCount = 8;
+
 	public static int minerMadeCount = 0;
+
+	public static int lastAssignmentRound = N_INF;
+	public static boolean builtCloseDesignSchool = false;
+	public static boolean builtCloseFulfillmentCenter = false;
 
 	public static void loop() throws GameActionException {
 		while (true) {
@@ -52,6 +57,54 @@ public class BotHQ extends Globals {
 
 		Communication.resubmitImportantTransactions();
 
+		// assign construction of close design school
+		if (!builtCloseDesignSchool) {
+			for (RobotInfo ri: visibleAllies) {
+				if (ri.type == RobotType.DESIGN_SCHOOL) {
+					builtCloseDesignSchool = true;
+					lastAssignmentRound = N_INF;
+					break;
+				}
+			}
+			if (!builtCloseDesignSchool && roundNum - lastAssignmentRound >= REASSIGN_ROUND_NUM) {
+				if (minerMadeCount >= 4) {
+					int id = findBuilderMiner();
+					if (id == -1) {
+						buildMiner();
+					} else {
+						writeTransactionBuildInstruction(id, BUILD_CLOSE_DESIGN_SCHOOL);
+						lastAssignmentRound = roundNum;
+					}
+				}
+			}
+		} else if (!builtCloseFulfillmentCenter) {
+			int landscaperCount = 0;
+			for (RobotInfo ri: visibleAllies) {
+				switch(ri.type) {
+					case FULFILLMENT_CENTER:
+						builtCloseFulfillmentCenter = true;
+						lastAssignmentRound = N_INF;
+						break;
+					case LANDSCAPER:
+						landscaperCount++;
+						break;
+
+				}
+			}
+			if (landscaperCount >= 3 &&
+					!builtCloseFulfillmentCenter && roundNum - lastAssignmentRound >= REASSIGN_ROUND_NUM) {
+				if (minerMadeCount >= 4) {
+					int id = findBuilderMiner();
+					if (id == -1) {
+						buildMiner();
+					} else {
+						writeTransactionBuildInstruction(id, BUILD_CLOSE_FULFILLMENT_CENTER);
+						lastAssignmentRound = roundNum;
+					}
+				}
+			}
+		}
+
 		if (!rc.isReady()) {
 			log("Not ready");
 			return;
@@ -62,7 +115,7 @@ public class BotHQ extends Globals {
 			return;
 		}
 
-		if (minerMadeCount < 8) {
+		if (minerMadeCount < maxMinerMadeCount) {
 			if (rc.getTeamSoup() >= RobotType.MINER.cost) {
 				buildMiner();
 			} else {
@@ -71,6 +124,18 @@ public class BotHQ extends Globals {
 			return;
 		}
 
+	}
+
+	/*
+	Returns the index of a valid builder miner (lowish cooldown)
+	 */
+	public static int findBuilderMiner () {
+		for (RobotInfo ri: visibleAllies) {
+			if (ri.type == RobotType.MINER && ri.cooldownTurns < 5) {
+				return ri.ID;
+			}
+		}
+		return -1;
 	}
 
 	/*
