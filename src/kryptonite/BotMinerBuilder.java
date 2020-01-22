@@ -18,8 +18,8 @@ public class BotMinerBuilder extends Globals {
 
         initialized = true;
 
-        Globals.endTurn();
-        Globals.update();
+//        Globals.endTurn();
+//        Globals.update();
     }
 
     public static void uninitMinerBuilder() throws GameActionException {
@@ -37,6 +37,14 @@ public class BotMinerBuilder extends Globals {
         switch (buildInstruction) {
             case BUILD_CLOSE_FULFILLMENT_CENTER:
                 if (buildCloseFulfillmentCenter()) {
+                    uninitMinerBuilder();
+                }
+                break;
+            case BUILD_CLOSE_VAPORATOR:
+                if (buildCloseVaporator()) {
+                    vaporatorBuiltCount++;
+                }
+                if (vaporatorBuiltCount >= 3) {
                     uninitMinerBuilder();
                 }
                 break;
@@ -58,7 +66,7 @@ public class BotMinerBuilder extends Globals {
             if (!rc.onTheMap(loc)) {
                 continue;
             }
-            if (maxXYDistance(HQLoc, loc) == 3 && isBuildLocation(loc)) {
+            if (maxXYDistance(HQLoc, loc) == 1) {
                 if (isDirDryFlatEmpty(dir)) {
                     if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost) {
                         Actions.doBuildRobot(RobotType.FULFILLMENT_CENTER, dir);
@@ -83,10 +91,56 @@ public class BotMinerBuilder extends Globals {
             if (!rc.onTheMap(buildLocation)) {
                 continue;
             }
-            // forces it to be on 7x7 ring
-            if (maxXYDistance(HQLoc, buildLocation) == 3 && isBuildLocation(buildLocation)) {
+
+            if (maxXYDistance(HQLoc, buildLocation) == 1) {
                 if (isLocDryEmpty(buildLocation)) {
                     log("Moving to build fulfillment center");
+                    moveLog(buildLocation);
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static int vaporatorBuiltCount = 0;
+
+    public static boolean buildCloseVaporator () throws GameActionException {
+        log("BUILDER MINER: Close Vaporator");
+        for (Direction dir : directions) {
+            MapLocation loc = rc.adjacentLocation(dir);
+            if (!rc.onTheMap(loc)) {
+                continue;
+            }
+            if (maxXYDistance(HQLoc, loc) == 2) {
+                if (isDirDryFlatEmpty(dir)) {
+                    if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
+                        Actions.doBuildRobot(RobotType.VAPORATOR, dir);
+                        tlog("Vaporator Built");
+                        return true;
+                    } else {
+                        tlog("In position, not enough soup");
+                    }
+                    // return if in position/built it
+                    return false;
+                }
+            }
+        }
+
+        //find a spot in the 5x5 where it can build vaporator
+        for (int[] dir : senseDirections) {
+            // ignore locs that are out of sensor range or within build range (since they are not flat)
+            if (dir[2] <= 2 || actualSensorRadiusSquared < dir[2]) {
+                continue;
+            }
+            MapLocation buildLocation = here.translate(dir[0], dir[1]);
+            if (!rc.onTheMap(buildLocation)) {
+                continue;
+            }
+            // forces it to be on 5x5 ring
+            if (maxXYDistance(HQLoc, buildLocation) == 2) {
+                if (isLocDryEmpty(buildLocation)) {
+                    log("Moving to build vaporator");
                     moveLog(buildLocation);
                     return false;
                 }
@@ -105,7 +159,7 @@ public class BotMinerBuilder extends Globals {
             if (!rc.onTheMap(loc)) {
                 continue;
             }
-            if (maxXYDistance(HQLoc, loc) == 3 && isBuildLocation(loc)) {
+            if (maxXYDistance(HQLoc, loc) == 1) {
                 if (isDirDryFlatEmpty(dir)) {
                     if (rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost) {
                         Actions.doBuildRobot(RobotType.DESIGN_SCHOOL, dir);
@@ -120,7 +174,7 @@ public class BotMinerBuilder extends Globals {
             }
         }
 
-        //find a spot in the 7x7 where it can build design school
+        //find a spot in the 3x3 where it can build design school
         for (int[] dir : senseDirections) {
             // ignore locs that are out of sensor range or within build range (since they are not flat)
             if (dir[2] <= 2 || actualSensorRadiusSquared < dir[2]) {
@@ -130,8 +184,8 @@ public class BotMinerBuilder extends Globals {
             if (!rc.onTheMap(buildLocation)) {
                 continue;
             }
-            // forces it to be on 7x7 ring
-            if (maxXYDistance(HQLoc, buildLocation) == 3 && isBuildLocation(buildLocation)) {
+            // forces it to be on 3x3 ring
+            if (maxXYDistance(HQLoc, buildLocation) == 1) {
                 if (isLocDryEmpty(buildLocation)) {
                     log("Moving to build design school");
                     moveLog(buildLocation);

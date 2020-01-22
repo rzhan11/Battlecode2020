@@ -109,7 +109,8 @@ public class BotMiner extends Globals {
 		}
 
 		// create vaporators
-		while (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
+		// TURNED OFF
+		/*while (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
 			//checks to see if there are too many adjacent allies/vaporators
 			if (visibleAllies.length >= 25) {
 				break;
@@ -150,7 +151,7 @@ public class BotMiner extends Globals {
 				}
 			}
 			break;
-		}
+		}*/
 
 		int avoidDangerResult = Nav.avoidDanger();
 		if (avoidDangerResult == 1) {

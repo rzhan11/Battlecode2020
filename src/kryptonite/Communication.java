@@ -440,6 +440,7 @@ public class Communication extends Globals {
 
 	final public static int BUILD_CLOSE_FULFILLMENT_CENTER = 1;
 	final public static int BUILD_CLOSE_DESIGN_SCHOOL = 2;
+	final public static int BUILD_CLOSE_VAPORATOR = 3;
 
 	/*
 	message[2] = miner id

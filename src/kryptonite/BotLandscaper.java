@@ -27,5 +27,6 @@ public class BotLandscaper extends Globals {
 
 	public static void turn() throws GameActionException {
 
+
 	}
 }

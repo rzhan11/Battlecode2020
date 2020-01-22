@@ -12,6 +12,8 @@ import static kryptonite.Zones.*;
 
 public class BotDesignSchool extends Globals {
 
+	public static int landscapersBuilt = 0;
+
 	public static void loop() throws GameActionException {
 		while (true) {
 			try {
@@ -27,5 +29,27 @@ public class BotDesignSchool extends Globals {
 
 	public static void turn() throws GameActionException {
 
+		if (!rc.isReady()) {
+			log("Not ready");
+			return;
+		}
+
+		if (roundNum % 25 == spawnRound % 25) {
+			designBuild(getCloseDirections(here.directionTo(getSymmetryLoc())), RobotType.LANDSCAPER.cost);
+			return;
+		}
+
+	}
+
+	public static void designBuild(Direction[] dirs, int soupLimit) throws GameActionException{
+		for (Direction dir : dirs) {
+			if (rc.getTeamSoup() >= soupLimit && isDirDryFlatEmpty(dir)) {
+				Debug.tlog("We are building");
+				Actions.doBuildRobot(RobotType.LANDSCAPER, dir);
+				landscapersBuilt++;
+				return;
+			}
+		}
+		return;
 	}
 }
