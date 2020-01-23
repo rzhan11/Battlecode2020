@@ -40,7 +40,7 @@ public class Globals extends Constants {
 	*/
 
     public static int roundNum;
-
+    public static boolean firstTurn = true;
     public static MapLocation here;
     public static int[] myZone;
     public static int myElevation;
@@ -242,6 +242,7 @@ public class Globals extends Constants {
 
         // check if we went over the bytecode limit
         int endTurn = rc.getRoundNum();
+        firstTurn = false; // if early end, do not count as full turn
         if (roundNum != endTurn) {
             printMyInfo();
             logi("BYTECODE LIMIT EXCEEDED");
