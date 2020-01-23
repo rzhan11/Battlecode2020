@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 import java.util.Random;
 
-import static kryptonite.Actions.*;
+
 import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
@@ -40,7 +40,6 @@ public class Globals extends Constants {
 	*/
 
     public static int roundNum;
-    public static boolean firstTurn = true;
     public static MapLocation here;
     public static int[] myZone;
     public static int myElevation;
@@ -87,9 +86,9 @@ public class Globals extends Constants {
     public static MapLocation HQLoc = null;
     public static int HQElevation;
 
-    public static MapLocation[] symmetryHQLocations = new MapLocation[3];
-    public static int[] isSymmetryHQLocation = {-1, -1, -1}; // -1 is unknown, 0 is false, 1 is true
-    public static int symmetryHQLocationsIndex; // current symmetry that we are exploring
+    public static MapLocation[] symmetryHQLocs = new MapLocation[3];
+    public static int[] isSymmetryHQLoc = new int[3]; // 0 is unknown, 1 is confirmed, 2 is denied
+    public static int symmetryHQLocsIndex; // current symmetry that we are exploring
     public static MapLocation enemyHQLoc = null;
 
 
@@ -121,16 +120,24 @@ public class Globals extends Constants {
         updateBasic();
 
         // find HQ location and symmetries if not already found
-        findHQLocation();
-        symmetryHQLocationsIndex = myID % symmetryHQLocations.length;
-        log("Initial exploreSymmetryLocation: " + symmetryHQLocations[symmetryHQLocationsIndex]);
+        findHQLoc();
+        symmetryHQLocsIndex = myID % symmetryHQLocs.length;
+        log("Initial exploreSymmetryLocation: " + symmetryHQLocs[symmetryHQLocsIndex]);
 
         if (!isLowBytecodeLimit(myType)) {
             loadZoneInformation();
         }
 
-        oldBlocksIndex = Math.max(oldBlocksIndex, roundNum - RESUBMIT_INTERVAL);
-        oldBlocksLength = roundNum - 1;
+        log("SEARCHING FOR REVIEW BLOCKS");
+        int recentReviewRound = ((roundNum + RESUBMIT_EARLY - 1) / RESUBMIT_INTERVAL) * RESUBMIT_INTERVAL - RESUBMIT_EARLY;
+        if (recentReviewRound >= 1) {
+            int startByte = Clock.getBytecodesLeft();
+            readReviewBlock(recentReviewRound, 0);
+            oldBlocksIndex = recentReviewRound;
+            log("Review round bytecode: " + (startByte - Clock.getBytecodesLeft()));
+        } else {
+            oldBlocksIndex = 1;
+        }
     }
 
     /*
@@ -186,6 +193,9 @@ public class Globals extends Constants {
         printMyInfo();
 
         if (roundNum > 1) {
+            if (oldBlocksLength == -1) {
+                oldBlocksLength = roundNum - 2;
+            }
             log("Reading the previous round's transactions");
             int result = readBlock(roundNum - 1, 0);
             if (result < 0) {
@@ -210,6 +220,8 @@ public class Globals extends Constants {
 
         // tries to submit unsent messages from previous turns
         submitUnsentTransactions();
+
+        log("Bytecode after update() " + Clock.getBytecodesLeft());
     }
 
     /*
@@ -234,15 +246,14 @@ public class Globals extends Constants {
     earlyEnd should be true, unless this method was called at the end of the loop() method
     */
     public static void endTurn () throws GameActionException {
-        if (myType == RobotType.HQ) {
-            drawZoneStatus();
-        }
+//        if (myType == RobotType.HQ || myID == 11405) {
+//            drawZoneStatus();
+//        }
 
         readOldBlocks();
 
         // check if we went over the bytecode limit
         int endTurn = rc.getRoundNum();
-        firstTurn = false; // if early end, do not count as full turn
         if (roundNum != endTurn) {
             printMyInfo();
             logi("BYTECODE LIMIT EXCEEDED");
@@ -264,8 +275,8 @@ public class Globals extends Constants {
         Clock.yield();
     }
 
-    public static void findHQLocation() throws GameActionException {
-        // tries to find our HQLocation and HQElevation by reading messages
+    public static void findHQLoc() throws GameActionException {
+        // tries to find our HQLoc and HQElevation by reading messages
         // will skip turn if not found
         if (myType == RobotType.HQ) {
             HQLoc = rc.getLocation();
@@ -298,9 +309,9 @@ public class Globals extends Constants {
         }
 
         // calculates possible enemy HQ locations
-        symmetryHQLocations[0] = new MapLocation(mapWidth - 1 - HQLoc.x, HQLoc.y);
-        symmetryHQLocations[1] = new MapLocation(HQLoc.x, mapHeight - 1 - HQLoc.y);
-        symmetryHQLocations[2] = new MapLocation(mapWidth - 1 - HQLoc.x, mapHeight - 1 - HQLoc.y);
+        symmetryHQLocs[0] = new MapLocation(mapWidth - 1 - HQLoc.x, HQLoc.y);
+        symmetryHQLocs[1] = new MapLocation(HQLoc.x, mapHeight - 1 - HQLoc.y);
+        symmetryHQLocs[2] = new MapLocation(mapWidth - 1 - HQLoc.x, mapHeight - 1 - HQLoc.y);
     }
 
     /*
@@ -321,9 +332,7 @@ public class Globals extends Constants {
 
     public static Direction moveLog(MapLocation loc) throws GameActionException {
         Direction move = Nav.bugNavigate(loc);
-        if (move != null) {
-            tlog("Moved " + move);
-        } else {
+        if (move == null) {
             tlog("But no move found");
         }
         return move;
@@ -335,39 +344,39 @@ public class Globals extends Constants {
             return;
         }
 
-        // if the HQ is on a horizontal/vertical/rotational symmetry that generates the same symmetryHQLOcations
+        // if the HQ is on a horizontal/vertical/rotational symmetry that generates the same symmetryHQLocs
         if ((mapWidth % 2 == 1 && mapWidth / 2 == HQLoc.x) ||
                 (mapHeight % 2 == 1 && mapHeight / 2 == HQLoc.y)) {
-            isSymmetryHQLocation[0] = 1;
-            isSymmetryHQLocation[1] = -1;
-            isSymmetryHQLocation[2] = -1;
-            enemyHQLoc = symmetryHQLocations[0];
-            symmetryHQLocationsIndex = 0;
+            isSymmetryHQLoc[0] = 1;
+            isSymmetryHQLoc[1] = 2;
+            isSymmetryHQLoc[2] = 2;
+            enemyHQLoc = symmetryHQLocs[0];
+            symmetryHQLocsIndex = 0;
             return;
         }
 
-        // try to visually check unknown enemyHQLocations
-        for (int i = 0; i < symmetryHQLocations.length; i++) {
-            MapLocation loc = symmetryHQLocations[i];
-            if (isSymmetryHQLocation[i] == -1 && rc.canSenseLocation(loc)) {
+        // try to visually check unknown enemyHQLocs
+        for (int i = 0; i < symmetryHQLocs.length; i++) {
+            MapLocation loc = symmetryHQLocs[i];
+            if (isSymmetryHQLoc[i] == 0 && rc.canSenseLocation(loc)) {
                 RobotInfo ri = rc.senseRobotAtLocation(loc);
                 if (ri != null && ri.type == RobotType.HQ) {
                     //STATE == enemy FOUND
 
                     enemyHQLoc = loc;
-                    isSymmetryHQLocation[i] = 1;
-                    symmetryHQLocationsIndex = i;
+                    isSymmetryHQLoc[i] = 1;
+                    symmetryHQLocsIndex = i;
 
                     log("Found enemy HQ at " + enemyHQLoc);
 
-                    writeTransactionEnemyHQLocation(i, 1);
+                    writeTransactionEnemyHQLoc(i, 1);
                 } else {
                     //STATE == enemy NOT FOUND
 
                     log("Denied enemy HQ at " + loc);
-                    isSymmetryHQLocation[i] = 0;
+                    isSymmetryHQLoc[i] = 2;
 
-                    writeTransactionEnemyHQLocation(i, 0);
+                    writeTransactionEnemyHQLoc(i, 2);
                 }
             }
         }
@@ -387,25 +396,25 @@ public class Globals extends Constants {
         // if two symmetries have been confirmed negatives, then the other one must be the last symmetry
         int denyCount = 0;
         int notDenyIndex = -1;
-        for (int i = 0; i < symmetryHQLocations.length; i++) {
-            if (isSymmetryHQLocation[i] == 0) {
+        for (int i = 0; i < symmetryHQLocs.length; i++) {
+            if (isSymmetryHQLoc[i] == 2) {
                 denyCount++;
             } else {
                 notDenyIndex = i;
             }
         }
         if (denyCount == 2) {
-            enemyHQLoc = symmetryHQLocations[notDenyIndex];
-            isSymmetryHQLocation[notDenyIndex] = 1;
-            symmetryHQLocationsIndex = notDenyIndex;
+            enemyHQLoc = symmetryHQLocs[notDenyIndex];
+            isSymmetryHQLoc[notDenyIndex] = 1;
+            symmetryHQLocsIndex = notDenyIndex;
             log("Determined through 2 denials that enemy HQ is at " + enemyHQLoc);
             return;
         }
 
-        while (isSymmetryHQLocation[symmetryHQLocationsIndex] == 0) {
-            symmetryHQLocationsIndex++;
-            symmetryHQLocationsIndex %= symmetryHQLocations.length;
-            log("Retargeting symmetry that we are exploring to " + symmetryHQLocations[symmetryHQLocationsIndex]);
+        while (isSymmetryHQLoc[symmetryHQLocsIndex] == 2) {
+            symmetryHQLocsIndex++;
+            symmetryHQLocsIndex %= symmetryHQLocs.length;
+            log("Retargeting symmetry that we are exploring to " + symmetryHQLocs[symmetryHQLocsIndex]);
         }
     }
 
@@ -415,7 +424,7 @@ public class Globals extends Constants {
      */
     public static MapLocation getSymmetryLoc() {
         if (enemyHQLoc == null) {
-            return symmetryHQLocations[symmetryHQLocationsIndex];
+            return symmetryHQLocs[symmetryHQLocsIndex];
         } else {
             return enemyHQLoc;
         }

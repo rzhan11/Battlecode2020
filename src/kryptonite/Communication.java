@@ -2,7 +2,7 @@ package kryptonite;
 
 import battlecode.common.*;
 
-import static kryptonite.Actions.*;
+
 import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
@@ -12,6 +12,7 @@ import static kryptonite.Zones.*;
 
 public class Communication extends Globals {
 
+	final public static int RESUBMIT_EARLY = 10;
 	final public static int RESUBMIT_INTERVAL = 100;
 
 	final public static int MAX_UNSENT_TRANSACTIONS_LENGTH = 25;
@@ -21,14 +22,17 @@ public class Communication extends Globals {
 	final public static int FIRST_TURN_DYNAMIC_COST = 1;
 
 	// each of these signals should be different
+	// MUST BE LESS THAN 256
 	final public static int HQ_FIRST_TURN_SIGNAL = 0;
 	final public static int ENEMY_HQ_LOCATION_SIGNAL = 1;
 	final public static int EXPLORED_ZONE_STATUS = 2;
 	final public static int SOUP_ZONE_STATUS_SIGNAL = 3;
 	final public static int REFINERY_BUILT_SIGNAL = 4;
 	final public static int BUILD_INSTRUCTION_SIGNAL = 5;
+	final public static int WALL_COMPLETED_SIGNAL = 6;
 
-	final public static int REVIEW_ZONE_STATUS_SIGNAL = 103;
+	final public static int ALL_ZONE_STATUS_SIGNAL = 103;
+	final public static int REVIEW_SIGNAL = 104;
 
 	// used to alter our own data
 	public static int secretKey;
@@ -133,16 +137,9 @@ public class Communication extends Globals {
 	Every interval of rounds, resend important messages
 	 */
 	public static void resubmitImportantTransactions () throws GameActionException {
-		if (roundNum % RESUBMIT_INTERVAL == RESUBMIT_INTERVAL - 5) {
-//			if (wallFull) {
-//				Communication.writeTransactionWallFull();
-//			}
-//			if (supportFull) {
-//				Communication.writeTransactionSupportWallFull();
-//			}
-			if (enemyHQLoc != null) {
-			 	Communication.writeTransactionEnemyHQLocation(symmetryHQLocationsIndex, 1);
-			}
+		if (roundNum % RESUBMIT_INTERVAL == RESUBMIT_INTERVAL - RESUBMIT_EARLY) {
+			writeTransactionReview();
+			writeTransactionAllExploredZones();
 		}
 	}
 
@@ -201,12 +198,12 @@ public class Communication extends Globals {
 				tlog("Found opponent's transaction");
 				continue; // not submitted by our team
 			} else {
-				switch (message[1] % (1 << 8)) {
+				switch (message[1] & ((1 << 8) - 1)) {
 					case HQ_FIRST_TURN_SIGNAL:
 						readTransactionHQFirstTurn(message, round);
 						break;
 					case ENEMY_HQ_LOCATION_SIGNAL:
-						readTransactionEnemyHQLocation(message, round);
+						readTransactionEnemyHQLoc(message, round);
 						break;
 					case EXPLORED_ZONE_STATUS:
 						if (!isLowBytecodeLimit(myType)) {
@@ -234,6 +231,18 @@ public class Communication extends Globals {
 							readTransactionBuildInstruction(message, round);
 						}
 						break;
+					case WALL_COMPLETED_SIGNAL:
+						if (myType == RobotType.DELIVERY_DRONE || myType == RobotType.LANDSCAPER) {
+							readTransactionWallCompleted(message, round);
+						}
+					/*case ALL_ZONE_STATUS_SIGNAL:
+						if (!isLowBytecodeLimit(myType)) {
+							readTransactionAllExploredZones(message, round);
+						}
+						break;
+					case REVIEW_SIGNAL:
+						readTransactionAllExploredZones(message, round);
+						break;*/
 				}
 			}
 
@@ -243,18 +252,66 @@ public class Communication extends Globals {
 		return index;
 	}
 
+	public static boolean[] hasReadAllExploredZones = {false, false};
+	public static boolean hasReadReviewTransaction = false;
+	public static boolean hasReadAllReviews = false;
+
+	public static void readReviewBlock (int round, int count) throws GameActionException {
+		if (hasReadAllReviews) {
+			return;
+		}
+
+		if (count == 5) {
+			return;
+		}
+
+		while (round >= roundNum) {
+			log("WAITING FOR REVIEW BLOCK " + round);
+			Globals.endTurn();
+			Globals.updateBasic();
+		}
+
+		Transaction[] block = rc.getBlock(round);
+		for (Transaction t : block) {
+			// if this is not the previous round, and we are almost out of bytecode, skip
+			int[] message = t.getMessage();
+			xorMessage(message);
+
+			int submitterID = decryptID(message[0]);
+			if (submitterID == -1) {
+				tlog("Found opponent's transaction");
+				continue; // not submitted by our team
+			} else {
+				switch (message[1] & ((1 << 8) - 1)) {
+					case ALL_ZONE_STATUS_SIGNAL:
+						if (!isLowBytecodeLimit(myType)) {
+							readTransactionAllExploredZones(message, round);
+						}
+						break;
+					case REVIEW_SIGNAL:
+						readTransactionReview(message, round);
+						break;
+				}
+			}
+		}
+		if (hasReadAllExploredZones[0] && hasReadAllExploredZones[1] && hasReadReviewTransaction) {
+			hasReadAllReviews = true;
+		}
+		readReviewBlock(round + 1, count + 1);
+	}
+
 	/*
 	message[2] = x coordinate of our HQ
 	message[3] = y coordinate of our HQ
 	message[4] = elevation of our HQ
 	*/
-	public static void writeTransactionHQFirstTurn (MapLocation myHQLocation) throws GameActionException {
-		log("Writing transaction for 'HQ First Turn' at " + myHQLocation);
+	public static void writeTransactionHQFirstTurn (MapLocation myHQLoc) throws GameActionException {
+		log("Writing transaction for 'HQ First Turn' at " + myHQLoc);
 		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = HQ_FIRST_TURN_SIGNAL;
-		message[2] = myHQLocation.x;
-		message[3] = myHQLocation.y;
+		message[2] = myHQLoc.x;
+		message[3] = myHQLoc.y;
 		message[4] = myElevation;
 
 		xorMessage(message);
@@ -282,7 +339,7 @@ public class Communication extends Globals {
 	message[3] = exists (0 = false, 1 = true)
 
 	 */
-	public static void writeTransactionEnemyHQLocation (int symmetryIndex, int exists) throws GameActionException{
+	public static void writeTransactionEnemyHQLoc (int symmetryIndex, int exists) throws GameActionException{
 		log("Writing transaction for 'Enemy HQ Location'");
 		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
@@ -300,16 +357,16 @@ public class Communication extends Globals {
 		}
 	}
 
-	public static void readTransactionEnemyHQLocation (int[] message, int round) throws GameActionException {
+	public static void readTransactionEnemyHQLoc (int[] message, int round) throws GameActionException {
 		if (message[3] == 1) {
-			enemyHQLoc = symmetryHQLocations[message[2]];
-			symmetryHQLocationsIndex = message[2];
+			enemyHQLoc = symmetryHQLocs[message[2]];
+			symmetryHQLocsIndex = message[2];
 		}
-		isSymmetryHQLocation[message[2]] = message[3];
+		isSymmetryHQLoc[message[2]] = message[3];
 		log("Reading transaction for 'Enemy HQ Location'");
 		log("Submitter ID: " + decryptID(message[0]));
-		log("Location: " + symmetryHQLocations[message[2]]);
-		log("Exists: " + isSymmetryHQLocation[message[2]]);
+		log("Location: " + symmetryHQLocs[message[2]]);
+		log("Exists: " + isSymmetryHQLoc[message[2]]);
 		log("Posted round: " + round);
 	}
 
@@ -475,5 +532,147 @@ public class Communication extends Globals {
 		if (myID == message[2]) {
 			BotMinerBuilder.buildInstruction = message[3];
 		}
+	}
+
+	/*
+message[2] = x coordinate of our HQ
+message[3] = y coordinate of our HQ
+
+*/
+	public static void writeTransactionWallCompleted() throws GameActionException {
+		log("Writing transaction for 'Wall Completed'");
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
+		message[0] = encryptID(myID);
+		message[1] = WALL_COMPLETED_SIGNAL;
+
+		xorMessage(message);
+		if (rc.getTeamSoup() >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
+
+		} else {
+			tlog("Could not afford transaction");
+			saveUnsentTransaction(message, dynamicCost);
+		}
+	}
+
+	public static void readTransactionWallCompleted(int[] message, int round) throws GameActionException {
+		Wall.wallCompleted = true;
+		log("Reading transaction for 'Wall Completed'");
+		log("Submitter ID: " + decryptID(message[0]));
+		log("Posted round: " + round);
+	}
+
+	public static void writeTransactionAllExploredZones() throws GameActionException{
+		for (int part = 0; part < 2; part++) {
+			log("Writing transaction for 'All Explored Zones' part " + part);
+			int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
+			message[0] = encryptID(myID);
+			message[1] = ALL_ZONE_STATUS_SIGNAL;
+			message[2] = part;
+			for (int i = part * 8; i < Math.min(part * 8 + 8, numYZones); i++) {
+				int i_message = (i % 8) / 2 + 3;
+				for (int j = 0; j < numYZones; j++) {
+					if (exploredZoneStatus[i][j] == 1) {
+						int bitLoc = (i % 2) * 16 + j;
+						message[i_message] |= (exploredZoneStatus[i][j] << bitLoc);
+					}
+				}
+			}
+
+			xorMessage(message);
+			if (rc.getTeamSoup() >= dynamicCost) {
+				rc.submitTransaction(message, dynamicCost);
+
+			} else {
+				tlog("Could not afford transaction");
+				saveUnsentTransaction(message, dynamicCost);
+			}
+		}
+	}
+
+	public static void readTransactionAllExploredZones(int[] message, int round) throws GameActionException {
+		int part = message[2];
+		if (hasReadAllExploredZones[part]) {
+			return;
+		}
+		hasReadAllExploredZones[part] = true;
+		log("Reading transaction for 'All Explored Zones'");
+		log("Submitter ID: " + decryptID(message[0]));
+		log("Part: " + part);
+		for (int i = part * 8; i < Math.min(part * 8 + 8, numYZones); i++) {
+			int i_message = (i % 8) / 2 + 3;
+			for (int j = 0; j < numYZones; j++) {
+				int bitLoc = (i % 2) * 16 + j;
+				if ((message[i_message] & (1 << bitLoc)) > 0) {
+					exploredZoneStatus[i][j] = 1;
+				}
+			}
+		}
+		log("Posted round: " + round);
+	}
+
+	/*
+	message[2] = wallCompleted
+	message[3] = explored symmetries
+	message[4] =
+	 */
+	public static void writeTransactionReview() throws GameActionException{
+		log("Writing transaction for 'Review'");
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
+		message[0] = encryptID(myID);
+		message[1] = REVIEW_SIGNAL;
+		if (Wall.wallCompleted) {
+			message[2] = 1;
+		}
+		if (enemyHQLoc == null) {
+			for (int i = 0; i < symmetryHQLocs.length; i++) {
+				if (isSymmetryHQLoc[i] == 2) {
+					message[3] |= (1 << i);
+				}
+			}
+		} else {
+			message[3] = (1 << 16) | symmetryHQLocsIndex;
+		}
+
+		xorMessage(message);
+		if (rc.getTeamSoup() >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
+
+		} else {
+			tlog("Could not afford transaction");
+			saveUnsentTransaction(message, dynamicCost);
+		}
+	}
+
+	public static void readTransactionReview(int[] message, int round) throws GameActionException {
+		if (hasReadReviewTransaction) {
+			return;
+		}
+		hasReadReviewTransaction = true;
+
+		log("Reading transaction for 'Review'");
+		log("Submitter ID: " + decryptID(message[0]));
+
+		if (message[2] == 1) {
+			Wall.wallCompleted = true;
+		} else {
+			Wall.wallCompleted = false;
+		}
+		tlog("wallCompleted " + Wall.wallCompleted);
+
+		if ((message[3] & (1 << 16)) == 0) {
+			log("hi " + (message[3] & ((1 << 16) - 1)));
+			for (int i = 0; i < symmetryHQLocs.length; i++) {
+				if ((message[3] & (1 << i)) > 0) {
+					tlog("Symmetry " + i + " denied");
+					isSymmetryHQLoc[i] = 2;
+				}
+			}
+		} else {
+			symmetryHQLocsIndex = message[3] | ((1 << 16) - 1);
+			enemyHQLoc = symmetryHQLocs[symmetryHQLocsIndex];
+			tlog("Symmetry " + symmetryHQLocsIndex + " confirmed");
+		}
+		log("Posted round: " + round);
 	}
 }

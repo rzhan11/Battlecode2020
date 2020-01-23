@@ -2,7 +2,7 @@ package kryptonite;
 
 import battlecode.common.*;
 
-import static kryptonite.Actions.*;
+
 import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
@@ -142,7 +142,7 @@ public class Debug extends Globals {
 		if (roundNum == 1 || us == Team.B) {
 			return;
 		}
-		for (int i = 0; i < numXZones; i++) {
+		for (int i = 0; i < numXZones*3/5; i++) {
 			for (int j = 0; j < numYZones; j++) {
 				MapLocation loc = new MapLocation(i * zoneSize, j * zoneSize);
 				MapLocation loc2 = loc.translate(1, 0);

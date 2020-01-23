@@ -2,7 +2,7 @@ package kryptonite;
 
 import battlecode.common.*;
 
-import static kryptonite.Actions.*;
+
 import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
@@ -35,16 +35,16 @@ public class BotDesignSchool extends Globals {
 		}
 
 		if (roundNum % 25 == spawnRound % 25) {
-			designBuild(getCloseDirections(here.directionTo(getSymmetryLoc())), RobotType.LANDSCAPER.cost);
+			buildLandscaper(getCloseDirections(here.directionTo(getSymmetryLoc())), RobotType.LANDSCAPER.cost);
 			return;
 		}
 
 	}
 
-	public static void designBuild(Direction[] dirs, int soupLimit) throws GameActionException{
+	public static void buildLandscaper(Direction[] dirs, int soupLimit) throws GameActionException{
 		for (Direction dir : dirs) {
 			if (rc.getTeamSoup() >= soupLimit && isDirDryFlatEmpty(dir)) {
-				Debug.tlog("We are building");
+				tlog("BUILDING LANDSCAPER " + dir);
 				Actions.doBuildRobot(RobotType.LANDSCAPER, dir);
 				landscapersBuilt++;
 				return;

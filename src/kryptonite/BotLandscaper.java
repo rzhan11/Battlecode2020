@@ -2,11 +2,13 @@ package kryptonite;
 
 import battlecode.common.*;
 
-import static kryptonite.Actions.*;
+import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
 import static kryptonite.Nav.*;
-import static kryptonite.Globals.*;
+import static kryptonite.Wall.*;
+import static kryptonite.Utils.*;
+import static kryptonite.Zones.*;
 
 public class BotLandscaper extends Globals {
 
@@ -27,17 +29,30 @@ public class BotLandscaper extends Globals {
 		while (true) {
 			try {
 				Globals.update();
-				if (firstTurn) {
-					rerollRole();
-					Globals.endTurn();
-					Globals.update();
+
+				if (!initialized) {
+					initLandscaper();
 				}
+
 				turn();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			Globals.endTurn();
 		}
+	}
+
+	public static boolean initialized = false;
+
+	public static void initLandscaper() throws GameActionException {
+		loadWallInfo();
+
+		rerollRole();
+
+		initialized = true;
+
+		Globals.endTurn();
+		Globals.update();
 	}
 
 	public static void turn() throws GameActionException {
@@ -72,7 +87,6 @@ public class BotLandscaper extends Globals {
 					else {
 						if(currentStep == 0) {
 							if(rc.getDirtCarrying() == 0) {
-								ttlog("DIGGING DIRT");
 								landscaperDig();
 								return;
 							}
@@ -83,7 +97,6 @@ public class BotLandscaper extends Globals {
 						if(currentStep == 1) {
 							if(rc.getDirtCarrying() > 0) {
 								Direction dropLoc = here.directionTo(buildingLocation);
-								ttlog("DEPOSITING DIRT IN DIRECTION: " + dropLoc);
 								if(rc.canDepositDirt(dropLoc)) Actions.doDepositDirt(dropLoc);
 								return;
 							}
@@ -128,8 +141,10 @@ public class BotLandscaper extends Globals {
 								}
 								if(rc.senseElevation(loc) > terraDepth && Math.abs(terraDepth-rc.senseElevation(loc)) < MAX_ELE_DIFF) {
 									flag = true;
-									if(rc.canDigDirt(d)) doDigDirt(d);
-									return;
+									if(rc.canDigDirt(d)) {
+										Actions.doDigDirt(d);
+										return;
+									}
 								}
 							}
 							if(!flag) landscaperDig();
@@ -159,7 +174,7 @@ public class BotLandscaper extends Globals {
 				break;
 			case TERRA_FILLER_ROLE:
 				updateTerraDepth();
-				Debug.ttlog("My Terra Fill Location is: " + terraFillerLocation);
+				ttlog("My Terra Fill Location is: " + terraFillerLocation);
 				if(shouldUpdateFillerLocation || terraFillerLocation == null || !rc.canSenseLocation(terraFillerLocation) || rc.senseElevation(terraFillerLocation) == terraDepth) {
 					shouldUpdateFillerLocation = findNewFillerLocation();
 				}
@@ -178,8 +193,10 @@ public class BotLandscaper extends Globals {
 								}
 								if(rc.senseElevation(loc) > terraDepth && Math.abs(terraDepth-rc.senseElevation(loc)) < MAX_ELE_DIFF) {
 									flag = true;
-									if(rc.canDigDirt(d)) doDigDirt(d);
-									return;
+									if(rc.canDigDirt(d)) {
+										Actions.doDigDirt(d);
+										return;
+									}
 								}
 							}
 							if(!flag) landscaperDig();
@@ -218,8 +235,9 @@ public class BotLandscaper extends Globals {
 				continue;
 			}
 			if (isDigLoc(loc)) {
-				ttlog("DIGGING IN DIRECTION: " + d);
-				if (rc.canDigDirt(d)) doDigDirt(d);
+				if (rc.canDigDirt(d)) {
+					Actions.doDigDirt(d);
+				}
 			}
 		}
 	}

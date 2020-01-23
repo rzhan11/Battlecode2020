@@ -2,7 +2,7 @@ package kryptonite;
 
 import battlecode.common.*;
 
-import static kryptonite.Actions.*;
+
 import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;

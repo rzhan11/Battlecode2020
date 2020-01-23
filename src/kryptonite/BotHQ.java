@@ -4,6 +4,9 @@ import battlecode.common.*;
 
 import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
+import static kryptonite.Map.*;
+import static kryptonite.Nav.*;
+import static kryptonite.Wall.*;
 import static kryptonite.Utils.*;
 import static kryptonite.Zones.*;
 
@@ -43,11 +46,14 @@ public class BotHQ extends Globals {
 	}
 
 	public static boolean initialized = false;
+
 	public static void initHQ() throws GameActionException {
+		loadWallInfo();
+
 		log("Possible enemy HQ locations");
-		tlog("" + symmetryHQLocations[0]);
-		tlog("" + symmetryHQLocations[1]);
-		tlog("" + symmetryHQLocations[2]);
+		tlog("" + symmetryHQLocs[0]);
+		tlog("" + symmetryHQLocs[1]);
+		tlog("" + symmetryHQLocs[2]);
 
 		writeTransactionHQFirstTurn(here);
 
@@ -57,9 +63,15 @@ public class BotHQ extends Globals {
 		log("closestVisibleSoupLocation: " + closestVisibleSoupLoc);
 
 		initialized = true;
+		for (int i = 0; i < wallLocsLength; i++) {
+			log("wall loc " + wallLocs[i]);
+			drawDot(wallLocs[i], BLACK);
+		}
 	}
 
 	public static void turn() throws GameActionException {
+
+		log("issym " + isSymmetryHQLoc[0] + " " + isSymmetryHQLoc[1] + " " + isSymmetryHQLoc[2]);
 
 		Communication.resubmitImportantTransactions();
 
@@ -70,7 +82,7 @@ public class BotHQ extends Globals {
 
 		// assign construction of fulfillment center
 		if (closeFulfillmentCenterInfo == null) {
-			log("fulfillment");
+			log("Trying to assign fulfillment center");
 			if (minerBuiltCount >= MINER_CHECKPOINT_1) {
 				for (RobotInfo ri : visibleAllies) {
 					if (ri.type == RobotType.FULFILLMENT_CENTER) {
@@ -90,7 +102,7 @@ public class BotHQ extends Globals {
 
 			// assign construction of close vaporators
 		} else if (closeVaporatorInfo == null) {
-			log("vaporator");
+			log("Trying to assign vaporator");
 			for (RobotInfo ri: visibleAllies) {
 				if (ri.type == RobotType.VAPORATOR) {
 					closeVaporatorInfo = ri;
@@ -108,7 +120,7 @@ public class BotHQ extends Globals {
 
 			// assign construction of close design school
 		} else if (closeDesignSchoolInfo == null) {
-			log("design school");
+			log("Trying to assign design school");
 			for (RobotInfo ri: visibleAllies) {
 				if (ri.type == RobotType.DESIGN_SCHOOL) {
 					closeDesignSchoolInfo = ri;

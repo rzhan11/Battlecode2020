@@ -2,12 +2,13 @@ package kryptonite;
 
 import battlecode.common.*;
 
-import static kryptonite.Actions.*;
+
 import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
 import static kryptonite.Nav.*;
 import static kryptonite.Utils.*;
+import static kryptonite.Wall.loadWallInfo;
 import static kryptonite.Zones.*;
 
 public class BotMiner extends Globals {
@@ -57,7 +58,10 @@ public class BotMiner extends Globals {
 	}
 
 	public static boolean initialized = false;
+
 	public static void initMiner() throws GameActionException {
+		loadWallInfo();
+
 		refineries = new MapLocation[BIG_ARRAY_SIZE];
 		deadRefineries = new boolean[BIG_ARRAY_SIZE];
 
@@ -393,7 +397,6 @@ public class BotMiner extends Globals {
 		if (refineriesIndex != -1) {
 			MapLocation loc = refineries[refineriesIndex];
 			if (here.isAdjacentTo(loc)) {
-				log("Depositing " + rc.getSoupCarrying() + " soup at refinery at " + loc);
 				Actions.doDepositSoup(here.directionTo(loc), rc.getSoupCarrying());
 				refineriesIndex = -1;
 				return;
@@ -581,7 +584,7 @@ public class BotMiner extends Globals {
 		int closestIndex = -1;
 		for (int i = 0; i < refineriesSize; i++) {
 			if (!deadRefineries[i]) {
-//				if (refineries[i].equals(HQLocation)) {
+//				if (refineries[i].equals(HQLoc)) {
 //					continue;
 //				}
 				int dist = here.distanceSquaredTo(refineries[i]);
