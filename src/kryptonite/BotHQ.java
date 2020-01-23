@@ -71,9 +71,22 @@ public class BotHQ extends Globals {
 
 	public static void turn() throws GameActionException {
 
-		log("issym " + isSymmetryHQLoc[0] + " " + isSymmetryHQLoc[1] + " " + isSymmetryHQLoc[2]);
+		// checks if wall is completed
+		if (!wallCompleted) {
+			wallCompleted = true;
+			for (MapLocation loc: wallLocs) {
+				if (!rc.canSenseLocation(loc) && rc.senseElevation(loc) >= terraDepth) {
+					wallCompleted = false;
+					break;
+				}
+			}
+			if (wallCompleted) {
+				writeTransactionWallCompleted();
+			}
+		}
 
 		Communication.resubmitImportantTransactions();
+
 
 		if (!rc.isReady()) {
 			log("Not ready");

@@ -16,7 +16,6 @@ public class BotLandscaper extends Globals {
 	private static final int TERRA_ROLE = 1, DEFENSE_ROLE = 2, ATTACK_ROLE = 3, TERRA_TARGET_ROLE = 4, TERRA_FILLER_ROLE = 5;
 
 	// TERRA Variables
-	private static int terraDepth;
 	private static MapLocation terraTargetLocation;
 	private static MapLocation terraFillerLocation;
 	private static boolean shouldUpdateFillerLocation = true;
