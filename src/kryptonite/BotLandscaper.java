@@ -59,6 +59,7 @@ public class BotLandscaper extends Globals {
 
 		if(isDigLoc(here) || maxXYDistance(here, HQLoc) <= 2) {
 			bugNavigate(getSymmetryLoc());
+			return;
 		}
 
 		ttlog("MY ROLE IS: " + role);
@@ -73,6 +74,7 @@ public class BotLandscaper extends Globals {
 							if(rc.getDirtCarrying() == 0) {
 								ttlog("DIGGING DIRT");
 								landscaperDig();
+								return;
 							}
 							else {
 								currentStep = 1;
@@ -83,6 +85,7 @@ public class BotLandscaper extends Globals {
 								Direction dropLoc = here.directionTo(buildingLocation);
 								ttlog("DEPOSITING DIRT IN DIRECTION: " + dropLoc);
 								if(rc.canDepositDirt(dropLoc)) Actions.doDepositDirt(dropLoc);
+								return;
 							}
 							else {
 								currentStep = 0;
@@ -96,10 +99,12 @@ public class BotLandscaper extends Globals {
 					}
 					else {
 						bugNavigate(buildingLocation);
+						return;
 					}
 				}
 				else {
 					bugNavigate(buildingLocation);
+					return;
 				}
 				break;
 
@@ -110,6 +115,7 @@ public class BotLandscaper extends Globals {
 				updateTerraDepth();
 				if(terraTargetCheck()) {
 					bugNavigate(terraTargetLocation);
+					return;
 				}
 				else {
 					if(currentStep == 0) {
@@ -123,6 +129,7 @@ public class BotLandscaper extends Globals {
 								if(rc.senseElevation(loc) > terraDepth && Math.abs(terraDepth-rc.senseElevation(loc)) < MAX_ELE_DIFF) {
 									flag = true;
 									if(rc.canDigDirt(d)) doDigDirt(d);
+									return;
 								}
 							}
 							if(!flag) landscaperDig();
@@ -143,6 +150,7 @@ public class BotLandscaper extends Globals {
 								}
 								if(rc.senseElevation(loc) < terraDepth && !isDigLoc(loc) && !isLocBuilding(loc) && maxXYDistance(rc.adjacentLocation(d), HQLoc) > 2 && Math.abs(terraDepth-rc.senseElevation(loc)) < MAX_ELE_DIFF) {
 									if(rc.canDepositDirt(d)) Actions.doDepositDirt(d);
+									return;
 								}
 							}
 						}
@@ -157,6 +165,7 @@ public class BotLandscaper extends Globals {
 				}
 				if(!here.isAdjacentTo(terraFillerLocation)) {
 					bugNavigate(terraFillerLocation);
+					return;
 				}
 				else {
 					if(currentStep == 0) {
@@ -170,9 +179,11 @@ public class BotLandscaper extends Globals {
 								if(rc.senseElevation(loc) > terraDepth && Math.abs(terraDepth-rc.senseElevation(loc)) < MAX_ELE_DIFF) {
 									flag = true;
 									if(rc.canDigDirt(d)) doDigDirt(d);
+									return;
 								}
 							}
 							if(!flag) landscaperDig();
+							return;
 						}
 						else {
 							currentStep = 1;
@@ -190,6 +201,7 @@ public class BotLandscaper extends Globals {
 								}
 								if(rc.senseElevation(loc) < terraDepth && !isDigLoc(loc) && !isLocBuilding(loc) && maxXYDistance(rc.adjacentLocation(d), HQLoc) > 2 && Math.abs(terraDepth-rc.senseElevation(loc)) < MAX_ELE_DIFF) {
 									if(rc.canDepositDirt(d)) Actions.doDepositDirt(d);
+									return;
 								}
 							}
 						}
