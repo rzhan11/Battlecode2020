@@ -26,7 +26,7 @@ public class Map extends Globals {
     public static MapLocation reflect(MapLocation ml1, MapLocation ml2) {
         return new MapLocation(2 * ml2.x - ml1.x, 2 * ml2.y - ml1.y);
     }
-    
+
     /*
     Useful for ring structures
     */

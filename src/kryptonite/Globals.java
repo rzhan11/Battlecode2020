@@ -105,7 +105,7 @@ public class Globals extends Constants {
 
         log("Pre-init: " + Clock.getBytecodesLeft());
 
-        senseDirections = HardCode.getSenseDirections(myType);
+        HardCode.getSenseDirections(myType);
         log("Post-senseDirection: " + Clock.getBytecodesLeft());
         rand = new Random(myID);
 

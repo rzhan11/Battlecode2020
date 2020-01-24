@@ -5,19 +5,25 @@ import battlecode.common.*;
 import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
-import static kryptonite.Nav.*;
 import static kryptonite.Wall.*;
 import static kryptonite.Utils.*;
 import static kryptonite.Zones.*;
 
+
 public class BotDeliveryDrone extends Globals {
+
+	final public static int
+			DRONE_SUPPORT_ROLE = 1,
+			DRONE_ATTACK_ROLE = 2;
+
+	public static int myRole = -1;
 
 	public static void loop() throws GameActionException {
 		while (true) {
 			try {
 				Globals.update();
 
-				if (!initialized) {
+				if (!initalizedDrone) {
 					initDeliveryDrone();
 				}
 
@@ -29,28 +35,61 @@ public class BotDeliveryDrone extends Globals {
 		}
 	}
 
-	public static boolean initialized = false;
+	public static boolean initalizedDrone = false;
 
 	public static void initDeliveryDrone() throws GameActionException {
 
-		initialized = true;
+		// if close to the HQ, be a support drone and move landscapers out of the 5x5 to the 7x7
+//		if (wallCompleted && here.distanceSquaredTo(HQLoc) <= myType.sensorRadiusSquared)
+
+		myRole = DRONE_SUPPORT_ROLE;
+
+		initalizedDrone = true;
 
 		Globals.endTurn();
 		Globals.update();
 	}
 
 	public static void turn() throws GameActionException {
-//		log("temp return");
-//		return;
+
 		if (!rc.isReady()) {
 			log("Not ready");
 			return;
 		}
 
-		Direction dirToHQ = HQLoc.directionTo(here);
-		Direction targetDir = dirToHQ.rotateRight().rotateRight();
-		MapLocation targetLoc = HQLoc.add(targetDir).add(targetDir);
-		log("Trying to rotate around ally HQ");
-		moveLog(targetLoc);
+		int avoidDangerResult = Nav.avoidDanger();
+		if (avoidDangerResult == 1) {
+			return;
+		}
+		if (avoidDangerResult == -1) {
+			// when danger is unavoidable, reset isDirMoveable to ignore danger tiles
+			updateIsDirMoveable();
+		}
+
+		switch (myRole) {
+			case DRONE_SUPPORT_ROLE:
+				BotDeliveryDroneSupport.turn();
+				break;
+			case DRONE_ATTACK_ROLE:
+				break;
+		}
+	}
+
+	/*
+	Tries to pick up the robot that corresponds to the given ID
+	If adjacent to the unit, pick it up
+	Else, bug navigate towards it
+	Returns 1 if we picked up the unit
+	Returns 0 otherwise (including if we moved towards it)
+	 */
+	public static int tryPickUpUnit (int targetID) throws GameActionException {
+		RobotInfo ri = rc.senseRobot(targetID);
+		if (here.isAdjacentTo(ri.location)) {
+			Actions.doPickUpUnit(targetID);
+			return 1;
+		} else {
+			moveLog(ri.location);
+			return 0;
+		}
 	}
 }

@@ -5,7 +5,6 @@ import battlecode.common.*;
 import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
-import static kryptonite.Nav.*;
 import static kryptonite.Wall.*;
 import static kryptonite.Utils.*;
 import static kryptonite.Zones.*;
@@ -33,7 +32,7 @@ public class BotHQ extends Globals {
 			try {
 				Globals.update();
 
-				if (!initialized) {
+				if (!initializedHQ) {
 					initHQ();
 				}
 
@@ -45,7 +44,7 @@ public class BotHQ extends Globals {
 		}
 	}
 
-	public static boolean initialized = false;
+	public static boolean initializedHQ = false;
 
 	public static void initHQ() throws GameActionException {
 
@@ -61,7 +60,7 @@ public class BotHQ extends Globals {
 		closestVisibleSoupLoc = findClosestVisibleSoupLoc(true);
 		log("closestVisibleSoupLocation: " + closestVisibleSoupLoc);
 
-		initialized = true;
+		initializedHQ = true;
 
 //		for (int i = 0; i < wallLocsLength; i++) {
 //			log("wall loc " + wallLocs[i]);
@@ -75,7 +74,7 @@ public class BotHQ extends Globals {
 		if (!wallCompleted) {
 			wallCompleted = true;
 			for (MapLocation loc: wallLocs) {
-				if (!rc.canSenseLocation(loc) && rc.senseElevation(loc) >= terraDepth) {
+				if (rc.canSenseLocation(loc) && rc.senseElevation(loc) < terraDepth) {
 					wallCompleted = false;
 					break;
 				}

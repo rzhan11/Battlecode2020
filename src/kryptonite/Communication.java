@@ -669,6 +669,6 @@ message[3] = y coordinate of our HQ
 			enemyHQLoc = symmetryHQLocs[symmetryHQLocsIndex];
 			ttlog("Symmetry " + symmetryHQLocsIndex + " confirmed");
 		}
-		tlog("Posted round: " + round);
+		ttlog("Posted round: " + round);
 	}
 }

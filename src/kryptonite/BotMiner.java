@@ -6,9 +6,7 @@ import battlecode.common.*;
 import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
-import static kryptonite.Nav.*;
 import static kryptonite.Utils.*;
-import static kryptonite.Wall.*;
 import static kryptonite.Zones.*;
 
 public class BotMiner extends Globals {
@@ -41,7 +39,7 @@ public class BotMiner extends Globals {
 			try {
 				Globals.update();
 
-				if (!initialized) {
+				if (!initializedMiner) {
 					initMiner();
 				}
 
@@ -57,7 +55,7 @@ public class BotMiner extends Globals {
 		}
 	}
 
-	public static boolean initialized = false;
+	public static boolean initializedMiner = false;
 
 	public static void initMiner() throws GameActionException {
 
@@ -67,7 +65,7 @@ public class BotMiner extends Globals {
 		log("Saving HQ as a refinery");
 		addToRefineries(HQLoc);
 
-		initialized = true;
+		initializedMiner = true;
 
 		Globals.endTurn();
 		Globals.update();

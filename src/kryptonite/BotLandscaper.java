@@ -2,13 +2,10 @@ package kryptonite;
 
 import battlecode.common.*;
 
-import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
 import static kryptonite.Nav.*;
 import static kryptonite.Wall.*;
-import static kryptonite.Utils.*;
-import static kryptonite.Zones.*;
 
 public class BotLandscaper extends Globals {
 
@@ -28,7 +25,7 @@ public class BotLandscaper extends Globals {
 			try {
 				Globals.update();
 
-				if (!initialized) {
+				if (!initializedLandscaper) {
 					initLandscaper();
 				}
 
@@ -40,13 +37,13 @@ public class BotLandscaper extends Globals {
 		}
 	}
 
-	public static boolean initialized = false;
+	public static boolean initializedLandscaper = false;
 
 	public static void initLandscaper() throws GameActionException {
 
 		rerollRole();
 
-		initialized = true;
+		initializedLandscaper = true;
 
 		Globals.endTurn();
 		Globals.update();

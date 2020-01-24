@@ -6,17 +6,15 @@ import battlecode.common.*;
 import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
-import static kryptonite.Nav.*;
-import static kryptonite.Utils.*;
 
-public class BotMinerBuilder extends Globals {
-    public static boolean initialized = false;
+public class BotMinerBuilder extends BotMiner {
+    public static boolean initializedMinerBuilder = false;
 
     public static int buildInstruction = -1;
 
     public static void initMinerBuilder() throws GameActionException {
 
-        initialized = true;
+        initializedMinerBuilder = true;
 
 //        Globals.endTurn();
 //        Globals.update();
@@ -24,12 +22,12 @@ public class BotMinerBuilder extends Globals {
 
     public static void uninitMinerBuilder() throws GameActionException {
 
-        initialized = false;
+        initializedMinerBuilder = false;
         buildInstruction = -1;
     }
 
     public static void turn() throws GameActionException {
-        if (!initialized) {
+        if (!initializedMinerBuilder) {
             initMinerBuilder();
         }
         drawDot(here, BROWN);
