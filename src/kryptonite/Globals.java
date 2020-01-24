@@ -90,6 +90,7 @@ public class Globals extends Constants {
     public static int symmetryHQLocsIndex; // current symmetry that we are exploring
     public static MapLocation enemyHQLoc = null;
 
+    public static int totalVaporators = 0;
 
     public static void init(RobotController theRC) throws GameActionException {
 

@@ -113,8 +113,6 @@ public class BotMinerBuilder extends BotMiner {
         return false;
     }
 
-    public static int vaporatorBuiltCount = 0;
-
     public static boolean buildCloseVaporator () throws GameActionException {
         log("BUILDER MINER: Close Vaporator");
         for (Direction dir : directions) {
@@ -126,7 +124,7 @@ public class BotMinerBuilder extends BotMiner {
                 if (isDirDryFlatEmpty(dir)) {
                     if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
                         Actions.doBuildRobot(RobotType.VAPORATOR, dir);
-                        tlog("Vaporator Built");
+                        writeTransactionVaporatorStatus(1);
                         return true;
                     } else {
                         tlog("In position, not enough soup");

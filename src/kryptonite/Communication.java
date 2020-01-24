@@ -26,6 +26,7 @@ public class Communication extends Globals {
 	final public static int REFINERY_BUILT_SIGNAL = 4;
 	final public static int BUILD_INSTRUCTION_SIGNAL = 5;
 	final public static int WALL_COMPLETED_SIGNAL = 6;
+	final public static int VAPORATOR_STATUS_SIGNAL = 7;
 
 	final public static int ALL_ZONE_STATUS_SIGNAL = 103;
 	final public static int REVIEW_SIGNAL = 104;
@@ -231,6 +232,8 @@ public class Communication extends Globals {
 						if (!isLowBytecodeLimit(myType)) {
 							readTransactionWallCompleted(message, round);
 						}
+					case VAPORATOR_STATUS_SIGNAL:
+						readTransactionVaporatorStatus(message, round);
 					/*case ALL_ZONE_STATUS_SIGNAL:
 						if (!isLowBytecodeLimit(myType)) {
 							readTransactionAllExploredZones(message, round);
@@ -564,6 +567,45 @@ message[3] = y coordinate of our HQ
 		ttlog("Posted round: " + round);
 	}
 
+	/*
+	message[2] = status
+		-1 = decrease by 1 (dying to landscapers)
+		 1 = increase by 1 (built by miner)
+
+	*/
+	public static void writeTransactionVaporatorStatus (int status) throws GameActionException {
+		log("Writing transaction for 'Vaporator Status'");
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
+		message[0] = encryptID(myID);
+		message[1] = VAPORATOR_STATUS_SIGNAL;
+		message[2] = status;
+
+		xorMessage(message);
+		if (rc.getTeamSoup() >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
+
+		} else {
+			tlog("Could not afford transaction");
+			saveUnsentTransaction(message, dynamicCost);
+		}
+	}
+
+	public static void readTransactionVaporatorStatus(int[] message, int round) throws GameActionException {
+		tlog("Reading transaction for 'Vaporator Status'");
+		ttlog("Submitter ID: " + decryptID(message[0]));
+		ttlog("Status: " + message[2]);
+		ttlog("Posted round: " + round);
+
+		switch (message[2]) {
+			case 0:
+				totalVaporators--;
+				break;
+			case 1:
+				totalVaporators++;
+				break;
+		}
+	}
+
 	public static void writeTransactionAllExploredZones() throws GameActionException{
 		for (int part = 0; part < 2; part++) {
 			log("Writing transaction for 'All Explored Zones' part " + part);
@@ -616,7 +658,7 @@ message[3] = y coordinate of our HQ
 	/*
 	message[2] = wallCompleted
 	message[3] = explored symmetries
-	message[4] =
+	message[4] = # of vaporators
 	 */
 	public static void writeTransactionReview() throws GameActionException{
 		log("Writing transaction for 'Review'");

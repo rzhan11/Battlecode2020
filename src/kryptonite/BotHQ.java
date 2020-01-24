@@ -73,6 +73,8 @@ public class BotHQ extends Globals {
 
 	public static void turn() throws GameActionException {
 
+		log("num v " + totalVaporators);
+
 		// checks if wall is completed
 		if (!wallCompleted) {
 			wallCompleted = true;

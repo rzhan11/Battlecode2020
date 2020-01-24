@@ -128,8 +128,7 @@ public class BotMiner extends Globals {
 		}
 
 		// create vaporators
-		// TURNED OFF
-		/*while (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
+		while (totalVaporators >= BotHQ.NUM_CLOSE_VAPORATOR && rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
 			//checks to see if there are too many adjacent allies/vaporators
 			if (visibleAllies.length >= 25) {
 				break;
@@ -164,13 +163,14 @@ public class BotMiner extends Globals {
 			if (highestDir != null) {
 				int minRevenue = (HardCode.getRoundFlooded(highestElevation) - roundNum) * RobotType.VAPORATOR.maxSoupProduced;
 				if (minRevenue >= 1.5 * RobotType.VAPORATOR.cost) {
-					log("Built vaporator with revenue " + minRevenue);
+					log("Trying to build vaporator with revenue " + minRevenue);
 					Actions.doBuildRobot(RobotType.VAPORATOR, highestDir);
+					writeTransactionVaporatorStatus(1);
 					return;
 				}
 			}
 			break;
-		}*/
+		}
 
 		/*
 		If no more soup at target location and cannot sense another soup location, try to deposit at a refinery
