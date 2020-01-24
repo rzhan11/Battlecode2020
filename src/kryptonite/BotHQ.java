@@ -156,7 +156,11 @@ public class BotHQ extends Globals {
 
 		if (minerBuiltCount < MINER_CHECKPOINT_1) {
 			if (rc.getTeamSoup() >= RobotType.MINER.cost) {
-				buildMiner();
+				if (closestVisibleSoupLoc == null) {
+					buildMiner(getSymmetryLoc());
+				} else {
+					buildMiner(closestVisibleSoupLoc);
+				}
 			} else {
 				log("Not enough soup to build miner");
 			}
@@ -166,13 +170,23 @@ public class BotHQ extends Globals {
 		// build up to second checkpoint after initial 3 buildings are done
 		if (closeFulfillmentCenterInfo != null && minerBuiltCount < MINER_CHECKPOINT_2) {
 			if (rc.getTeamSoup() >= RobotType.MINER.cost) {
-				buildMiner();
+				if (closestVisibleSoupLoc == null) {
+					buildMiner(getSymmetryLoc());
+				} else {
+					buildMiner(closestVisibleSoupLoc);
+				}
 			} else {
 				log("Not enough soup to build miner");
 			}
 			return;
 		}
 
+		// enter mid-game
+		if (wallCompleted) {
+			if (rc.getTeamSoup() < RobotType.MINER.cost) {
+				buildMiner(getSymmetryLoc());
+			}
+		}
 	}
 
 	/*
@@ -183,7 +197,7 @@ public class BotHQ extends Globals {
 		int id = findVisibleRobotType(RobotType.MINER);
 		if (id == -1) {
 			if (rc.getTeamSoup() >= RobotType.MINER.cost && roundNum - lastMinerBuiltRound >= GameConstants.INITIAL_COOLDOWN_TURNS - MAX_BUILDER_MINER_COOLDOWN) {
-				Direction dir = buildMiner();
+				Direction dir = buildMiner(getSymmetryLoc());
 				if (dir != null) {
 					return rc.senseRobotAtLocation(rc.adjacentLocation(dir)).ID * 100000 + 100000;
 				}
@@ -213,15 +227,8 @@ public class BotHQ extends Globals {
 	Returns the direction that the miner was built in
 	Returns null if did not build a miner
 	*/
-	public static Direction buildMiner() throws GameActionException {
-		Direction[] orderedDirections;
-		MapLocation target = null;
-		if (closestVisibleSoupLoc == null) {
-			target = getSymmetryLoc();
-		} else {
-			target = closestVisibleSoupLoc;
-		}
-		orderedDirections = getCloseDirections(here.directionTo(target));
+	public static Direction buildMiner(MapLocation target) throws GameActionException {
+		Direction[] orderedDirections = getCloseDirections(here.directionTo(target));
 
 		log("Building miner towards " + target);
 		Direction buildDir = tryBuild(RobotType.MINER, orderedDirections);

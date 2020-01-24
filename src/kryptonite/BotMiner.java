@@ -7,6 +7,7 @@ import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
 import static kryptonite.Utils.*;
+import static kryptonite.Wall.wallCompleted;
 import static kryptonite.Zones.*;
 
 public class BotMiner extends Globals {
@@ -109,6 +110,24 @@ public class BotMiner extends Globals {
 			}
 		}
 
+		int avoidDangerResult = Nav.avoidDanger();
+		if (avoidDangerResult == 1) {
+			return;
+		}
+		if (avoidDangerResult == -1) {
+			updateIsDirMoveable();
+		}
+
+		// after wall is completed, do not wao into dig locations
+		log("wallCompleted " + wallCompleted);
+		if (wallCompleted) {
+			for (int i = 0; i < directions.length; i++) {
+				if (isDigLoc(rc.adjacentLocation(directions[i]))) {
+					isDirMoveable[i] = false;
+				}
+			}
+		}
+
 		// create vaporators
 		// TURNED OFF
 		/*while (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
@@ -153,14 +172,6 @@ public class BotMiner extends Globals {
 			}
 			break;
 		}*/
-
-		int avoidDangerResult = Nav.avoidDanger();
-		if (avoidDangerResult == 1) {
-			return;
-		}
-		if (avoidDangerResult == -1) {
-			updateIsDirMoveable();
-		}
 
 		/*
 		If no more soup at target location and cannot sense another soup location, try to deposit at a refinery

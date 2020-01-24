@@ -232,7 +232,7 @@ public class Communication extends Globals {
 						}
 						break;
 					case WALL_COMPLETED_SIGNAL:
-						if (myType == RobotType.DELIVERY_DRONE || myType == RobotType.LANDSCAPER) {
+						if (!isLowBytecodeLimit(myType)) {
 							readTransactionWallCompleted(message, round);
 						}
 					/*case ALL_ZONE_STATUS_SIGNAL:
