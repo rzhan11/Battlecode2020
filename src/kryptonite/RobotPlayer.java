@@ -5,7 +5,11 @@ import battlecode.common.*;
 public strictfp class RobotPlayer {
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
-        Globals.init(rc);
+        try {
+            Globals.init(rc);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         switch (rc.getType()) {
             case HQ:                 BotHQ.loop();                break;
             case MINER:              BotMiner.loop();             break;

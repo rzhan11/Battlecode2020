@@ -210,8 +210,15 @@ public class BotHQ extends Globals {
 
 		// enter mid-game
 		if (wallCompleted) {
-			if (rc.getTeamSoup() < RobotType.MINER.cost) {
-				buildMiner(getSymmetryLoc());
+
+			int incomePerRound = 1 + totalVaporators * RobotType.VAPORATOR.maxSoupProduced;
+			// intentionally uses landscaper cost, not miner cost
+			int spawnDelay = 4 * RobotType.LANDSCAPER.cost / incomePerRound;
+			if (roundNum - lastMinerBuiltRound > spawnDelay) {
+				if (rc.getTeamSoup() >= RobotType.MINER.cost) {
+					buildMiner(getSymmetryLoc());
+					return;
+				}
 			}
 		}
 	}

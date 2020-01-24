@@ -13,6 +13,7 @@ import static kryptonite.Zones.*;
 public class BotFulfillmentCenter extends Globals {
 
 	public static int dronesBuilt = 0;
+	public static int lastBuildRound = N_INF;
 
 	public static void loop() throws GameActionException {
 		while (true) {
@@ -33,7 +34,10 @@ public class BotFulfillmentCenter extends Globals {
 			return;
 		}
 
-		if (roundNum % 25 == spawnRound % 25) {
+		int incomePerRound = 1 + totalVaporators * RobotType.VAPORATOR.maxSoupProduced;
+		int spawnDelay = 4 * RobotType.LANDSCAPER.cost / incomePerRound;
+		if (roundNum - lastBuildRound > spawnDelay ||
+			roundNum >= 1000) {
 			buildDrone(getCloseDirections(here.directionTo(getSymmetryLoc())), RobotType.DELIVERY_DRONE.cost);
 			return;
 		}
@@ -46,6 +50,7 @@ public class BotFulfillmentCenter extends Globals {
 				tlog("BUILDING DRONE " + dir);
 				Actions.doBuildRobot(RobotType.DELIVERY_DRONE, dir);
 				dronesBuilt++;
+				lastBuildRound = roundNum;
 				return;
 			}
 		}

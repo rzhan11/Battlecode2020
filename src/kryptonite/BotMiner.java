@@ -42,7 +42,11 @@ public class BotMiner extends Globals {
 
 	public static void initMiner() throws GameActionException {
 
-		myRole = MINER_RESOURCE_ROLE;
+		if (wallCompleted) {
+			myRole = MINER_MIDGAME_ROLE;
+		} else {
+			myRole = MINER_RESOURCE_ROLE;
+		}
 		evacuateRound = HardCode.getRoundFlooded(3) - 100;
 
 		BotMinerResource.initMinerResource();

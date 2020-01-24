@@ -598,7 +598,7 @@ message[3] = y coordinate of our HQ
 		ttlog("Posted round: " + round);
 
 		switch (message[2]) {
-			case 0:
+			case -1:
 				totalVaporators--;
 				break;
 			case 1:
@@ -713,7 +713,8 @@ message[3] = y coordinate of our HQ
 				}
 			}
 		} else {
-			symmetryHQLocsIndex = message[3] | ((1 << 16) - 1);
+			symmetryHQLocsIndex = message[3] & ((1 << 16) - 1);
+
 			enemyHQLoc = symmetryHQLocs[symmetryHQLocsIndex];
 			ttlog("Symmetry " + symmetryHQLocsIndex + " confirmed");
 		}
