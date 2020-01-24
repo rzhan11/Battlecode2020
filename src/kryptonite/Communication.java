@@ -488,7 +488,7 @@ public class Communication extends Globals {
 		ttlog("Submitter ID: " + decryptID(message[0]));
 		ttlog("Location: " + loc);
 		ttlog("Posted round: " + round);
-		BotMiner.addToRefineries(loc);
+		BotMinerResource.addToRefineries(loc);
 	}
 
 	final public static int BUILD_CLOSE_FULFILLMENT_CENTER = 1;
@@ -533,6 +533,7 @@ public class Communication extends Globals {
 		ttlog("Detail: " + message[5]);
 		ttlog("Posted round: " + round);
 		if (myID == message[2]) {
+			BotMiner.myRole = BotMiner.MINER_BUILDER_ROLE;
 			BotMinerBuilder.assignRound = message[3];
 			BotMinerBuilder.buildInstruction = message[4];
 			BotMinerBuilder.buildDetail = message[5];

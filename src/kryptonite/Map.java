@@ -7,6 +7,7 @@ import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
 import static kryptonite.Nav.*;
+import static kryptonite.Wall.*;
 import static kryptonite.Utils.*;
 import static kryptonite.Zones.*;
 
@@ -16,7 +17,10 @@ public class Map extends Globals {
         return Math.abs(ml.x - HQLoc.x) % 2 == 0 &&  Math.abs(ml.y - HQLoc.y) % 2 == 0 && maxXYDistance(ml, HQLoc) > 2;
     }
 
-    public static boolean isBuildLocation(MapLocation ml) {
+    public static boolean isBuildLoc(MapLocation ml) {
+        if (maxXYDistance(HQLoc, ml) == wallRingRadius) {
+            return false;
+        }
         return Math.abs(ml.x - HQLoc.x) % 2 == 1 &&  Math.abs(ml.y - HQLoc.y) % 2 == 1;
     }
 
