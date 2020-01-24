@@ -1,13 +1,13 @@
-package kryptonite;
+package turtle;
 
 import battlecode.common.*;
 
-import static kryptonite.Communication.*;
-import static kryptonite.Debug.*;
-import static kryptonite.Map.*;
-import static kryptonite.Utils.*;
-import static kryptonite.Wall.wallCompleted;
-import static kryptonite.Zones.*;
+import static turtle.Communication.*;
+import static turtle.Debug.*;
+import static turtle.Map.*;
+import static turtle.Utils.*;
+import static turtle.Wall.wallCompleted;
+import static turtle.Zones.*;
 
 public class BotMiner extends Globals {
 

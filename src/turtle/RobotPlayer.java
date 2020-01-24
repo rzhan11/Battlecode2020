@@ -1,4 +1,4 @@
-package kryptonite;
+package turtle;
 
 import battlecode.common.*;
 

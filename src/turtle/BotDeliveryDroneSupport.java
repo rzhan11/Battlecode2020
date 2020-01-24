@@ -1,13 +1,13 @@
-package kryptonite;
+package turtle;
 
 import battlecode.common.*;
 
-import static kryptonite.Communication.*;
-import static kryptonite.Debug.*;
-import static kryptonite.Map.*;
-import static kryptonite.Wall.*;
-import static kryptonite.Utils.*;
-import static kryptonite.Zones.*;
+import static turtle.Communication.*;
+import static turtle.Debug.*;
+import static turtle.Map.*;
+import static turtle.Wall.*;
+import static turtle.Utils.*;
+import static turtle.Zones.*;
 
 
 public class BotDeliveryDroneSupport extends BotDeliveryDrone {

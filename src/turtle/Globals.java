@@ -1,15 +1,15 @@
-package kryptonite;
+package turtle;
 
 import battlecode.common.*;
 
 import java.util.Random;
 
 
-import static kryptonite.Communication.*;
-import static kryptonite.Debug.*;
-import static kryptonite.Map.*;
-import static kryptonite.Wall.*;
-import static kryptonite.Zones.*;
+import static turtle.Communication.*;
+import static turtle.Debug.*;
+import static turtle.Map.*;
+import static turtle.Wall.*;
+import static turtle.Zones.*;
 
 public class Globals extends Constants {
     /*

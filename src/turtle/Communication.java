@@ -1,10 +1,10 @@
-package kryptonite;
+package turtle;
 
 import battlecode.common.*;
 
 
-import static kryptonite.Debug.*;
-import static kryptonite.Zones.*;
+import static turtle.Debug.*;
+import static turtle.Zones.*;
 
 public class Communication extends Globals {
 

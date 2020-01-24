@@ -1,11 +1,11 @@
-package kryptonite;
+package turtle;
 
 import battlecode.common.*;
 
-import static kryptonite.Debug.*;
-import static kryptonite.Map.*;
-import static kryptonite.Nav.*;
-import static kryptonite.Wall.*;
+import static turtle.Debug.*;
+import static turtle.Map.*;
+import static turtle.Nav.*;
+import static turtle.Wall.*;
 
 public class BotLandscaper extends Globals {
 

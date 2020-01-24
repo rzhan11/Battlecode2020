@@ -1,12 +1,12 @@
-package kryptonite;
+package turtle;
 
 import battlecode.common.*;
 
 
-import static kryptonite.Communication.*;
-import static kryptonite.Debug.*;
-import static kryptonite.Map.*;
-import static kryptonite.Wall.*;
+import static turtle.Communication.*;
+import static turtle.Debug.*;
+import static turtle.Map.*;
+import static turtle.Wall.*;
 
 public class BotMinerMidgame extends BotMiner {
     public static boolean initializedMinerMidgame = false;
