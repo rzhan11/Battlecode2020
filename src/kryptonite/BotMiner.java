@@ -8,7 +8,7 @@ import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
 import static kryptonite.Nav.*;
 import static kryptonite.Utils.*;
-import static kryptonite.Wall.loadWallInfo;
+import static kryptonite.Wall.*;
 import static kryptonite.Zones.*;
 
 public class BotMiner extends Globals {
@@ -60,7 +60,6 @@ public class BotMiner extends Globals {
 	public static boolean initialized = false;
 
 	public static void initMiner() throws GameActionException {
-		loadWallInfo();
 
 		refineries = new MapLocation[BIG_ARRAY_SIZE];
 		deadRefineries = new boolean[BIG_ARRAY_SIZE];

@@ -8,8 +8,7 @@ import java.util.Random;
 import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
-import static kryptonite.Nav.*;
-import static kryptonite.Utils.*;
+import static kryptonite.Wall.*;
 import static kryptonite.Zones.*;
 
 public class Globals extends Constants {
@@ -103,7 +102,11 @@ public class Globals extends Constants {
 
         myID = rc.getID();
         myType = rc.getType();
+
+        log("Pre-init: " + Clock.getBytecodesLeft());
+
         senseDirections = HardCode.getSenseDirections(myType);
+        log("Post-senseDirection: " + Clock.getBytecodesLeft());
         rand = new Random(myID);
 
         mapWidth = rc.getMapWidth();
@@ -117,26 +120,40 @@ public class Globals extends Constants {
 
         lastActiveTurn = rc.getRoundNum() - 1;
 
-        updateBasic();
+        log("Pre-updateBasic: " + Clock.getBytecodesLeft());
+        Globals.updateBasic();
+        log("Post-updateBasic: " + Clock.getBytecodesLeft());
 
         // find HQ location and symmetries if not already found
         findHQLoc();
         symmetryHQLocsIndex = myID % symmetryHQLocs.length;
         log("Initial exploreSymmetryLocation: " + symmetryHQLocs[symmetryHQLocsIndex]);
+        log("Post-findHQLoc: " + Clock.getBytecodesLeft());
 
         if (!isLowBytecodeLimit(myType)) {
-            loadZoneInformation();
+            loadWallInfo();
+            log("Post-loadWallInfo: " + Clock.getBytecodesLeft());
+            loadZoneInfo();
+            log("Post-loadZoneInfo: " + Clock.getBytecodesLeft());
+        } else {
+            Clock.yield();
+            Globals.updateBasic();
         }
 
-        log("SEARCHING FOR REVIEW BLOCKS");
         int recentReviewRound = ((roundNum + RESUBMIT_EARLY - 1) / RESUBMIT_INTERVAL) * RESUBMIT_INTERVAL - RESUBMIT_EARLY;
         if (recentReviewRound >= 1) {
+            log("SEARCHING FOR REVIEW BLOCKS");
             int startByte = Clock.getBytecodesLeft();
             readReviewBlock(recentReviewRound, 0);
             oldBlocksIndex = recentReviewRound;
             log("Review round bytecode: " + (startByte - Clock.getBytecodesLeft()));
         } else {
             oldBlocksIndex = 1;
+        }
+
+        if (myType != RobotType.HQ) {
+            Clock.yield();
+            Globals.updateBasic();
         }
     }
 
@@ -188,7 +205,7 @@ public class Globals extends Constants {
     }
 
     public static void update() throws GameActionException {
-        updateBasic();
+        Globals.updateBasic();
 
         printMyInfo();
 
@@ -203,7 +220,7 @@ public class Globals extends Constants {
             } else {
                 log("Done reading the previous round's transactions");
             }
-            log("Bytecode after reading prev. transactions " + Clock.getBytecodesLeft());
+            log("Post-readPrevBlock: " + Clock.getBytecodesLeft());
         }
 
         if (!isLowBytecodeLimit(myType)) {

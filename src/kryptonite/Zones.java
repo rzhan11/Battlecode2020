@@ -46,7 +46,7 @@ public class Zones extends Globals {
     Takes 2 turns
      */
 
-    public static void loadZoneInformation () throws GameActionException {
+    public static void loadZoneInfo() throws GameActionException {
 
         if (hasLoadedZones) {
             return;

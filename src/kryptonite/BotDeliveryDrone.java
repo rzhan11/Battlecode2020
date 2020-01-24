@@ -32,7 +32,6 @@ public class BotDeliveryDrone extends Globals {
 	public static boolean initialized = false;
 
 	public static void initDeliveryDrone() throws GameActionException {
-		loadWallInfo();
 
 		initialized = true;
 

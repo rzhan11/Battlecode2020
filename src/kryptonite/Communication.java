@@ -267,7 +267,7 @@ public class Communication extends Globals {
 
 		while (round >= roundNum) {
 			log("WAITING FOR REVIEW BLOCK " + round);
-			Globals.endTurn();
+			Clock.yield();
 			Globals.updateBasic();
 		}
 
@@ -278,10 +278,7 @@ public class Communication extends Globals {
 			xorMessage(message);
 
 			int submitterID = decryptID(message[0]);
-			if (submitterID == -1) {
-				tlog("Found opponent's transaction");
-				continue; // not submitted by our team
-			} else {
+			if (submitterID !=-1) {
 				switch (message[1] & ((1 << 8) - 1)) {
 					case ALL_ZONE_STATUS_SIGNAL:
 						if (!isLowBytecodeLimit(myType)) {
@@ -363,11 +360,11 @@ public class Communication extends Globals {
 			symmetryHQLocsIndex = message[2];
 		}
 		isSymmetryHQLoc[message[2]] = message[3];
-		log("Reading transaction for 'Enemy HQ Location'");
-		log("Submitter ID: " + decryptID(message[0]));
-		log("Location: " + symmetryHQLocs[message[2]]);
-		log("Exists: " + isSymmetryHQLoc[message[2]]);
-		log("Posted round: " + round);
+		tlog("Reading transaction for 'Enemy HQ Location'");
+		ttlog("Submitter ID: " + decryptID(message[0]));
+		ttlog("Location: " + symmetryHQLocs[message[2]]);
+		ttlog("Exists: " + isSymmetryHQLoc[message[2]]);
+		ttlog("Posted round: " + round);
 	}
 
 	/*
@@ -488,10 +485,10 @@ public class Communication extends Globals {
 
 	public static void readTransactionRefineryBuilt (int[] message, int round) {
 		MapLocation loc = new MapLocation(message[2], message[3]);
-		log("Reading 'Refinery Built' transaction");
-		tlog("Submitter ID: " + decryptID(message[0]));
-		tlog("Location: " + loc);
-		tlog("Posted round: " + round);
+		tlog("Reading 'Refinery Built' transaction");
+		ttlog("Submitter ID: " + decryptID(message[0]));
+		ttlog("Location: " + loc);
+		ttlog("Posted round: " + round);
 		BotMiner.addToRefineries(loc);
 	}
 
@@ -524,11 +521,11 @@ public class Communication extends Globals {
 	}
 
 	public static void readTransactionBuildInstruction (int[] message, int round) {
-		log("Reading 'Build Instruction' transaction");
-		tlog("Submitter ID: " + decryptID(message[0]));
-		tlog("Builder Miner ID: " + message[2]);
-		tlog("Instruction: " + message[3]);
-		tlog("Posted round: " + round);
+		tlog("Reading 'Build Instruction' transaction");
+		ttlog("Submitter ID: " + decryptID(message[0]));
+		ttlog("Builder Miner ID: " + message[2]);
+		ttlog("Instruction: " + message[3]);
+		ttlog("Posted round: " + round);
 		if (myID == message[2]) {
 			BotMinerBuilder.buildInstruction = message[3];
 		}
@@ -557,9 +554,9 @@ message[3] = y coordinate of our HQ
 
 	public static void readTransactionWallCompleted(int[] message, int round) throws GameActionException {
 		Wall.wallCompleted = true;
-		log("Reading transaction for 'Wall Completed'");
-		log("Submitter ID: " + decryptID(message[0]));
-		log("Posted round: " + round);
+		tlog("Reading transaction for 'Wall Completed'");
+		ttlog("Submitter ID: " + decryptID(message[0]));
+		ttlog("Posted round: " + round);
 	}
 
 	public static void writeTransactionAllExploredZones() throws GameActionException{
@@ -596,9 +593,9 @@ message[3] = y coordinate of our HQ
 			return;
 		}
 		hasReadAllExploredZones[part] = true;
-		log("Reading transaction for 'All Explored Zones'");
-		log("Submitter ID: " + decryptID(message[0]));
-		log("Part: " + part);
+		ttlog("Reading transaction for 'All Explored Zones'");
+		tlog("Submitter ID: " + decryptID(message[0]));
+		tlog("Part: " + part);
 		for (int i = part * 8; i < Math.min(part * 8 + 8, numYZones); i++) {
 			int i_message = (i % 8) / 2 + 3;
 			for (int j = 0; j < numYZones; j++) {
@@ -608,7 +605,7 @@ message[3] = y coordinate of our HQ
 				}
 			}
 		}
-		log("Posted round: " + round);
+		tlog("Posted round: " + round);
 	}
 
 	/*
@@ -650,29 +647,28 @@ message[3] = y coordinate of our HQ
 		}
 		hasReadReviewTransaction = true;
 
-		log("Reading transaction for 'Review'");
-		log("Submitter ID: " + decryptID(message[0]));
+		tlog("Reading transaction for 'Review'");
+		ttlog("Submitter ID: " + decryptID(message[0]));
 
 		if (message[2] == 1) {
 			Wall.wallCompleted = true;
 		} else {
 			Wall.wallCompleted = false;
 		}
-		tlog("wallCompleted " + Wall.wallCompleted);
+		ttlog("wallCompleted " + Wall.wallCompleted);
 
 		if ((message[3] & (1 << 16)) == 0) {
-			log("hi " + (message[3] & ((1 << 16) - 1)));
 			for (int i = 0; i < symmetryHQLocs.length; i++) {
 				if ((message[3] & (1 << i)) > 0) {
-					tlog("Symmetry " + i + " denied");
+					ttlog("Symmetry " + i + " denied");
 					isSymmetryHQLoc[i] = 2;
 				}
 			}
 		} else {
 			symmetryHQLocsIndex = message[3] | ((1 << 16) - 1);
 			enemyHQLoc = symmetryHQLocs[symmetryHQLocsIndex];
-			tlog("Symmetry " + symmetryHQLocsIndex + " confirmed");
+			ttlog("Symmetry " + symmetryHQLocsIndex + " confirmed");
 		}
-		log("Posted round: " + round);
+		tlog("Posted round: " + round);
 	}
 }

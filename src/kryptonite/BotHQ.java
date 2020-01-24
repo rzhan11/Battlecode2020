@@ -48,7 +48,6 @@ public class BotHQ extends Globals {
 	public static boolean initialized = false;
 
 	public static void initHQ() throws GameActionException {
-		loadWallInfo();
 
 		log("Possible enemy HQ locations");
 		tlog("" + symmetryHQLocs[0]);
@@ -63,10 +62,11 @@ public class BotHQ extends Globals {
 		log("closestVisibleSoupLocation: " + closestVisibleSoupLoc);
 
 		initialized = true;
-		for (int i = 0; i < wallLocsLength; i++) {
-			log("wall loc " + wallLocs[i]);
-			drawDot(wallLocs[i], BLACK);
-		}
+
+//		for (int i = 0; i < wallLocsLength; i++) {
+//			log("wall loc " + wallLocs[i]);
+//			drawDot(wallLocs[i], BLACK);
+//		}
 	}
 
 	public static void turn() throws GameActionException {

@@ -34,6 +34,11 @@ public class BotMinerBuilder extends Globals {
         }
         drawDot(here, BROWN);
 
+        if (!rc.isReady()) {
+            log("Not ready");
+            return;
+        }
+
         switch (buildInstruction) {
             case BUILD_CLOSE_FULFILLMENT_CENTER:
                 if (buildCloseFulfillmentCenter()) {

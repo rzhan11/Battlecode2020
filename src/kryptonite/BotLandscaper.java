@@ -16,7 +16,6 @@ public class BotLandscaper extends Globals {
 	private static final int TERRA_ROLE = 1, DEFENSE_ROLE = 2, ATTACK_ROLE = 3, TERRA_TARGET_ROLE = 4, TERRA_FILLER_ROLE = 5;
 
 	// TERRA Variables
-	private static MapLocation terraTargetLocation;
 	private static MapLocation terraFillerLocation;
 	private static boolean shouldUpdateFillerLocation = true;
 	private static final int MAX_ELE_DIFF = 25;
@@ -44,7 +43,6 @@ public class BotLandscaper extends Globals {
 	public static boolean initialized = false;
 
 	public static void initLandscaper() throws GameActionException {
-		loadWallInfo();
 
 		rerollRole();
 
@@ -126,7 +124,7 @@ public class BotLandscaper extends Globals {
 			case TERRA_TARGET_ROLE:
 				updateTerraDepth();
 				if(terraTargetCheck()) {
-					bugNavigate(terraTargetLocation);
+					bugNavigate(getSymmetryLoc());
 					return;
 				}
 				else {
@@ -274,7 +272,6 @@ public class BotLandscaper extends Globals {
 
 	private static void rerollRole() {
 		role = TERRA_ROLE;
-		terraTargetLocation = getSymmetryLoc();
 	}
 
 	private static boolean findNewFillerLocation() throws GameActionException {
