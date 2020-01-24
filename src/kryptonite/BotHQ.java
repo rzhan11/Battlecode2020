@@ -72,6 +72,21 @@ public class BotHQ extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
+		if (us == Team.A) {
+			if (enemyHQLoc != null) {
+				drawDot(enemyHQLoc, PINK);
+			}
+			for (int i = 0; i < symmetryHQLocs.length; i++) {
+				int[] color = BLACK;
+				if (isSymmetryHQLoc[i] == 0) {
+					drawLine(here, symmetryHQLocs[i], YELLOW);
+				} else if (isSymmetryHQLoc[i] == 1) {
+					drawLine(here, symmetryHQLocs[i], GREEN);
+				} else if (isSymmetryHQLoc[i] == 2) {
+					drawLine(here, symmetryHQLocs[i], RED);
+				}
+			}
+		}
 
 		log("num v " + totalVaporators);
 

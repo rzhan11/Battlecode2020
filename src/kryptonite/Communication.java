@@ -27,6 +27,7 @@ public class Communication extends Globals {
 	final public static int BUILD_INSTRUCTION_SIGNAL = 5;
 	final public static int WALL_COMPLETED_SIGNAL = 6;
 	final public static int VAPORATOR_STATUS_SIGNAL = 7;
+	final public static int FLOODING_FOUND_SIGNAL = 8;
 
 	final public static int ALL_ZONE_STATUS_SIGNAL = 103;
 	final public static int REVIEW_SIGNAL = 104;
@@ -232,8 +233,15 @@ public class Communication extends Globals {
 						if (!isLowBytecodeLimit(myType)) {
 							readTransactionWallCompleted(message, round);
 						}
+						break;
 					case VAPORATOR_STATUS_SIGNAL:
 						readTransactionVaporatorStatus(message, round);
+						break;
+					case FLOODING_FOUND_SIGNAL:
+						if (myType == RobotType.HQ || myType == RobotType.DELIVERY_DRONE) {
+							readTransactionFloodingFound(message, round);
+						}
+						break;
 					/*case ALL_ZONE_STATUS_SIGNAL:
 						if (!isLowBytecodeLimit(myType)) {
 							readTransactionAllExploredZones(message, round);
@@ -605,6 +613,37 @@ message[3] = y coordinate of our HQ
 				totalVaporators++;
 				break;
 		}
+	}
+
+	/*
+	message[2] = flooded tile x
+	message[3] = flooded tile y
+	 */
+
+	public static void writeTransactionFloodingFound (MapLocation loc) throws GameActionException{
+		log("Writing transaction for 'Flooding Found'");
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
+		message[0] = encryptID(myID);
+		message[1] = FLOODING_FOUND_SIGNAL;
+		message[2] = loc.x;
+		message[3] = loc.y;
+
+		xorMessage(message);
+		if (rc.getTeamSoup() >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
+
+		} else {
+			tlog("Could not afford transaction");
+			saveUnsentTransaction(message, dynamicCost);
+		}
+	}
+
+	public static void readTransactionFloodingFound (int[] message, int round) throws GameActionException {
+		BotDeliveryDrone.floodingMemory = new MapLocation(message[2], message[3]);
+		log("Reading transaction for 'Flooding Found'");
+		log("Submitter ID: " + decryptID(message[0]));
+		log("Location: " + BotDeliveryDrone.floodingMemory);
+		log("Posted round: " + round);
 	}
 
 	public static void writeTransactionAllExploredZones() throws GameActionException{

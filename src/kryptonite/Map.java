@@ -31,6 +31,29 @@ public class Map extends Globals {
         return new MapLocation(2 * ml2.x - ml1.x, 2 * ml2.y - ml1.y);
     }
 
+    public static boolean inSameZone(MapLocation ml1, MapLocation ml2) throws GameActionException {
+        return locToZonePair(ml1).equals(locToZonePair(ml2));
+    }
+
+    public static MapLocation getRandomLoc() throws GameActionException {
+        return new MapLocation(rand.nextInt(mapWidth), rand.nextInt(mapHeight));
+    }
+
+    /*
+    Reflects ml1 over ml2
+     */
+    public static MapLocation reflectLocOverSymmetry(MapLocation loc) {
+        switch (symmetryHQLocsIndex) {
+            case 0: // horizontal symmetry
+                return new MapLocation(mapWidth - 1 - loc.x, loc.y);
+            case 1:
+                return new MapLocation(loc.x, mapWidth - 1 - loc.y);
+            case 2:
+                return new MapLocation(mapWidth - 1 - loc.x, mapWidth - 1 - loc.y);
+        }
+        return null;
+    }
+
     /*
     Useful for ring structures
     */
