@@ -243,5 +243,20 @@ public class Map extends Globals {
             }
             isDirDanger[i] = false;
         }
+
+        // when danger is unavoidable, reset isDirMoveable to ignore danger tiles
+        if (inDanger) {
+            boolean canAvoid = false;
+            for (int i = 0; i < directions.length; i++) {
+                if (isDirMoveable[i]) {
+                    canAvoid = true;
+                    break;
+                }
+            }
+            if (!canAvoid) {
+                updateIsDirMoveable();
+            }
+        }
+
     }
 }

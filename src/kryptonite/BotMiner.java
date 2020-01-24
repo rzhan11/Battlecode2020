@@ -72,10 +72,6 @@ public class BotMiner extends Globals {
 		if (avoidDangerResult == 1) {
 			return;
 		}
-		if (avoidDangerResult == -1) {
-			// when danger is unavoidable, reset isDirMoveable to ignore danger tiles
-			updateIsDirMoveable();
-		}
 
 		// after wall is completed, do not walk into dig locations
 		if (wallCompleted) {

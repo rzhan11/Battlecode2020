@@ -19,7 +19,7 @@ public class BotDeliveryDrone extends Globals {
 	public static int myRole = -1;
 
 	public static boolean isCarryingEnemy = false;
-	public static MapLocation floodingMemory;
+	public static int avoidDangerResult;
 
 	public static void loop() throws GameActionException {
 		while (true) {
@@ -45,7 +45,17 @@ public class BotDeliveryDrone extends Globals {
 		// if close to the HQ, be a support drone and move landscapers out of the 5x5 to the 7x7
 //		if (wallCompleted && here.distanceSquaredTo(HQLoc) <= myType.sensorRadiusSquared)
 
-		if (myID % 2 == 0) {
+		RobotInfo[] localDrones = rc.senseNearbyRobots(HQLoc, 18, us);
+		int count = 0;
+		for (RobotInfo ri: localDrones) {
+			if (ri.type == RobotType.DELIVERY_DRONE) {
+				count++;
+			}
+		}
+
+		if (count < BotFulfillmentCenter.NUM_EARLY_DRONE) {
+			myRole = DRONE_SUPPORT_ROLE;
+		} else if (myID % 2 == 0) {
 			myRole = DRONE_SUPPORT_ROLE;
 		} else {
 			myRole = DRONE_HARASS_ROLE;
@@ -64,35 +74,8 @@ public class BotDeliveryDrone extends Globals {
 			return;
 		}
 
-		locateFlooding();
-		log("floodingMemory: " + floodingMemory);
-
-		int avoidDangerResult = Nav.avoidDanger();
-		log("avoid result " + avoidDangerResult);
+		avoidDangerResult = Nav.avoidDanger();
 		if (avoidDangerResult == 1) {
-			return;
-		}
-		if (avoidDangerResult == -1) {
-			// when danger is unavoidable, reset isDirMoveable to ignore danger tiles
-			log("avoidresult -1 " + avoidDangerResult);
-			updateIsDirMoveable();
-		}
-
-		for (int i = 0; i < directions.length; i++) {
-			log("dir " + directions[i] + " " + isDirMoveable[i]);
-		}
-		if (true) {
-			for (int i = 1; i < directions.length; i+=2) {
-				isDirMoveable[i] = false;
-			}
-		}
-
-		boolean sawEnemy = tryKillRobots(visibleEnemies, them);
-		if (sawEnemy) {
-			return;
-		}
-		boolean sawCow = tryKillRobots(visibleCows, cowTeam);
-		if (sawCow) {
 			return;
 		}
 
@@ -104,8 +87,28 @@ public class BotDeliveryDrone extends Globals {
 				BotDeliveryDroneHarass.turn();
 				break;
 			case DRONE_ATTACK_ROLE:
+				BotDeliveryDroneAttack.turn();
 				break;
 		}
+	}
+
+	public static boolean chaseEnemies (boolean moveDiagonal) throws GameActionException {
+		if (!moveDiagonal) {
+			for (int i = 1; i < directions.length; i+=2) {
+				isDirMoveable[i] = false;
+			}
+		}
+
+		boolean sawEnemy = tryKillRobots(visibleEnemies, them);
+		if (sawEnemy) {
+			return true;
+		}
+		boolean sawCow = tryKillRobots(visibleCows, cowTeam);
+		if (sawCow) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/*
@@ -188,46 +191,6 @@ public class BotDeliveryDrone extends Globals {
 			}
 		}
 		return false;
-	}
-
-	/*
-	If we do not already know a visible flooded tile
-		Checks visible tiles for flooding
-		Saves the flooded tile to memory
-	 */
-	public static void locateFlooding () throws GameActionException {
-		// checks if floodingMemory still exists
-		if (floodingMemory != null && rc.canSenseLocation(floodingMemory)) {
-			if (rc.senseFlooding(floodingMemory)) {
-				log("Confirmed that floodingMemory at " + floodingMemory + " is flooded");
-				return;
-			} else {
-				log("Resetting floodingMemory at " + floodingMemory + " since it is dry");
-				floodingMemory = null;
-			}
-		}
-
-		// runs if floodingMemory is not visible or is null
-		// searches for a flooded tile that is empty
-		for (int[] dir: senseDirections) {
-			if (actualSensorRadiusSquared < dir[2]) {
-				break;
-			}
-			MapLocation loc = here.translate(dir[0], dir[1]);
-			if (rc.onTheMap(loc) && rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
-				// floodingMemory[loc.x][loc.y] = rc.senseFlooding(loc);
-
-				log("Found visible flooded tile at " + loc);
-
-				// if floodingMemory is null, write a Transaction
-				if (floodingMemory == null) {
-					writeTransactionFloodingFound(loc);
-				}
-
-				floodingMemory = loc;
-				return;
-			}
-		}
 	}
 
 	/*

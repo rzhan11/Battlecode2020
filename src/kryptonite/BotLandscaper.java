@@ -75,6 +75,10 @@ public class BotLandscaper extends Globals {
 
 		ttlog("MY ROLE IS: " + role);
 
+		int avoidDangerResult = Nav.avoidDanger();
+		if (avoidDangerResult == 1) {
+			return;
+		}
 
 		switch(role) {
 			case DEFENSE_ROLE:

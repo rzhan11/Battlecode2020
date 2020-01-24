@@ -227,6 +227,7 @@ public class Globals extends Constants {
         if (!isLowBytecodeLimit(myType)) {
             checkZone();
             locateSoup();
+            locateFlooding();
 
             // update moveable directions
             updateIsDirMoveable();

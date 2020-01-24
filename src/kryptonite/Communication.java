@@ -639,10 +639,10 @@ message[3] = y coordinate of our HQ
 	}
 
 	public static void readTransactionFloodingFound (int[] message, int round) throws GameActionException {
-		BotDeliveryDrone.floodingMemory = new MapLocation(message[2], message[3]);
+		floodingMemory = new MapLocation(message[2], message[3]);
 		log("Reading transaction for 'Flooding Found'");
 		log("Submitter ID: " + decryptID(message[0]));
-		log("Location: " + BotDeliveryDrone.floodingMemory);
+		log("Location: " + floodingMemory);
 		log("Posted round: " + round);
 	}
 

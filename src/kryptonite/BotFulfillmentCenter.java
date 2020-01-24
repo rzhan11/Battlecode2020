@@ -8,17 +8,27 @@ import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
 import static kryptonite.Nav.*;
 import static kryptonite.Utils.*;
+import static kryptonite.Wall.*;
 import static kryptonite.Zones.*;
 
 public class BotFulfillmentCenter extends Globals {
 
+	final public static int NUM_EARLY_DRONE = 3;
+
 	public static int dronesBuilt = 0;
 	public static int lastBuildRound = N_INF;
+
+	public static boolean isEarly = false;
+
 
 	public static void loop() throws GameActionException {
 		while (true) {
 			try {
 				Globals.update();
+
+				if (!initializedFulfillmentCenter) {
+					initFulfillmentCenter();
+				}
 
 				turn();
 			} catch (Exception e) {
@@ -28,9 +38,34 @@ public class BotFulfillmentCenter extends Globals {
 		}
 	}
 
+	public static boolean initializedFulfillmentCenter = false;
+
+	public static void initFulfillmentCenter() throws GameActionException {
+
+		// determines if I am the first building of my type
+		if (maxXYDistance(HQLoc, here) > wallRingRadius) {
+			isEarly = false;
+		} else {
+			isEarly = true;
+			RobotInfo[] localRobots = rc.senseNearbyRobots(HQLoc, 8, us);
+			for (RobotInfo ri: localRobots) {
+				if (ri.type == myType && ri.ID != myID) {
+					isEarly = false;
+					break;
+				}
+			}
+		}
+
+	}
+
 	public static void turn() throws GameActionException {
 		if (!rc.isReady()) {
 			log("Not ready");
+			return;
+		}
+
+		if (isEarly && dronesBuilt < NUM_EARLY_DRONE) {
+			buildDrone(getCloseDirections(here.directionTo(getSymmetryLoc())), RobotType.DELIVERY_DRONE.cost);
 			return;
 		}
 

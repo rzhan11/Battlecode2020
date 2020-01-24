@@ -33,6 +33,15 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
             initDroneSupport();
         }
 
+        boolean moveDiagonal = false;
+        if (maxXYDistance(HQLoc, here) <= wallRingRadius + 1) {
+            moveDiagonal = true;
+        }
+        boolean result = chaseEnemies(moveDiagonal);
+        if (result) {
+            return;
+        }
+
         // do not go into 3x3 plot, in order to avoid trapping the design school/fulfillment center
         if (wallCompleted) {
             int myRing = maxXYDistance(HQLoc, here);
@@ -135,8 +144,8 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
             }
 
             if (targetID != -1) {
-                int result = tryPickUpUnit(targetID);
-                if (result == 1) {
+                int res = tryPickUpUnit(targetID);
+                if (res == 1) {
                     // successfully picked up unit
                     targetID = -1;
                 }

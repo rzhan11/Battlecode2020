@@ -64,6 +64,11 @@ public class BotDeliveryDroneHarass extends BotDeliveryDrone {
             initDroneHarass();
         }
 
+        boolean result = chaseEnemies(false);
+        if (result) {
+            return;
+        }
+
         // STATE = not carrying/seeing enemy units
 
         MapLocation[] locs = findClosestSoupAndUnexploredZone();
@@ -74,7 +79,7 @@ public class BotDeliveryDroneHarass extends BotDeliveryDrone {
         }
 
         if (roundNum - harassTypeAssignRound > 50) {
-            assignSymmetryRandomHarassType();
+            assignHarassType();
         }
 
         switch (harassType) {
