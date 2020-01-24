@@ -27,6 +27,9 @@ public class BotHQ extends Globals {
 	public static RobotInfo closeVaporatorInfo = null;
 	public static RobotInfo closeDesignSchoolInfo = null;
 
+	final public static int NUM_CLOSE_VAPORATOR = 3;
+	public static int closeVaporatorCount = 0;
+
 	public static void loop() throws GameActionException {
 		while (true) {
 			try {
@@ -102,7 +105,7 @@ public class BotHQ extends Globals {
 						lastAssignmentRound = N_INF;
 					}
 				}
-				if (closeFulfillmentCenterInfo == null && roundNum - lastAssignmentRound >= REASSIGN_ROUND_NUM &&
+				if (closeFulfillmentCenterInfo == null && roundNum - lastAssignmentRound > REASSIGN_ROUND_NUM &&
 						rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost) {
 					int id = assignTask(BUILD_CLOSE_FULFILLMENT_CENTER);
 					if (id >= 100000) {
@@ -121,9 +124,9 @@ public class BotHQ extends Globals {
 					lastAssignmentRound = N_INF;
 				}
 			}
-			if (closeVaporatorInfo == null && roundNum - lastAssignmentRound >= REASSIGN_ROUND_NUM &&
+			if (closeVaporatorInfo == null && roundNum - lastAssignmentRound > REASSIGN_ROUND_NUM &&
 					rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
-				int id = assignTask(BUILD_CLOSE_VAPORATOR);
+				int id = assignTask(BUILD_CLOSE_VAPORATOR, 1);
 				if (id >= 100000) {
 					// we built this turn
 					return;
@@ -139,12 +142,34 @@ public class BotHQ extends Globals {
 					lastAssignmentRound = N_INF;
 				}
 			}
-			if (closeDesignSchoolInfo == null && roundNum - lastAssignmentRound >= REASSIGN_ROUND_NUM &&
+			if (closeDesignSchoolInfo == null && roundNum - lastAssignmentRound > REASSIGN_ROUND_NUM &&
 					rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost) {
 				int id = assignTask(BUILD_CLOSE_DESIGN_SCHOOL);
 				if (id >= 100000) {
 					// we built this turn
 					return;
+				}
+			}
+
+			// assign construction of two more vaporators (three total)
+		} else {
+			int closeVaporatorCount = 0;
+			for (RobotInfo ri: visibleAllies) {
+				if (ri.type == RobotType.VAPORATOR) {
+					closeVaporatorCount++;
+				}
+			}
+			if (closeVaporatorCount >= NUM_CLOSE_VAPORATOR) {
+				lastAssignmentRound = N_INF;
+			} else {
+				if (roundNum - lastAssignmentRound > REASSIGN_ROUND_NUM &&
+						rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
+					log("hi " + roundNum + " " + lastAssignmentRound);
+					int id = assignTask(BUILD_CLOSE_VAPORATOR, NUM_CLOSE_VAPORATOR - closeVaporatorCount);
+					if (id >= 100000) {
+						// we built this turn
+						return;
+					}
 				}
 			}
 		}
@@ -193,7 +218,7 @@ public class BotHQ extends Globals {
 	Returns the id of the miner that was assigned this task
 	Returns -1 if no miner found
 	 */
-	public static int assignTask (int instruction) throws GameActionException {
+	public static int assignTask (int instruction, int details) throws GameActionException {
 		int id = findVisibleRobotType(RobotType.MINER);
 		if (id == -1) {
 			if (rc.getTeamSoup() >= RobotType.MINER.cost && roundNum - lastMinerBuiltRound >= GameConstants.INITIAL_COOLDOWN_TURNS - MAX_BUILDER_MINER_COOLDOWN) {
@@ -204,10 +229,14 @@ public class BotHQ extends Globals {
 			}
 			return -1;
 		} else {
-			writeTransactionBuildInstruction(id, instruction);
+			writeTransactionBuildInstruction(id, instruction, details);
 			lastAssignmentRound = roundNum;
 			return id;
 		}
+	}
+
+	public static int assignTask (int instruction) throws GameActionException {
+		return assignTask(instruction, 0);
 	}
 
 	/*

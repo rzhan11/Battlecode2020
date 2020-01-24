@@ -11,6 +11,8 @@ public class BotMinerBuilder extends BotMiner {
     public static boolean initializedMinerBuilder = false;
 
     public static int buildInstruction = -1;
+    public static int buildDetail = -1;
+    public static int assignRound = -1;
 
     public static void initMinerBuilder() throws GameActionException {
 
@@ -24,12 +26,20 @@ public class BotMinerBuilder extends BotMiner {
 
         initializedMinerBuilder = false;
         buildInstruction = -1;
+        buildDetail = -1;
     }
 
     public static void turn() throws GameActionException {
         if (!initializedMinerBuilder) {
             initMinerBuilder();
         }
+
+        if (roundNum - assignRound >= BotHQ.REASSIGN_ROUND_NUM) {
+            log("Assignment expired");
+            uninitMinerBuilder();
+            return;
+        }
+
         drawDot(here, BROWN);
 
         if (!rc.isReady()) {
@@ -45,9 +55,6 @@ public class BotMinerBuilder extends BotMiner {
                 break;
             case BUILD_CLOSE_VAPORATOR:
                 if (buildCloseVaporator()) {
-                    vaporatorBuiltCount++;
-                }
-                if (vaporatorBuiltCount >= 3) {
                     uninitMinerBuilder();
                 }
                 break;

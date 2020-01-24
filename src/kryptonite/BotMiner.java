@@ -119,7 +119,6 @@ public class BotMiner extends Globals {
 		}
 
 		// after wall is completed, do not wao into dig locations
-		log("wallCompleted " + wallCompleted);
 		if (wallCompleted) {
 			for (int i = 0; i < directions.length; i++) {
 				if (isDigLoc(rc.adjacentLocation(directions[i]))) {

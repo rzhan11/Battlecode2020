@@ -104,8 +104,10 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
             if (targetID != -1) {
                 if (rc.canSenseRobot(targetID)) {
                     RobotInfo ri = rc.senseRobot(targetID);
-                    if (maxXYDistance(HQLoc, ri.location) >= wallRingRadius) {
-                        // resets target since they are out of the 5x5 plot
+                    // resets target if they are out of the 5x5 plot
+                    // or is currently being carried by another drone
+                    if (maxXYDistance(HQLoc, ri.location) >= wallRingRadius ||
+                        !ri.equals(rc.senseRobotAtLocation(ri.location))) {
                         targetID = -1;
                     }
                 } else {
@@ -121,7 +123,6 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
                 for (RobotInfo ri: visibleAllies) {
                     if (ri.type == RobotType.LANDSCAPER ||
                             (ri.type == RobotType.MINER && wallCompleted)) {
-                        log("type " + ri.type + " " + wallCompleted);
                         if (maxXYDistance(HQLoc, ri.location) < wallRingRadius) {
                             int dist = here.distanceSquaredTo(ri.location);
                             if (dist < closestDist) {

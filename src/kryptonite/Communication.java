@@ -3,11 +3,7 @@ package kryptonite;
 import battlecode.common.*;
 
 
-import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
-import static kryptonite.Map.*;
-import static kryptonite.Nav.*;
-import static kryptonite.Utils.*;
 import static kryptonite.Zones.*;
 
 public class Communication extends Globals {
@@ -498,17 +494,22 @@ public class Communication extends Globals {
 
 	/*
 	message[2] = miner id
-	message[3] = build instruction
+	message[3] = round assigned
+	message[4] = build instruction
+	message[5] = details about build instruction
+
 
 	*/
-	public static void writeTransactionBuildInstruction (int minerID, int instruction) throws GameActionException {
+	public static void writeTransactionBuildInstruction (int minerID, int instruction, int details) throws GameActionException {
 		// check money
 		log("Writing transaction for 'Build Instruction' at " + minerID + ": " + instruction);
 		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = BUILD_INSTRUCTION_SIGNAL;
 		message[2] = minerID;
-		message[3] = instruction;
+		message[3] = roundNum;
+		message[4] = instruction;
+		message[5] = details;
 
 		xorMessage(message);
 		if (rc.getTeamSoup() >= dynamicCost) {
@@ -524,10 +525,14 @@ public class Communication extends Globals {
 		tlog("Reading 'Build Instruction' transaction");
 		ttlog("Submitter ID: " + decryptID(message[0]));
 		ttlog("Builder Miner ID: " + message[2]);
-		ttlog("Instruction: " + message[3]);
+		ttlog("Round Assigned: " + message[3]);
+		ttlog("Instruction: " + message[4]);
+		ttlog("Detail: " + message[5]);
 		ttlog("Posted round: " + round);
 		if (myID == message[2]) {
-			BotMinerBuilder.buildInstruction = message[3];
+			BotMinerBuilder.assignRound = message[3];
+			BotMinerBuilder.buildInstruction = message[4];
+			BotMinerBuilder.buildDetail = message[5];
 		}
 	}
 
