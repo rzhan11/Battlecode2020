@@ -7,6 +7,7 @@ import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
 import static kryptonite.Utils.*;
+import static kryptonite.Wall.*;
 import static kryptonite.Zones.*;
 
 public class BotMinerResource extends BotMiner {
@@ -111,7 +112,7 @@ public class BotMinerResource extends BotMiner {
                 if (!rc.onTheMap(loc)) {
                     continue;
                 }
-                if (isDirDryFlatEmpty(dir) && isBuildLoc(loc) && maxXYDistance(HQLoc, loc) >= 2) {
+                if (isDirDryFlatEmpty(dir) && isBuildLoc(loc) && maxXYDistance(HQLoc, loc) > wallRingRadius) {
                     int elevation = rc.senseElevation(loc);
                     if (elevation > highestElevation) {
                         highestDir = dir;
