@@ -1,15 +1,18 @@
-package turtle;
+package rush_bot;
 
 import battlecode.common.*;
 
-import java.util.Random;
+import static rush_bot.Actions.*;
+import static rush_bot.Communication.*;
+import static rush_bot.Debug.*;
+import static rush_bot.Globals.*;
+import static rush_bot.Map.*;
+import static rush_bot.Nav.*;
+import static rush_bot.Utils.*;
+import static rush_bot.Wall.*;
+import static rush_bot.Zones.*;
 
-
-import static turtle.Communication.*;
-import static turtle.Debug.*;
-import static turtle.Map.*;
-import static turtle.Wall.*;
-import static turtle.Zones.*;
+import java.util.*;
 
 public class Globals extends Constants {
     /*

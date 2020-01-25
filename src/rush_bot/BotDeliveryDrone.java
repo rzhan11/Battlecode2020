@@ -1,13 +1,16 @@
-package turtle;
+package rush_bot;
 
 import battlecode.common.*;
 
-import static turtle.Communication.*;
-import static turtle.Debug.*;
-import static turtle.Map.*;
-import static turtle.Wall.*;
-import static turtle.Utils.*;
-import static turtle.Zones.*;
+import static rush_bot.Actions.*;
+import static rush_bot.Communication.*;
+import static rush_bot.Debug.*;
+import static rush_bot.Globals.*;
+import static rush_bot.Map.*;
+import static rush_bot.Nav.*;
+import static rush_bot.Utils.*;
+import static rush_bot.Wall.*;
+import static rush_bot.Zones.*;
 
 public class BotDeliveryDrone extends Globals {
 
@@ -15,7 +18,8 @@ public class BotDeliveryDrone extends Globals {
 			DRONE_SUPPORT_ROLE = 1,
 			DRONE_HARASS_ROLE = 2,
 			DRONE_ATTACK_ROLE = 3,
-			DRONE_RUSH_ROLE = 4;
+			DRONE_RUSH_ROLE = 4,
+			DRONE_WALL_ROLE = 5;
 
 	public static int myRole = -1;
 
@@ -51,6 +55,9 @@ public class BotDeliveryDrone extends Globals {
 		} else {
 			myRole = DRONE_HARASS_ROLE;
 		}
+
+		// Uncomment for drone wall
+		//myRole = DRONE_WALL_ROLE;
 
 		for (RobotInfo ri: visibleAllies) {
 			if (ri.ID == rushMinerID && rc.senseRobotAtLocation(ri.location).ID == rushMinerID) {
@@ -111,6 +118,9 @@ public class BotDeliveryDrone extends Globals {
 				break;
 			case DRONE_HARASS_ROLE:
 				BotDeliveryDroneHarass.turn();
+				break;
+			case DRONE_WALL_ROLE:
+				BotDeliveryDroneWall.turn();
 				break;
 			case DRONE_ATTACK_ROLE:
 				break;

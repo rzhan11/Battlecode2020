@@ -2,6 +2,16 @@ package turtle;
 
 import battlecode.common.*;
 
+import static turtle.Actions.*;
+import static turtle.Communication.*;
+import static turtle.Debug.*;
+import static turtle.Globals.*;
+import static turtle.Map.*;
+import static turtle.Nav.*;
+import static turtle.Utils.*;
+import static turtle.Wall.*;
+import static turtle.Zones.*;
+
 public strictfp class RobotPlayer {
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {

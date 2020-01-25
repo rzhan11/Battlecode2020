@@ -2,14 +2,17 @@ package turtle;
 
 import battlecode.common.*;
 
-import java.util.Random;
-
-
+import static turtle.Actions.*;
 import static turtle.Communication.*;
 import static turtle.Debug.*;
+import static turtle.Globals.*;
 import static turtle.Map.*;
+import static turtle.Nav.*;
+import static turtle.Utils.*;
 import static turtle.Wall.*;
 import static turtle.Zones.*;
+
+import java.util.*;
 
 public class Globals extends Constants {
     /*
