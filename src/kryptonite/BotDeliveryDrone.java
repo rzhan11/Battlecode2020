@@ -74,6 +74,10 @@ public class BotDeliveryDrone extends Globals {
 			return;
 		}
 
+		if (roundNum > 1000) {
+			myRole = DRONE_ATTACK_ROLE;
+		}
+
 		avoidDangerResult = Nav.avoidDanger();
 		if (avoidDangerResult == 1) {
 			return;

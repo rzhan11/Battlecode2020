@@ -37,9 +37,10 @@ public class BotDesignSchool extends Globals {
 
 		int incomePerRound = 1 + totalVaporators * RobotType.VAPORATOR.maxSoupProduced;
 		int spawnDelay = 4 * RobotType.LANDSCAPER.cost / incomePerRound;
-		log("hi " + roundNum + " " + lastBuildRound + " " + spawnDelay);
-		if (roundNum - lastBuildRound > spawnDelay ||
-			roundNum >= 1000) {
+		if (roundNum < 400) {
+			spawnDelay /= 2;
+		}
+		if (roundNum - lastBuildRound > spawnDelay) {
 			log("target " + getSymmetryLoc());
 			buildLandscaper(getCloseDirections(here.directionTo(getSymmetryLoc())), RobotType.LANDSCAPER.cost);
 			return;
