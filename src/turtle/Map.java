@@ -206,7 +206,7 @@ public class Map extends Globals {
         if (myType == RobotType.DELIVERY_DRONE) {
             nearbyEnemies = visibleEnemies;;
             for (RobotInfo ri : nearbyEnemies) {
-                if (ri.type.canShoot()) {
+                if (ri.type.canShoot() && ri.cooldownTurns < 5) {
                     if (here.distanceSquaredTo(ri.location) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
                         inDanger = true;
                     }
@@ -215,7 +215,7 @@ public class Map extends Globals {
         } else {
             nearbyEnemies = rc.senseNearbyRobots(8, them);;
             for (RobotInfo ri : nearbyEnemies) {
-                if (ri.type == RobotType.DELIVERY_DRONE) {
+                if (ri.type == RobotType.DELIVERY_DRONE && ri.cooldownTurns < 5) {
                     if (ri.location.isAdjacentTo(here)) {
                         inDanger = true;
                     }
@@ -235,7 +235,7 @@ public class Map extends Globals {
                 // checks for dangerous netguns
                 // add check for if we are ignoring netguns
                 for (RobotInfo ri : nearbyEnemies) {
-                    if (ri.type.canShoot()) {
+                    if (ri.type.canShoot() && ri.cooldownTurns < 5) {
                         if (adjLoc.distanceSquaredTo(ri.location) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
                             isDirMoveable[i] = false;
                             isDirDanger[i] = true;
@@ -247,7 +247,7 @@ public class Map extends Globals {
                 // STATE == I am a miner/landscaper
                 // checks for dangerous drones
                 for (RobotInfo ri : nearbyEnemies) {
-                    if (ri.type == RobotType.DELIVERY_DRONE) {
+                    if (ri.type == RobotType.DELIVERY_DRONE && ri.cooldownTurns < 5) {
                         if (ri.location.isAdjacentTo(adjLoc)) {
                             isDirMoveable[i] = false;
                             isDirDanger[i] = true;
@@ -258,5 +258,20 @@ public class Map extends Globals {
             }
             isDirDanger[i] = false;
         }
+
+        // when danger is unavoidable, reset isDirMoveable to ignore danger tiles
+        if (inDanger) {
+            boolean canAvoid = false;
+            for (int i = 0; i < directions.length; i++) {
+                if (isDirMoveable[i]) {
+                    canAvoid = true;
+                    break;
+                }
+            }
+            if (!canAvoid) {
+                updateIsDirMoveable();
+            }
+        }
+
     }
 }

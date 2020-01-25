@@ -317,6 +317,7 @@ public class Communication extends Globals {
 		message[2] = myHQLoc.x;
 		message[3] = myHQLoc.y;
 		message[4] = myElevation;
+		message[5] = rushMinerID;
 
 		xorMessage(message);
 		if (rc.getTeamSoup() >= dynamicCost) {
@@ -332,9 +333,11 @@ public class Communication extends Globals {
 		tlog("Reading 'HQ First Turn' transaction");
 		HQLoc = new MapLocation(message[2], message[3]);
 		HQElevation = message[4];
+		rushMinerID = message[5];
 		ttlog("Submitter ID: " + decryptID(message[0]));
 		ttlog("Location: " + HQLoc);
 		ttlog("Elevation: " + HQElevation);
+		ttlog("rushMinerID: " + rushMinerID);
 		ttlog("Posted round: " + round);
 	}
 

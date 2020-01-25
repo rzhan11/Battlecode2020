@@ -14,7 +14,8 @@ public class BotDeliveryDrone extends Globals {
 	final public static int
 			DRONE_SUPPORT_ROLE = 1,
 			DRONE_HARASS_ROLE = 2,
-			DRONE_ATTACK_ROLE = 3;
+			DRONE_ATTACK_ROLE = 3,
+			DRONE_RUSH_ROLE = 4;
 
 	public static int myRole = -1;
 
@@ -51,6 +52,12 @@ public class BotDeliveryDrone extends Globals {
 			myRole = DRONE_HARASS_ROLE;
 		}
 
+		for (RobotInfo ri: visibleAllies) {
+			if (ri.ID == rushMinerID && rc.senseRobotAtLocation(ri.location).ID == rushMinerID) {
+				myRole = DRONE_RUSH_ROLE;
+			}
+		}
+
 		initalizedDrone = true;
 
 		Globals.endTurn();
@@ -78,13 +85,15 @@ public class BotDeliveryDrone extends Globals {
 			updateIsDirMoveable();
 		}
 
-		for (int i = 0; i < directions.length; i++) {
-			log("dir " + directions[i] + " " + isDirMoveable[i]);
-		}
 		if (true) {
 			for (int i = 1; i < directions.length; i+=2) {
 				isDirMoveable[i] = false;
 			}
+		}
+
+		if (myRole == DRONE_RUSH_ROLE) {
+			BotDeliveryDroneRush.turn();
+			return;
 		}
 
 		boolean sawEnemy = tryKillRobots(visibleEnemies, them);

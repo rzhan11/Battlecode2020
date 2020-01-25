@@ -56,8 +56,6 @@ public class BotHQ extends Globals {
 		tlog("" + symmetryHQLocs[1]);
 		tlog("" + symmetryHQLocs[2]);
 
-		writeTransactionHQFirstTurn(here);
-
 		// finds visible soup locations
 
 		closestVisibleSoupLoc = findClosestVisibleSoupLoc(true);
@@ -77,7 +75,6 @@ public class BotHQ extends Globals {
 				drawDot(enemyHQLoc, PINK);
 			}
 			for (int i = 0; i < symmetryHQLocs.length; i++) {
-				int[] color = BLACK;
 				if (isSymmetryHQLoc[i] == 0) {
 					drawLine(here, symmetryHQLocs[i], YELLOW);
 				} else if (isSymmetryHQLoc[i] == 1) {
@@ -198,6 +195,9 @@ public class BotHQ extends Globals {
 		log("Building miner towards " + target);
 		Direction buildDir = tryBuild(RobotType.MINER, orderedDirections);
 		if (buildDir != null) {
+			if (roundNum == 1) {
+				rushMinerID = rc.senseRobotAtLocation(rc.adjacentLocation(buildDir)).ID;
+			}
 			minerBuiltCount++;
 			lastMinerBuiltRound = roundNum;
 			return buildDir;

@@ -92,6 +92,8 @@ public class Globals extends Constants {
 
     public static int totalVaporators = 0;
 
+    public static int rushMinerID = -1;
+
     public static void init(RobotController theRC) throws GameActionException {
 
         rc = theRC;
@@ -264,9 +266,9 @@ public class Globals extends Constants {
     earlyEnd should be true, unless this method was called at the end of the loop() method
     */
     public static void endTurn () throws GameActionException {
-//        if (myType == RobotType.HQ || myID == 11405) {
-//            drawZoneStatus();
-//        }
+        if (myType == RobotType.HQ && roundNum == 1) {
+            writeTransactionHQFirstTurn(here);
+        }
 
         readOldBlocks();
 
@@ -446,5 +448,20 @@ public class Globals extends Constants {
         } else {
             return enemyHQLoc;
         }
+    }
+
+    public static int getClosestSymmetryIndex() {
+        int bestIndex = -1;
+        int bestDist = P_INF;
+        for (int i = 0; i < symmetryHQLocs.length; i++) {
+            if (isSymmetryHQLoc[i] != 2) {
+                int dist = here.distanceSquaredTo(symmetryHQLocs[i]);
+                if (dist < bestDist) {
+                    bestIndex = i;
+                    bestDist = dist;
+                }
+            }
+        }
+        return bestIndex;
     }
 }

@@ -65,6 +65,11 @@ public class BotMiner extends Globals {
 			return;
 		}
 
+		if (myRole == MINER_RUSH_ROLE) {
+			BotMinerRush.turn();
+			return;
+		}
+
 		int avoidDangerResult = Nav.avoidDanger();
 		if (avoidDangerResult == 1) {
 			return;
@@ -80,9 +85,6 @@ public class BotMiner extends Globals {
 				break;
 			case MINER_BUILDER_ROLE:
 				BotMinerBuilder.turn();
-				break;
-			case MINER_RUSH_ROLE:
-				BotMinerRush.turn();
 				break;
 		}
 
