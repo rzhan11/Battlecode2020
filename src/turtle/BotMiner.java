@@ -17,8 +17,7 @@ public class BotMiner extends Globals {
 	final public static int
 			MINER_RESOURCE_ROLE = 1,
 			MINER_BUILDER_ROLE = 2,
-			MINER_MIDGAME_ROLE = 3,
-			MINER_RUSH_ROLE = 4;
+			MINER_MIDGAME_ROLE = 3;
 
 	public static int myRole = -1;
 
@@ -46,11 +45,8 @@ public class BotMiner extends Globals {
 
 	public static void initMiner() throws GameActionException {
 
-		if (spawnRound == 2) {
-			myRole = MINER_RUSH_ROLE;
-		} else {
-			myRole = MINER_RESOURCE_ROLE;
-		}
+		myRole = MINER_RESOURCE_ROLE;
+
 		evacuateRound = HardCode.getRoundFlooded(3) - 100;
 
 		BotMinerResource.initMinerResource();
@@ -69,11 +65,6 @@ public class BotMiner extends Globals {
 
 		if (!rc.isReady()) {
 			log("Not ready");
-			return;
-		}
-
-		if (myRole == MINER_RUSH_ROLE) {
-			BotMinerRush.turn();
 			return;
 		}
 
