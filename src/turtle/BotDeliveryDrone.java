@@ -15,7 +15,8 @@ public class BotDeliveryDrone extends Globals {
 			DRONE_SUPPORT_ROLE = 1,
 			DRONE_HARASS_ROLE = 2,
 			DRONE_ATTACK_ROLE = 3,
-			DRONE_RUSH_ROLE = 4;
+			DRONE_RUSH_ROLE = 4,
+			DRONE_WALL_ROLE = 5;
 
 	public static int myRole = -1;
 
@@ -51,6 +52,9 @@ public class BotDeliveryDrone extends Globals {
 		} else {
 			myRole = DRONE_HARASS_ROLE;
 		}
+
+		// Uncomment for drone wall
+		//myRole = DRONE_WALL_ROLE;
 
 		for (RobotInfo ri: visibleAllies) {
 			if (ri.ID == rushMinerID && rc.senseRobotAtLocation(ri.location).ID == rushMinerID) {
@@ -111,6 +115,9 @@ public class BotDeliveryDrone extends Globals {
 				break;
 			case DRONE_HARASS_ROLE:
 				BotDeliveryDroneHarass.turn();
+				break;
+			case DRONE_WALL_ROLE:
+				BotDeliveryDroneWall.turn();
 				break;
 			case DRONE_ATTACK_ROLE:
 				break;
