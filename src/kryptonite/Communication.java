@@ -28,6 +28,8 @@ public class Communication extends Globals {
 	final public static int WALL_COMPLETED_SIGNAL = 6;
 	final public static int VAPORATOR_STATUS_SIGNAL = 7;
 	final public static int FLOODING_FOUND_SIGNAL = 8;
+	final public static int SUPPORT_WALL_FULL_SIGNAL = 9;
+	final public static int WALL_FULL_SIGNAL = 10;
 
 	final public static int ALL_ZONE_STATUS_SIGNAL = 103;
 	final public static int REVIEW_SIGNAL = 104;
@@ -241,6 +243,11 @@ public class Communication extends Globals {
 						if (myType == RobotType.HQ || myType == RobotType.DELIVERY_DRONE) {
 							readTransactionFloodingFound(message, round);
 						}
+					case WALL_FULL_SIGNAL:
+						readTransactionWallFull(message, round);
+						break;
+					case SUPPORT_WALL_FULL_SIGNAL:
+						readTransactionSupportWallFull(message, round);
 						break;
 					/*case ALL_ZONE_STATUS_SIGNAL:
 						if (!isLowBytecodeLimit(myType)) {
@@ -758,5 +765,51 @@ message[3] = y coordinate of our HQ
 			ttlog("Symmetry " + symmetryHQLocsIndex + " confirmed");
 		}
 		ttlog("Posted round: " + round);
+	}
+
+	public static void writeTransactionWallFull() throws GameActionException {
+		log("Writing transaction for 'Wall Full'");
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
+		message[0] = encryptID(myID);
+		message[1] = WALL_FULL_SIGNAL;
+
+		xorMessage(message);
+		if (rc.getTeamSoup() >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
+
+		} else {
+			tlog("Could not afford transaction");
+			saveUnsentTransaction(message, dynamicCost);
+		}
+	}
+
+	public static void readTransactionWallFull(int[] message, int round) throws GameActionException {
+		wallFull = true;
+		log("Reading transaction for 'Wall Full'");
+		log("Submitter ID: " + decryptID(message[0]));
+		log("Posted round: " + round);
+	}
+
+	public static void readTransactionSupportWallFull(int[] message, int round) throws GameActionException {
+		supportFull = true;
+		log("Reading transaction for 'Support Wall Full'");
+		log("Submitter ID: " + decryptID(message[0]));
+		log("Posted round: " + round);
+	}
+
+	public static void writeTransactionSupportWallFull() throws GameActionException {
+		log("Writing transaction for 'Support Wall Full'");
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
+		message[0] = encryptID(myID);
+		message[1] = SUPPORT_WALL_FULL_SIGNAL;
+
+		xorMessage(message);
+		if (rc.getTeamSoup() >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
+
+		} else {
+			tlog("Could not afford transaction");
+			saveUnsentTransaction(message, dynamicCost);
+		}
 	}
 }
