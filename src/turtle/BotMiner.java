@@ -2,19 +2,16 @@ package turtle;
 
 import battlecode.common.*;
 
-import static turtle.Communication.*;
 import static turtle.Debug.*;
 import static turtle.Map.*;
-import static turtle.Utils.*;
-import static turtle.Wall.wallCompleted;
-import static turtle.Zones.*;
 
 public class BotMiner extends Globals {
 
 	final public static int
 			MINER_RESOURCE_ROLE = 1,
 			MINER_BUILDER_ROLE = 2,
-			MINER_MIDGAME_ROLE = 3;
+			MINER_MIDGAME_ROLE = 3,
+			MINER_RUSH_ROLE = 4;
 
 	public static int myRole = -1;
 
@@ -42,8 +39,8 @@ public class BotMiner extends Globals {
 
 	public static void initMiner() throws GameActionException {
 
-		if (wallCompleted) {
-			myRole = MINER_MIDGAME_ROLE;
+		if (spawnRound == 2) {
+			myRole = MINER_RUSH_ROLE;
 		} else {
 			myRole = MINER_RESOURCE_ROLE;
 		}
@@ -77,15 +74,6 @@ public class BotMiner extends Globals {
 			updateIsDirMoveable();
 		}
 
-		// after wall is completed, do not walk into dig locations
-		if (wallCompleted) {
-			for (int i = 0; i < directions.length; i++) {
-				if (isDigLoc(rc.adjacentLocation(directions[i]))) {
-					isDirMoveable[i] = false;
-				}
-			}
-		}
-
 		switch (myRole) {
 			case MINER_RESOURCE_ROLE:
 				BotMinerResource.turn();
@@ -93,8 +81,8 @@ public class BotMiner extends Globals {
 			case MINER_BUILDER_ROLE:
 				BotMinerBuilder.turn();
 				break;
-			case MINER_MIDGAME_ROLE:
-				BotMinerMidgame.turn();
+			case MINER_RUSH_ROLE:
+				BotMinerRush.turn();
 				break;
 		}
 

@@ -14,18 +14,42 @@ public class BotDesignSchool extends Globals {
 
 	public static int landscapersBuilt = 0;
 	public static int lastBuildRound = N_INF;
+	public static boolean isRushDS = false;
 
 	public static void loop() throws GameActionException {
 		while (true) {
 			try {
 				Globals.update();
 
-				turn();
+				if (!initializedDesignSchool) {
+					initDesignSchool();
+				}
+
+				if (isRushDS) {
+					BotDesignSchoolRush.turn();
+				} else {
+					turn();
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			Globals.endTurn();
 		}
+	}
+
+	public static boolean initializedDesignSchool = false;
+
+	public static void initDesignSchool() throws GameActionException {
+
+		if (rc.canSenseLocation(getSymmetryLoc())) {
+			RobotInfo ri = rc.senseRobotAtLocation(getSymmetryLoc());
+			if (ri != null && ri.type == RobotType.HQ && ri.team == them) {
+				isRushDS = true;
+			}
+		}
+
+		initializedDesignSchool = true;
+
 	}
 
 	public static void turn() throws GameActionException {

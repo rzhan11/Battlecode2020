@@ -131,6 +131,21 @@ public class Map extends Globals {
         return ri != null && ri.type.isBuilding();
     }
 
+    public static boolean isLocAlly(MapLocation loc) throws GameActionException {
+        RobotInfo ri = rc.senseRobotAtLocation(loc);
+        return ri != null && ri.team == us;
+    }
+
+    public static boolean isLocAllyBuilding(MapLocation loc) throws GameActionException {
+        RobotInfo ri = rc.senseRobotAtLocation(loc);
+        return ri != null && ri.type.isBuilding() && ri.team == us;
+    }
+
+    public static boolean isLocEnemy(MapLocation loc) throws GameActionException {
+        RobotInfo ri = rc.senseRobotAtLocation(loc);
+        return ri != null && ri.team == them;
+    }
+
     public static boolean isLocEnemyBuilding(MapLocation loc) throws GameActionException {
         RobotInfo ri = rc.senseRobotAtLocation(loc);
         return ri != null && ri.type.isBuilding() && ri.team == them;

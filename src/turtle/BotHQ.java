@@ -2,8 +2,6 @@ package turtle;
 
 import battlecode.common.*;
 
-import static kryptonite.Wall.wallLocs;
-import static kryptonite.Wall.wallLocsLength;
 import static turtle.Communication.*;
 import static turtle.Debug.*;
 import static turtle.Map.*;
@@ -115,90 +113,6 @@ public class BotHQ extends Globals {
 			return;
 		}
 
-		// assign construction of fulfillment center
-		if (closeFulfillmentCenterInfo == null) {
-			log("Trying to assign fulfillment center");
-			if (minerBuiltCount >= MINER_CHECKPOINT_1) {
-				for (RobotInfo ri : visibleAllies) {
-					if (ri.type == RobotType.FULFILLMENT_CENTER) {
-						closeFulfillmentCenterInfo = ri;
-						lastAssignmentRound = N_INF;
-					}
-				}
-				if (closeFulfillmentCenterInfo == null && roundNum - lastAssignmentRound > REASSIGN_ROUND_NUM &&
-						rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost) {
-					int id = assignTask(BUILD_CLOSE_FULFILLMENT_CENTER);
-					if (id >= 100000) {
-						// we built this turn
-						return;
-					}
-				}
-			}
-
-			// assign construction of close vaporators
-		} else if (closeVaporatorInfo == null) {
-			log("Trying to assign vaporator");
-			for (RobotInfo ri: visibleAllies) {
-				if (ri.type == RobotType.VAPORATOR) {
-					closeVaporatorInfo = ri;
-					lastAssignmentRound = N_INF;
-				}
-			}
-			if (closeVaporatorInfo == null && roundNum - lastAssignmentRound > REASSIGN_ROUND_NUM &&
-					rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
-				int id = assignTask(BUILD_CLOSE_VAPORATOR, 1);
-				if (id >= 100000) {
-					// we built this turn
-					return;
-				}
-			}
-
-			// assign construction of close design school
-		} else if (closeDesignSchoolInfo == null) {
-			log("Trying to assign design school");
-			for (RobotInfo ri: visibleAllies) {
-				if (ri.type == RobotType.DESIGN_SCHOOL) {
-					closeDesignSchoolInfo = ri;
-					lastAssignmentRound = N_INF;
-				}
-			}
-			if (closeDesignSchoolInfo == null && roundNum - lastAssignmentRound > REASSIGN_ROUND_NUM &&
-					rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost) {
-				int id = assignTask(BUILD_CLOSE_DESIGN_SCHOOL);
-				if (id >= 100000) {
-					// we built this turn
-					return;
-				}
-			}
-
-			// assign construction of two more vaporators (three total)
-		} else {
-			int closeVaporatorCount = 0;
-			for (RobotInfo ri: visibleAllies) {
-				if (ri.type == RobotType.VAPORATOR) {
-					closeVaporatorCount++;
-				}
-			}
-			if (closeVaporatorCount >= NUM_CLOSE_VAPORATOR) {
-				lastAssignmentRound = N_INF;
-			} else {
-				if (roundNum - lastAssignmentRound > REASSIGN_ROUND_NUM &&
-						rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
-					log("hi " + roundNum + " " + lastAssignmentRound);
-					int id = assignTask(BUILD_CLOSE_VAPORATOR, NUM_CLOSE_VAPORATOR - closeVaporatorCount);
-					if (id >= 100000) {
-						// we built this turn
-						return;
-					}
-				}
-			}
-		}
-
-		int shotID = BotNetGun.tryShoot();
-		if (shotID != -1) {
-			return;
-		}
-
 		if (minerBuiltCount < MINER_CHECKPOINT_1) {
 			if (rc.getTeamSoup() >= RobotType.MINER.cost) {
 				if (closestVisibleSoupLoc == null) {
@@ -212,32 +126,27 @@ public class BotHQ extends Globals {
 			return;
 		}
 
-		// build up to second checkpoint after initial 3 buildings are done
-		if (closeFulfillmentCenterInfo != null && minerBuiltCount < MINER_CHECKPOINT_2) {
-			if (rc.getTeamSoup() >= RobotType.MINER.cost) {
-				if (closestVisibleSoupLoc == null) {
-					buildMiner(getSymmetryLoc());
-				} else {
-					buildMiner(closestVisibleSoupLoc);
-				}
-			} else {
-				log("Not enough soup to build miner");
-			}
+//		if (closeDesignSchoolInfo == null) {
+//			log("Trying to assign design school");
+//			for (RobotInfo ri: visibleAllies) {
+//				if (ri.type == RobotType.DESIGN_SCHOOL) {
+//					closeDesignSchoolInfo = ri;
+//					lastAssignmentRound = N_INF;
+//				}
+//			}
+//			if (closeDesignSchoolInfo == null && roundNum - lastAssignmentRound > REASSIGN_ROUND_NUM &&
+//					rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost) {
+//				int id = assignTask(BUILD_CLOSE_DESIGN_SCHOOL);
+//				if (id >= 100000) {
+//					// we built this turn
+//					return;
+//				}
+//			}
+//		}
+
+		int shotID = BotNetGun.tryShoot();
+		if (shotID != -1) {
 			return;
-		}
-
-		// enter mid-game
-		if (wallCompleted) {
-
-			int incomePerRound = 1 + totalVaporators * RobotType.VAPORATOR.maxSoupProduced;
-			// intentionally uses landscaper cost, not miner cost
-			int spawnDelay = 4 * RobotType.LANDSCAPER.cost / incomePerRound;
-			if (roundNum - lastMinerBuiltRound > spawnDelay) {
-				if (rc.getTeamSoup() >= RobotType.MINER.cost) {
-					buildMiner(getSymmetryLoc());
-					return;
-				}
-			}
 		}
 	}
 

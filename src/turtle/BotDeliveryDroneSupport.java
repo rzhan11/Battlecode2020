@@ -2,8 +2,6 @@ package turtle;
 
 import battlecode.common.*;
 
-import static kryptonite.Wall.wallLocs;
-import static kryptonite.Wall.wallLocsLength;
 import static turtle.Communication.*;
 import static turtle.Debug.*;
 import static turtle.Map.*;

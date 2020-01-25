@@ -2,6 +2,8 @@ package turtle;
 
 import battlecode.common.*;
 
+import java.awt.*;
+
 import static turtle.Debug.*;
 import static turtle.Map.*;
 import static turtle.Nav.*;
@@ -10,7 +12,7 @@ import static turtle.Wall.*;
 public class BotLandscaper extends Globals {
 
 	private static int role, currentStep = 0;
-	private static final int TERRA_ROLE = 1, DEFENSE_ROLE = 2, ATTACK_ROLE = 3, TERRA_TARGET_ROLE = 4, TERRA_FILLER_ROLE = 5;
+	private static final int TERRA_ROLE = 1, DEFENSE_ROLE = 2, ATTACK_ROLE = 3, TERRA_TARGET_ROLE = 4, TERRA_FILLER_ROLE = 5, RUSH_ROLE = 6;
 
 	// TERRA Variables
 	private static MapLocation terraFillerLocation;
@@ -45,6 +47,13 @@ public class BotLandscaper extends Globals {
 
 		rerollRole();
 
+		if (rc.canSenseLocation(getSymmetryLoc())) {
+			RobotInfo ri = rc.senseRobotAtLocation(getSymmetryLoc());
+			if (ri != null && ri.type == RobotType.HQ && ri.team == them) {
+				role = RUSH_ROLE;
+			}
+		}
+
 		initializedLandscaper = true;
 
 		Globals.endTurn();
@@ -53,8 +62,16 @@ public class BotLandscaper extends Globals {
 
 	public static void turn() throws GameActionException {
 		if(!rc.isReady()) {
+			log("Not ready");
 			return;
 		}
+
+		// rushers
+		if (role == RUSH_ROLE) {
+			doRushRole();
+			return;
+		}
+
 		for(int i = 0; i < directions.length; i++) {
 			if(isDigLoc(rc.adjacentLocation(directions[i]))) {
 				isDirMoveable[i] = false;
@@ -90,6 +107,59 @@ public class BotLandscaper extends Globals {
 				doTerraFillRole();
 				break;
 		}
+	}
+
+	private static void doRushRole() throws GameActionException {
+		if (here.isAdjacentTo(enemyHQLoc)) {
+			if (rc.getDirtCarrying() > 0) {
+				Actions.doDepositDirt(here.directionTo(enemyHQLoc));
+			} else {
+				rushDig();
+			}
+		} else {
+			moveLog(enemyHQLoc);
+		}
+	}
+	private static void rushDig () throws GameActionException {
+		Direction bestDir = null;
+		int bestScore = N_INF;
+		for (Direction dir: allDirections) {
+			MapLocation loc = rc.adjacentLocation(dir);
+			if (!rc.onTheMap(loc)) {
+				continue;
+			}
+			int score = 0;
+			if (isLocEmpty(loc)) {
+				// prioritize empty tiles farther from enemy HQ
+				score = loc.distanceSquaredTo(enemyHQLoc);
+			} else {
+				RobotInfo ri = rc.senseRobotAtLocation(loc);
+				if (ri.team == us) {
+					if (ri.type.isBuilding()) {
+						if (ri.dirtCarrying > 0) {
+							score = P_INF;
+						} else {
+							continue;
+						}
+					} else {
+						// prioritize allies closer to enemy HQ
+						score = -loc.distanceSquaredTo(enemyHQLoc);
+					}
+				} else {
+					if (ri.type.isBuilding()) {
+						continue;
+					} else {
+						score = P_INF / 2;
+					}
+				}
+			}
+			if (score > bestScore) {
+				bestDir = dir;
+				bestScore = score;
+			}
+		}
+		Actions.doDigDirt(bestDir);
+		return;
 	}
 
 	private static void doDefenseRole() throws GameActionException {
