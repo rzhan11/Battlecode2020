@@ -15,7 +15,7 @@ public class BotHQ extends Globals {
 	final public static int MAX_BUILDER_MINER_COOLDOWN = 5;
 
 	final public static int MINER_CHECKPOINT_1 = 4;
-	final public static int MINER_CHECKPOINT_2 = 8;
+	final public static int MINER_CHECKPOINT_2 = 4;
 
 //	public static int maxMinerMadeCount = 8;
 
@@ -26,6 +26,7 @@ public class BotHQ extends Globals {
 	public static RobotInfo closeFulfillmentCenterInfo = null;
 	public static RobotInfo closeVaporatorInfo = null;
 	public static RobotInfo closeDesignSchoolInfo = null;
+	public static boolean builtCloseBuildings = false;
 
 	final public static int NUM_CLOSE_VAPORATOR = 3;
 	public static int closeVaporatorCount = 0;
@@ -179,6 +180,7 @@ public class BotHQ extends Globals {
 			}
 			if (closeVaporatorCount >= NUM_CLOSE_VAPORATOR) {
 				lastAssignmentRound = N_INF;
+				builtCloseBuildings = true;
 			} else {
 				if (roundNum - lastAssignmentRound > REASSIGN_ROUND_NUM &&
 						rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
@@ -209,8 +211,8 @@ public class BotHQ extends Globals {
 			return;
 		}
 
-		// build up to second checkpoint after initial 3 buildings are done
-		if (closeFulfillmentCenterInfo != null && minerBuiltCount < MINER_CHECKPOINT_2) {
+		// build up to second checkpoint after initial buildings are done
+		if (builtCloseBuildings && minerBuiltCount < MINER_CHECKPOINT_2) {
 			if (rc.getTeamSoup() >= RobotType.MINER.cost) {
 				if (closestVisibleSoupLoc == null) {
 					buildMiner(getSymmetryLoc());

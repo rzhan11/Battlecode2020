@@ -53,7 +53,7 @@ public class BotDeliveryDrone extends Globals {
 			}
 		}
 
-		if (count < BotFulfillmentCenter.NUM_EARLY_DRONE) {
+		if (count < 1) {
 			myRole = DRONE_SUPPORT_ROLE;
 		} else if (myID % 2 == 0) {
 			myRole = DRONE_SUPPORT_ROLE;

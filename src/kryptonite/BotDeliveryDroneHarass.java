@@ -104,12 +104,19 @@ public class BotDeliveryDroneHarass extends BotDeliveryDrone {
                 break;
             case 1:
                 log("EXPLORE HARASS");
+                if (targetLoc != null) {
+
+                    log("t " + targetLoc + " " + inSameZone(here, targetLoc));
+                }
                 if (targetLoc != null && inSameZone(here, targetLoc)) {
                     targetLoc = null;
                 }
                 if (targetLoc == null) {
                     if (unexploredLoc == null) {
                         assignSymmetryRandomHarassType();
+                    } else {
+                        log("une " + unexploredLoc);
+                        targetLoc = unexploredLoc;
                     }
                 }
                 break;
@@ -127,6 +134,8 @@ public class BotDeliveryDroneHarass extends BotDeliveryDrone {
                 }
                 break;
         }
+
+        log("tageg "+ targetLoc);
 
         if (targetLoc != null) {
             moveLog(targetLoc);

@@ -39,7 +39,9 @@ public class Map extends Globals {
     }
 
     public static boolean inSameZone(MapLocation ml1, MapLocation ml2) throws GameActionException {
-        return locToZonePair(ml1).equals(locToZonePair(ml2));
+        int[] zone1 = locToZonePair(ml1);
+        int[] zone2 = locToZonePair(ml2);
+        return zone1[0] == zone2[0] && zone1[1] == zone2[1];
     }
 
     public static MapLocation getRandomLoc() throws GameActionException {
@@ -108,6 +110,10 @@ public class Map extends Globals {
 
     public static boolean isLocWet (MapLocation loc) throws GameActionException {
         return rc.senseFlooding(loc);
+    }
+
+    public static boolean isLocWetEmpty (MapLocation loc) throws GameActionException {
+        return rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null;
     }
 
     public static boolean isLocDry (MapLocation loc) throws GameActionException {

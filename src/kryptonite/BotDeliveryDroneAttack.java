@@ -13,6 +13,7 @@ public class BotDeliveryDroneAttack extends BotDeliveryDrone {
 
     public static boolean initializedDroneAttack = false;
     public static boolean isAttacking = false;
+    public static boolean isCarryingLandscaper = false;
 
     public static void initDroneAttack() throws GameActionException {
 
@@ -36,33 +37,70 @@ public class BotDeliveryDroneAttack extends BotDeliveryDrone {
             isAttacking = true;
         }
 
-        if (!isAttacking) {
-            if (rc.isCurrentlyHoldingUnit()) {
+        // if in attack mode, ignore dangerous directions
+
+        if (isAttacking) {
+            updateIsDirMoveable();
+
+            if (isCarryingEnemy) {
                 for (Direction dir: directions) {
-                    if (rc.canDropUnit(dir)) {
+                    MapLocation loc = rc.adjacentLocation(dir);
+                    if (!rc.onTheMap(loc)) {
+                        continue;
+                    }
+                    if (isLocWetEmpty(loc)) {
                         Actions.doDropUnit(dir);
+                        return;
+                    }
+                }
+                if (isLocWet(here)) {
+                    log("Disintegrating to drop landscaper");
+                    rc.disintegrate();
+                    return;
+                }
+            }
+
+            if (isCarryingLandscaper) {
+                for (Direction dir: directions) {
+                    MapLocation loc = rc.adjacentLocation(dir);
+                    if (!rc.onTheMap(loc)) {
+                        continue;
+                    }
+                    if (isLocDryEmpty(loc) && loc.isAdjacentTo(getSymmetryLoc())) {
+                        Actions.doDropUnit(dir);
+                        return;
+                    }
+                }
+                if (here.isAdjacentTo(getSymmetryLoc()) && isLocDry(here)) {
+                    log("Disintegrating to drop landscaper");
+                    rc.disintegrate();
+                    return;
+                }
+            }
+
+            if (!rc.isCurrentlyHoldingUnit()) {
+                for (RobotInfo ri: adjacentAllies) {
+                    if (ri.type == RobotType.LANDSCAPER && !ri.location.isAdjacentTo(getSymmetryLoc())) {
+                        Actions.doPickUpUnit(ri.ID);
+                        isCarryingLandscaper = true;
+                        return;
                     }
                 }
             }
-        }
-
-        // if in attack mode, ignore dangerous directions
-        if (isAttacking) {
-            updateIsDirMoveable();
-        }
-
-        boolean result = chaseEnemies(isAttacking);
-        if (result) {
-            return;
-        }
-
-        if (isAttacking) {
             if (!rc.isCurrentlyHoldingUnit()) {
-                for (RobotInfo ri: adjacentAllies) {
-                    if (ri.type == RobotType.LANDSCAPER) {
+                for (RobotInfo ri: adjacentEnemies) {
+                    if (ri.type.canBePickedUp()) {
                         Actions.doPickUpUnit(ri.ID);
+                        isCarryingEnemy = true;
+                        return;
                     }
                 }
+            }
+        } else {
+            boolean result = chaseEnemies(isAttacking);
+            if (result) {
+                isCarryingEnemy = true;
+                return;
             }
         }
 

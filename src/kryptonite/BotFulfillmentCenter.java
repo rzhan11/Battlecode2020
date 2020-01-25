@@ -64,7 +64,7 @@ public class BotFulfillmentCenter extends Globals {
 			return;
 		}
 
-		if (isEarly && dronesBuilt < NUM_EARLY_DRONE) {
+		if (isEarly && dronesBuilt < NUM_EARLY_DRONE && visibleEnemies.length > 0) {
 			buildDrone(getCloseDirections(here.directionTo(getSymmetryLoc())), RobotType.DELIVERY_DRONE.cost);
 			return;
 		}
