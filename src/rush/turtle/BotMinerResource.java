@@ -1,14 +1,13 @@
-package kryptonite;
+package turtle;
 
 import battlecode.common.*;
 
 
-import static kryptonite.Communication.*;
-import static kryptonite.Debug.*;
-import static kryptonite.Map.*;
-import static kryptonite.Utils.*;
-import static kryptonite.Wall.*;
-import static kryptonite.Zones.*;
+import static turtle.Communication.*;
+import static turtle.Debug.*;
+import static turtle.Map.*;
+import static turtle.Utils.*;
+import static turtle.Zones.*;
 
 public class BotMinerResource extends BotMiner {
 
@@ -112,7 +111,7 @@ public class BotMinerResource extends BotMiner {
                 if (!rc.onTheMap(loc)) {
                     continue;
                 }
-                if (isDirDryFlatEmpty(dir) && isBuildLoc(loc) && maxXYDistance(HQLoc, loc) > wallRingRadius) {
+                if (isDirDryFlatEmpty(dir) && isBuildLoc(loc) && maxXYDistance(HQLoc, loc) >= 2) {
                     int elevation = rc.senseElevation(loc);
                     if (elevation > highestElevation) {
                         highestDir = dir;
@@ -187,10 +186,10 @@ public class BotMinerResource extends BotMiner {
                 }
             }
             // if HQ is walled off, force a new refinery to be built
-//			if (wallFull && refineries[refineriesIndex].equals(HQLoc)) {
-//				deadRefineries[refineriesIndex] = true;
-//				pickRefinery();
-//			}
+			if (roundNum >= 150 && refineries[refineriesIndex].equals(HQLoc)) {
+				deadRefineries[refineriesIndex] = true;
+				pickRefinery();
+			}
         }
 
 		/*
@@ -432,9 +431,6 @@ public class BotMinerResource extends BotMiner {
             log("Trying to move away from HQ to unclog it");
             for (Direction dir: directions) {
                 MapLocation loc = rc.adjacentLocation(dir);
-                if (!rc.onTheMap(loc)) {
-                    continue;
-                }
                 if (isDirDryFlatEmpty(dir) && !loc.isAdjacentTo(HQLoc)) {
                     Actions.doMove(dir);
                     tlog("Moved " + dir);
