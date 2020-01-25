@@ -37,8 +37,10 @@ public class BotDesignSchool extends Globals {
 
 		int incomePerRound = 1 + totalVaporators * RobotType.VAPORATOR.maxSoupProduced;
 		int spawnDelay = 4 * RobotType.LANDSCAPER.cost / incomePerRound;
+		log("hi " + roundNum + " " + lastBuildRound + " " + spawnDelay);
 		if (roundNum - lastBuildRound > spawnDelay ||
 			roundNum >= 1000) {
+			log("target " + getSymmetryLoc());
 			buildLandscaper(getCloseDirections(here.directionTo(getSymmetryLoc())), RobotType.LANDSCAPER.cost);
 			return;
 		}
@@ -47,9 +49,11 @@ public class BotDesignSchool extends Globals {
 	public static void buildLandscaper(Direction[] dirs, int soupLimit) throws GameActionException{
 		for (Direction dir : dirs) {
 			MapLocation loc = rc.adjacentLocation(dir);
+			log("loc " + loc);
 			if (!rc.onTheMap(loc)) {
 				continue;
 			}
+			log("good " + loc);
 			if (rc.getTeamSoup() >= soupLimit && isDirDryFlatEmpty(dir)) {
 				tlog("BUILDING LANDSCAPER " + dir);
 				Actions.doBuildRobot(RobotType.LANDSCAPER, dir);

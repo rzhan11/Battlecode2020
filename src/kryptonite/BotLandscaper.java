@@ -68,7 +68,7 @@ public class BotLandscaper extends Globals {
 			}
 		}
 
-		if(isDigLoc(here) || maxXYDistance(here, HQLoc) <= 2) {
+		if(isDigLoc(here) || maxXYDistance(here, HQLoc) < wallRingRadius) {
 			bugNavigate(getSymmetryLoc());
 			return;
 		}
@@ -114,7 +114,9 @@ public class BotLandscaper extends Globals {
 				if(currentStep == 1) {
 					if(rc.getDirtCarrying() > 0) {
 						Direction dropLoc = here.directionTo(buildingLocation);
-						if(rc.canDepositDirt(dropLoc)) Actions.doDepositDirt(dropLoc);
+						if(rc.canDepositDirt(dropLoc)) {
+							Actions.doDepositDirt(dropLoc);
+						}
 						return;
 					}
 					else {
@@ -147,12 +149,12 @@ public class BotLandscaper extends Globals {
 			if(currentStep == 0) {
 				if(rc.getDirtCarrying() == 0) {
 					boolean flag = false;
-					for(Direction d : Direction.allDirections()) {
+					for(Direction d : allDirections) {
 						MapLocation loc = rc.adjacentLocation(d);
 						if (!rc.onTheMap(loc)) {
 							continue;
 						}
-						if(rc.senseElevation(loc) > terraDepth && Math.abs(terraDepth-rc.senseElevation(loc)) < MAX_ELE_DIFF) {
+						if(rc.senseElevation(loc) > terraDepth && Math.abs(terraDepth - rc.senseElevation(loc)) < MAX_ELE_DIFF) {
 							flag = true;
 							if(rc.canDigDirt(d)) {
 								Actions.doDigDirt(d);
@@ -176,7 +178,7 @@ public class BotLandscaper extends Globals {
 						if (!rc.onTheMap(loc)) {
 							continue;
 						}
-						if(rc.senseElevation(loc) < terraDepth && !isDigLoc(loc) && !isLocBuilding(loc) && maxXYDistance(rc.adjacentLocation(d), HQLoc) > 2 && Math.abs(terraDepth-rc.senseElevation(loc)) < MAX_ELE_DIFF) {
+						if(rc.senseElevation(loc) < terraDepth && !isDigLoc(loc) && !isLocBuilding(loc) && maxXYDistance(rc.adjacentLocation(d), HQLoc) >= wallRingRadius && Math.abs(terraDepth-rc.senseElevation(loc)) < MAX_ELE_DIFF) {
 							if(rc.canDepositDirt(d)) Actions.doDepositDirt(d);
 							return;
 						}
@@ -227,7 +229,7 @@ public class BotLandscaper extends Globals {
 						if (!rc.onTheMap(loc)) {
 							continue;
 						}
-						if (rc.senseElevation(loc) < terraDepth && !isDigLoc(loc) && !isLocBuilding(loc) && maxXYDistance(rc.adjacentLocation(d), HQLoc) > 2 && Math.abs(terraDepth - rc.senseElevation(loc)) < MAX_ELE_DIFF) {
+						if (rc.senseElevation(loc) < terraDepth && !isDigLoc(loc) && !isLocBuilding(loc) && maxXYDistance(rc.adjacentLocation(d), HQLoc) >= wallRingRadius && Math.abs(terraDepth - rc.senseElevation(loc)) < MAX_ELE_DIFF) {
 							if (rc.canDepositDirt(d)) Actions.doDepositDirt(d);
 							return;
 						}
@@ -254,8 +256,12 @@ public class BotLandscaper extends Globals {
 	private static boolean terraTargetCheck() throws GameActionException {
 		for(Direction d : allDirections) {
 			MapLocation loc = rc.adjacentLocation(d);
-			if (!rc.onTheMap(loc))  continue;
-			if(maxXYDistance(HQLoc, loc) <= 2) continue;
+			if (!rc.onTheMap(loc)) {
+				continue;
+			}
+			if(maxXYDistance(HQLoc, loc) < wallRingRadius) {
+				continue;
+			}
 			if(rc.senseElevation(loc) < terraDepth && !isDigLoc(loc) && !isLocBuilding(loc) && Math.abs(terraDepth-rc.senseElevation(loc)) < MAX_ELE_DIFF) {
 				ttlog("TERRA CHECK: FAILED CHECK IN DIRECTION " + d);
 				return false;
@@ -269,7 +275,7 @@ public class BotLandscaper extends Globals {
 			MapLocation loc = here.translate(i,j);
 			if(!rc.canSenseLocation(loc)) continue;
 			if (!rc.onTheMap(loc))  continue;
-			if(maxXYDistance(HQLoc, loc) <= 2) continue;
+			if(maxXYDistance(HQLoc, loc) <= wallRingRadius) continue;
 			if(rc.senseElevation(loc) < terraDepth && !isDigLoc(loc) && !isLocBuilding(loc) && Math.abs(terraDepth-rc.senseElevation(loc)) < MAX_ELE_DIFF) {
 				ttlog("TERRA CHECK: FAILED CHECK IN MAP LOCATION: " + loc);
 				return false;
@@ -293,7 +299,7 @@ public class BotLandscaper extends Globals {
 			MapLocation loc = here.translate(i,j);
 			if(!rc.canSenseLocation(loc)) continue;
 			if (!rc.onTheMap(loc))  continue;
-			if(maxXYDistance(HQLoc, loc) <= 2) continue;
+			if(maxXYDistance(HQLoc, loc) <= wallRingRadius) continue;
 			if(rc.senseElevation(loc) < terraDepth && !isDigLoc(loc) && !isLocBuilding(loc) && Math.abs(terraDepth-rc.senseElevation(loc)) < MAX_ELE_DIFF) {
 				if(maxCirc > maxXYDistance(here, loc)) {
 					ml = loc;

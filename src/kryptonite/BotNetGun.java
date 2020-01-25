@@ -42,7 +42,9 @@ public class BotNetGun extends Globals {
 		int closestDist = P_INF;
 		RobotInfo closestDrone = null;
 
-		for (RobotInfo ri: visibleEnemies) {
+		RobotInfo[] shootEnemies = rc.senseNearbyRobots(GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED, them);
+
+		for (RobotInfo ri: shootEnemies) {
 			if (ri.type.canBeShot()) {
 				int dist = here.distanceSquaredTo(ri.location);
 				if(dist < closestDist){

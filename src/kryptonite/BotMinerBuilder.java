@@ -2,10 +2,13 @@ package kryptonite;
 
 import battlecode.common.*;
 
-
 import static kryptonite.Communication.*;
 import static kryptonite.Debug.*;
 import static kryptonite.Map.*;
+import static kryptonite.Nav.*;
+import static kryptonite.Utils.*;
+import static kryptonite.Wall.*;
+import static kryptonite.Zones.*;
 
 public class BotMinerBuilder extends BotMiner {
     public static boolean initializedMinerBuilder = false;
@@ -67,12 +70,13 @@ public class BotMinerBuilder extends BotMiner {
      */
     public static boolean buildCloseFulfillmentCenter () throws GameActionException {
         log("BUILDER MINER: Close Fulfillment Center");
+        int targetRing = 3;
         for (Direction dir : directions) {
             MapLocation loc = rc.adjacentLocation(dir);
             if (!rc.onTheMap(loc)) {
                 continue;
             }
-            if (maxXYDistance(HQLoc, loc) == 1) {
+            if (maxXYDistance(HQLoc, loc) == targetRing && isCloseBuildLoc(loc)) {
                 if (isDirDryFlatEmpty(dir)) {
                     if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost) {
                         Actions.doBuildRobot(RobotType.FULFILLMENT_CENTER, dir);
@@ -81,89 +85,101 @@ public class BotMinerBuilder extends BotMiner {
                     } else {
                         tlog("In position, not enough soup");
                     }
-                    // return if in position/built it
                     return false;
                 }
             }
         }
 
-        //find a spot in the 7x7 where it can build design school
-        for (int[] dir : senseDirections) {
-            // ignore locs that are out of sensor range or within build range (since they are not flat)
-            if (dir[2] <= 2 || actualSensorRadiusSquared < dir[2]) {
+        int closestWallLocDist = P_INF;
+        MapLocation closestWallLoc = null;
+        for (int i = 0; i < wallLocsLength; i++) {
+            MapLocation loc = wallLocs[i].add(wallLocs[i].directionTo(HQLoc));
+            if (here.isAdjacentTo(loc)) {
                 continue;
             }
-            MapLocation buildLocation = here.translate(dir[0], dir[1]);
-            if (!rc.onTheMap(buildLocation)) {
-                continue;
-            }
-
-            if (maxXYDistance(HQLoc, buildLocation) == 1) {
-                if (isLocDryEmpty(buildLocation)) {
-                    log("Moving to build fulfillment center");
-                    moveLog(buildLocation);
-                    return false;
+            if (rc.canSenseLocation(loc) && isCloseBuildLoc(loc) && isLocDryEmpty(loc)) {
+                int dist = here.distanceSquaredTo(loc);
+                if (dist < closestWallLocDist) {
+                    closestWallLocDist = dist;
+                    closestWallLoc = loc;
                 }
             }
         }
+
+        if (closestWallLoc == null) {
+            if (maxXYDistance(HQLoc, here) < wallRingRadius) {
+                closestWallLoc = getSymmetryLoc();
+            } else {
+                closestWallLoc = HQLoc;
+            }
+        }
+
+        log("Moving to build fulfillment center");
+        moveLog(closestWallLoc);
         return false;
     }
 
     public static boolean buildCloseVaporator () throws GameActionException {
         log("BUILDER MINER: Close Vaporator");
+        int targetRing = 3;
         for (Direction dir : directions) {
             MapLocation loc = rc.adjacentLocation(dir);
             if (!rc.onTheMap(loc)) {
                 continue;
             }
-            if (maxXYDistance(HQLoc, loc) == 2) {
+            if (maxXYDistance(HQLoc, loc) == targetRing && isCloseBuildLoc(loc)) {
                 if (isDirDryFlatEmpty(dir)) {
                     if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
                         Actions.doBuildRobot(RobotType.VAPORATOR, dir);
+                        tlog("Vaporator Built");
                         writeTransactionVaporatorStatus(1);
                         return true;
                     } else {
                         tlog("In position, not enough soup");
                     }
-                    // return if in position/built it
                     return false;
                 }
             }
         }
 
-        //find a spot in the 5x5 where it can build vaporator
-        for (int[] dir : senseDirections) {
-            // ignore locs that are out of sensor range or within build range (since they are not flat)
-            if (dir[2] <= 2 || actualSensorRadiusSquared < dir[2]) {
+        int closestWallLocDist = P_INF;
+        MapLocation closestWallLoc = null;
+        for (int i = 0; i < wallLocsLength; i++) {
+            MapLocation loc = wallLocs[i].add(wallLocs[i].directionTo(HQLoc));
+            if (here.isAdjacentTo(loc)) {
                 continue;
             }
-            MapLocation buildLocation = here.translate(dir[0], dir[1]);
-            if (!rc.onTheMap(buildLocation)) {
-                continue;
-            }
-            // forces it to be on 5x5 ring
-            if (maxXYDistance(HQLoc, buildLocation) == 2) {
-                if (isLocDryEmpty(buildLocation)) {
-                    log("Moving to build vaporator");
-                    moveLog(buildLocation);
-                    return false;
+            if (rc.canSenseLocation(loc) && isCloseBuildLoc(loc) && isLocDryEmpty(loc)) {
+                int dist = here.distanceSquaredTo(loc);
+                if (dist < closestWallLocDist) {
+                    closestWallLocDist = dist;
+                    closestWallLoc = loc;
                 }
             }
         }
+
+        if (closestWallLoc == null) {
+            if (maxXYDistance(HQLoc, here) < wallRingRadius) {
+                closestWallLoc = getSymmetryLoc();
+            } else {
+                closestWallLoc = HQLoc;
+            }
+        }
+
+        log("Moving to build vaporator");
+        moveLog(closestWallLoc);
         return false;
     }
 
-    /*
-    Returns if task was completed
-     */
     public static boolean buildCloseDesignSchool () throws GameActionException {
         log("BUILDER MINER: Close Design School");
+        int targetRing = 3;
         for (Direction dir : directions) {
             MapLocation loc = rc.adjacentLocation(dir);
             if (!rc.onTheMap(loc)) {
                 continue;
             }
-            if (maxXYDistance(HQLoc, loc) == 1) {
+            if (maxXYDistance(HQLoc, loc) == targetRing && isCloseBuildLoc(loc)) {
                 if (isDirDryFlatEmpty(dir)) {
                     if (rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost) {
                         Actions.doBuildRobot(RobotType.DESIGN_SCHOOL, dir);
@@ -172,31 +188,37 @@ public class BotMinerBuilder extends BotMiner {
                     } else {
                         tlog("In position, not enough soup");
                     }
-                    // return if in position/built it
                     return false;
                 }
             }
         }
 
-        //find a spot in the 3x3 where it can build design school
-        for (int[] dir : senseDirections) {
-            // ignore locs that are out of sensor range or within build range (since they are not flat)
-            if (dir[2] <= 2 || actualSensorRadiusSquared < dir[2]) {
+        int closestWallLocDist = P_INF;
+        MapLocation closestWallLoc = null;
+        for (int i = 0; i < wallLocsLength; i++) {
+            MapLocation loc = wallLocs[i].add(wallLocs[i].directionTo(HQLoc));
+            if (here.isAdjacentTo(loc)) {
                 continue;
             }
-            MapLocation buildLocation = here.translate(dir[0], dir[1]);
-            if (!rc.onTheMap(buildLocation)) {
-                continue;
-            }
-            // forces it to be on 3x3 ring
-            if (maxXYDistance(HQLoc, buildLocation) == 1) {
-                if (isLocDryEmpty(buildLocation)) {
-                    log("Moving to build design school");
-                    moveLog(buildLocation);
-                    return false;
+            if (rc.canSenseLocation(loc) && isCloseBuildLoc(loc) && isLocDryEmpty(loc)) {
+                int dist = here.distanceSquaredTo(loc);
+                if (dist < closestWallLocDist) {
+                    closestWallLocDist = dist;
+                    closestWallLoc = loc;
                 }
             }
         }
+
+        if (closestWallLoc == null) {
+            if (maxXYDistance(HQLoc, here) < wallRingRadius) {
+                closestWallLoc = getSymmetryLoc();
+            } else {
+                closestWallLoc = HQLoc;
+            }
+        }
+
+        log("Moving to build design school");
+        moveLog(closestWallLoc);
         return false;
     }
 }

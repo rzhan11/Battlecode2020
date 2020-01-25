@@ -13,15 +13,22 @@ import static kryptonite.Zones.*;
 
 public class Map extends Globals {
 
-    public static boolean isDigLoc(MapLocation ml) {
-        return Math.abs(ml.x - HQLoc.x) % 2 == 0 &&  Math.abs(ml.y - HQLoc.y) % 2 == 0 && maxXYDistance(ml, HQLoc) > 2;
+    public static boolean isDigLoc(MapLocation loc) {
+        return Math.abs(loc.x - HQLoc.x) % 2 == 1 &&  Math.abs(loc.y - HQLoc.y) % 2 == 1 && maxXYDistance(loc, HQLoc) > wallRingRadius;
     }
 
-    public static boolean isBuildLoc(MapLocation ml) {
-        if (maxXYDistance(HQLoc, ml) == wallRingRadius) {
+    public static boolean isCloseBuildLoc(MapLocation loc) {
+        if (maxXYDistance(HQLoc, loc) == wallRingRadius) {
             return false;
         }
-        return Math.abs(ml.x - HQLoc.x) % 2 == 1 &&  Math.abs(ml.y - HQLoc.y) % 2 == 1;
+        return Math.abs(loc.x - HQLoc.x) % 2 == 1 && Math.abs(loc.y - HQLoc.y) % 2 == 1;
+    }
+
+    public static boolean isBuildLoc(MapLocation loc) {
+        if (maxXYDistance(HQLoc, loc) == wallRingRadius) {
+            return false;
+        }
+        return Math.abs(loc.x - HQLoc.x) % 2 == 0 && Math.abs(loc.y - HQLoc.y) % 2 == 0;
     }
 
     /*

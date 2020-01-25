@@ -13,8 +13,8 @@ public class Wall extends Globals {
 
     public static boolean hasLoadedWall = false;
 
-    public static int wallRingRadius = 3; // 7x7 ring
-    public static int wallRingSize = 2 * wallRingRadius + 1; // 7x7 ring
+    public static int wallRingRadius = 4; // 9x9 ring
+    public static int wallRingSize = 2 * wallRingRadius + 1;
     public static int wallMinX, wallMinY, wallMaxX, wallMaxY;
     public static MapLocation[] wallLocs = null;
     public static int wallLocsLength;

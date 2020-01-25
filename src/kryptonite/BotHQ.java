@@ -182,7 +182,6 @@ public class BotHQ extends Globals {
 			} else {
 				if (roundNum - lastAssignmentRound > REASSIGN_ROUND_NUM &&
 						rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
-					log("hi " + roundNum + " " + lastAssignmentRound);
 					int id = assignTask(BUILD_CLOSE_VAPORATOR, NUM_CLOSE_VAPORATOR - closeVaporatorCount);
 					if (id >= 100000) {
 						// we built this turn
@@ -226,7 +225,9 @@ public class BotHQ extends Globals {
 
 		// enter mid-game
 		if (wallCompleted) {
-
+			if (minerBuiltCount >= 20) {
+				return;
+			}
 			int incomePerRound = 1 + totalVaporators * RobotType.VAPORATOR.maxSoupProduced;
 			// intentionally uses landscaper cost, not miner cost
 			int spawnDelay = 4 * RobotType.LANDSCAPER.cost / incomePerRound;
@@ -269,7 +270,7 @@ public class BotHQ extends Globals {
 	 */
 	public static int findVisibleRobotType (RobotType rt) {
 		for (RobotInfo ri: visibleAllies) {
-			if (ri.type == rt && ri.cooldownTurns <= MAX_BUILDER_MINER_COOLDOWN) {
+			if (ri.type == rt && ri.cooldownTurns <= MAX_BUILDER_MINER_COOLDOWN && maxXYDistance(HQLoc, ri.location) < wallRingRadius) {
 				return ri.ID;
 			}
 		}
