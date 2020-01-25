@@ -120,7 +120,10 @@ public class BotDeliveryDrone extends Globals {
 			// check for adjacent empty water
 			for (Direction dir: directions) {
 				MapLocation loc = rc.adjacentLocation(dir);
-				if (rc.onTheMap(loc) && rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
+				if (!rc.onTheMap(loc)) {
+					continue;
+				}
+				if (rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null) {
 					log("Dropped unit into water at " + loc);
 					Actions.doDropUnit(dir);
 					isCarryingEnemy = false;
@@ -135,11 +138,6 @@ public class BotDeliveryDrone extends Globals {
 					log("Moving to get off of floodingMemory");
 					for (Direction dir: directions) {
 						Direction move = Nav.tryMoveInDirection(dir);
-						if (move != null) {
-							tlog("Moved " + move);
-						} else {
-							tlog("But no move found");
-						}
 					}
 					return true;
 				}
@@ -158,14 +156,15 @@ public class BotDeliveryDrone extends Globals {
 			// checks for adjacent enemies that can be picked up
 			for (Direction dir: directions) {
 				MapLocation loc = rc.adjacentLocation(dir);
-				if (rc.onTheMap(loc)) {
-					RobotInfo ri = rc.senseRobotAtLocation(loc);
-					if (ri != null && ri.team == killTeam && ri.type.canBePickedUp()) {
-						Actions.doPickUpUnit(ri.ID);
-						isCarryingEnemy = true;
-						log("Picked up unit at " + loc);
-						return true;
-					}
+				if (!rc.onTheMap(loc)) {
+					continue;
+				}
+				RobotInfo ri = rc.senseRobotAtLocation(loc);
+				if (ri != null && ri.team == killTeam && ri.type.canBePickedUp()) {
+					Actions.doPickUpUnit(ri.ID);
+					isCarryingEnemy = true;
+					log("Picked up unit at " + loc);
+					return true;
 				}
 			}
 

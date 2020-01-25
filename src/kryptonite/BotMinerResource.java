@@ -431,6 +431,9 @@ public class BotMinerResource extends BotMiner {
             log("Trying to move away from HQ to unclog it");
             for (Direction dir: directions) {
                 MapLocation loc = rc.adjacentLocation(dir);
+                if (!rc.onTheMap(loc)) {
+                    continue;
+                }
                 if (isDirDryFlatEmpty(dir) && !loc.isAdjacentTo(HQLoc)) {
                     Actions.doMove(dir);
                     tlog("Moved " + dir);

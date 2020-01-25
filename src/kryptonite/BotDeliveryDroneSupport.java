@@ -58,6 +58,9 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
             // if adjacent to valid tile, drop unit down
             for (Direction dir: directions) {
                 MapLocation loc = rc.adjacentLocation(dir);
+                if (!rc.onTheMap(loc)) {
+                    continue;
+                }
                 if (isLocDryEmpty(loc) && !isDigLoc(loc) && maxXYDistance(HQLoc, loc) >= wallRingRadius) {
                     Actions.doDropUnit(dir);
                     return;
@@ -75,7 +78,8 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
 
             // find a safe tile OUTSIDE of the 5x5 plot where we can drop unit
             if (maxXYDistance(HQLoc, here) < wallRingRadius) {
-                for (MapLocation loc: wallLocs) {
+                for (int i = 0; i < wallLocsLength; i++) {
+                    MapLocation loc = wallLocs[i];
                     if (rc.canSenseLocation(loc)) {
                         if (isLocDryEmpty(loc)) {
                             targetDropLoc = loc;
@@ -153,9 +157,29 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
                 // STATE == no valid visible, pick-up-able robots
                 // Rotate around HQ and try to find one
 
+                // 90 clockwise
                 Direction dirToHQ = HQLoc.directionTo(here);
                 Direction targetDir = dirToHQ.rotateRight().rotateRight();
                 MapLocation targetLoc = HQLoc.add(targetDir).add(targetDir).add(targetDir);
+                if (!rc.onTheMap(targetLoc)) {
+                    // 90 counterclockwise
+                    targetDir = dirToHQ.rotateLeft().rotateLeft();
+                    targetLoc = HQLoc.add(targetDir).add(targetDir).add(targetDir);
+                    if (!rc.onTheMap(targetLoc)) {
+                        // 45 clockwise
+                        targetDir = dirToHQ.rotateRight();
+                        targetLoc = HQLoc.add(targetDir).add(targetDir).add(targetDir);
+                        if (!rc.onTheMap(targetLoc)) {
+                            // 45 counterclockwise
+                            targetDir = dirToHQ.rotateLeft();
+                            targetLoc = HQLoc.add(targetDir).add(targetDir).add(targetDir);
+                            if (!rc.onTheMap(targetLoc)) {
+                                targetDir = HQLoc.directionTo(getSymmetryLoc());
+                                targetLoc = HQLoc.add(targetDir).add(targetDir).add(targetDir);
+                            }
+                        }
+                    }
+                }
                 log("Trying to rotate around ally HQ");
                 moveLog(targetLoc);
             }

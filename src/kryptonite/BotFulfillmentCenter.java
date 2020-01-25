@@ -81,6 +81,10 @@ public class BotFulfillmentCenter extends Globals {
 
 	public static void buildDrone(Direction[] dirs, int soupLimit) throws GameActionException{
 		for (Direction dir : dirs) {
+			MapLocation loc = rc.adjacentLocation(dir);
+			if (!rc.onTheMap(loc)) {
+				continue;
+			}
 			if (rc.getTeamSoup() >= soupLimit && isDirDryFlatEmpty(dir)) {
 				tlog("BUILDING DRONE " + dir);
 				Actions.doBuildRobot(RobotType.DELIVERY_DRONE, dir);

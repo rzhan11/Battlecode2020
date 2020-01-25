@@ -2,6 +2,8 @@ package turtle;
 
 import battlecode.common.*;
 
+import static kryptonite.Wall.wallLocs;
+import static kryptonite.Wall.wallLocsLength;
 import static turtle.Communication.*;
 import static turtle.Debug.*;
 import static turtle.Map.*;
@@ -66,7 +68,8 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
 
             // find a safe tile OUTSIDE of the 5x5 plot where we can drop unit
             if (maxXYDistance(HQLoc, here) < wallRingRadius) {
-                for (MapLocation loc: wallLocs) {
+                for (int i = 0; i < wallLocsLength; i++) {
+                    MapLocation loc = wallLocs[i];
                     if (rc.canSenseLocation(loc)) {
                         if (isLocDryEmpty(loc)) {
                             targetDropLoc = loc;

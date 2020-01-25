@@ -2,6 +2,8 @@ package turtle;
 
 import battlecode.common.*;
 
+import static kryptonite.Wall.wallLocs;
+import static kryptonite.Wall.wallLocsLength;
 import static turtle.Communication.*;
 import static turtle.Debug.*;
 import static turtle.Map.*;
@@ -93,7 +95,8 @@ public class BotHQ extends Globals {
 		// checks if wall is completed
 		if (!wallCompleted) {
 			wallCompleted = true;
-			for (MapLocation loc: wallLocs) {
+			for (int i = 0; i < wallLocsLength; i++) {
+				MapLocation loc = wallLocs[i];
 				if (rc.canSenseLocation(loc) && rc.senseElevation(loc) < terraDepth) {
 					wallCompleted = false;
 					break;

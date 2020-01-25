@@ -199,7 +199,7 @@ public class BotLandscaper extends Globals {
 			if (currentStep == 0) {
 				if (rc.getDirtCarrying() == 0) {
 					boolean flag = false;
-					for (Direction d : Direction.allDirections()) {
+					for (Direction d : allDirections) {
 						MapLocation loc = rc.adjacentLocation(d);
 						if (!rc.onTheMap(loc)) {
 							continue;
@@ -222,7 +222,7 @@ public class BotLandscaper extends Globals {
 				if (rc.getDirtCarrying() == 0) {
 					currentStep = 0;
 				} else {
-					for (Direction d : Direction.allDirections()) {
+					for (Direction d : allDirections) {
 						MapLocation loc = rc.adjacentLocation(d);
 						if (!rc.onTheMap(loc)) {
 							continue;

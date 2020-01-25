@@ -90,10 +90,11 @@ public class BotHQ extends Globals {
 
 		log("num v " + totalVaporators);
 
-		// checks if wall is completed
+		// checks if wall is completedwa
 		if (!wallCompleted) {
 			wallCompleted = true;
-			for (MapLocation loc: wallLocs) {
+			for (int i = 0; i < wallLocsLength; i++) {
+				MapLocation loc = wallLocs[i];
 				if (rc.canSenseLocation(loc) && rc.senseElevation(loc) < terraDepth) {
 					wallCompleted = false;
 					break;
@@ -114,7 +115,7 @@ public class BotHQ extends Globals {
 
 		// assign construction of fulfillment center
 		if (closeFulfillmentCenterInfo == null) {
-			log("Trying to assign fulfillment center");
+			log("Trying to assign fulfillment center " + minerBuiltCount);
 			if (minerBuiltCount >= MINER_CHECKPOINT_1) {
 				for (RobotInfo ri : visibleAllies) {
 					if (ri.type == RobotType.FULFILLMENT_CENTER) {

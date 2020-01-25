@@ -316,7 +316,10 @@ public class Nav extends Globals {
 		boolean danger = false;
 		for (Direction dir: directions) {
 			MapLocation loc = rc.adjacentLocation(dir);
-			if (rc.onTheMap(loc) && rc.senseFlooding(loc)) {
+			if (!rc.onTheMap(loc)) {
+				continue;
+			}
+			if (isLocWet(loc)) {
 				danger = true;
 				break;
 			}
