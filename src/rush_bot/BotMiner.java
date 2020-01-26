@@ -53,6 +53,9 @@ public class BotMiner extends Globals {
 		}
 		evacuateRound = HardCode.getRoundFlooded(3) - 100;
 
+		Clock.yield();
+		Globals.updateBasic();
+
 		BotMinerResource.initMinerResource();
 
 		initializedMiner = true;

@@ -240,6 +240,9 @@ public class BotHQ extends Globals {
 	Returns null if did not build a miner
 	*/
 	public static Direction buildMiner(MapLocation target) throws GameActionException {
+		if (roundNum == 1) {
+			target = symmetryHQLocs[getClosestSymmetryIndex()];
+		}
 		Direction[] orderedDirections = getCloseDirections(here.directionTo(target));
 
 		log("Building miner towards " + target);

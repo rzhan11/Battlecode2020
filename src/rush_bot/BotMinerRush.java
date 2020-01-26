@@ -82,6 +82,10 @@ public class BotMinerRush extends BotMiner {
                     if (!rc.onTheMap(loc)) {
                         continue;
                     }
+                    if (!rc.canSenseLocation(loc)) {
+                        openCardinals++;
+                        continue;
+                    }
                     if (here.isAdjacentTo(loc)) {
                         if (isLocDryFlatEmpty(loc)) {
                             buildDir = here.directionTo(loc);
@@ -97,6 +101,9 @@ public class BotMinerRush extends BotMiner {
                     for (Direction dir: diagonalDirections) {
                         MapLocation loc = enemyHQLoc.add(dir);
                         if (!rc.onTheMap(loc)) {
+                            continue;
+                        }
+                        if (!rc.canSenseLocation(loc)) {
                             continue;
                         }
                         if (here.isAdjacentTo(loc)) {

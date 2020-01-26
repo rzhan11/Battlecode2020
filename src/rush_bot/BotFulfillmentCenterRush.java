@@ -36,8 +36,47 @@ public class BotFulfillmentCenterRush extends BotFulfillmentCenter {
             return;
         }
 
-        if (dronesBuilt == 0) {
-            buildDrone(getCloseDirections(here.directionTo(rc.senseRobot(rushMinerID).location)), RobotType.DELIVERY_DRONE.cost);
+        if (!rc.canSenseRobot(rushMinerID)) {
+            log("Cannot sense rush miner");
+            return;
+        }
+
+        if (dronesBuilt == 0 && rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost) {
+            buildRushDrone();
+            return;
+        }
+    }
+
+    public static void buildRushDrone() throws GameActionException {
+        MapLocation targetLoc = symmetryHQLocs[getClosestSymmetryIndex()];
+        MapLocation rushMinerLoc = rc.senseRobot(rushMinerID).location;
+        int minDist = P_INF;
+        Direction minDir = null;
+        boolean isMinAdjToRushMiner = false;
+        for (Direction dir: directions) {
+            MapLocation loc = rc.adjacentLocation(dir);
+            if (!rc.onTheMap(loc)) {
+                continue;
+            }
+            if (isMinAdjToRushMiner) {
+                if (loc.isAdjacentTo(rushMinerLoc)) {
+                    int dist = loc.distanceSquaredTo(targetLoc);
+                    if (dist < minDist) {
+                        minDir = dir;
+                        minDist = dist;
+                    }
+                }
+            } else {
+                int dist = loc.distanceSquaredTo(targetLoc);
+                if (loc.isAdjacentTo(rushMinerLoc) || dist < minDist) {
+                    minDir = dir;
+                    minDist = dist;
+                    isMinAdjToRushMiner = true;
+                }
+            }
+        }
+        if (minDir != null) {
+            Actions.doBuildRobot(RobotType.DELIVERY_DRONE, minDir);
             return;
         }
     }
