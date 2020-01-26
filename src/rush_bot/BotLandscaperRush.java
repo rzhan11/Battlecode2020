@@ -91,11 +91,20 @@ public class BotLandscaperRush extends BotLandscaper {
         }
         // checks if netgun is protected by at least 4 ally landscapers
         if (netGunInfo != null) {
-            // protect netgun if already adjacent to it
             if (here.isAdjacentTo(netGunInfo.location)) {
+                if (rc.getDirtCarrying() == 0) {
+                    rushDig();
+                    return;
+                }
+                // save myself from flooding
+                if(rc.senseElevation(here) - waterLevel < 3) {
+                    Actions.doDepositDirt(Direction.CENTER);
+                    return;
+                }
+                // protect netgun if already adjacent to it
                 if (netGunInfo.dirtCarrying > 0) {
                     if (rc.getDirtCarrying() < myType.dirtLimit) {
-                        rushDig();
+                        Actions.doDigDirt(here.directionTo(netGunInfo.location));
                         return;
                     } else {
                         protectDeposit();
@@ -105,13 +114,8 @@ public class BotLandscaperRush extends BotLandscaper {
                 // try to kill adjacent enemy buildings
                 for (RobotInfo ri: adjacentEnemies) {
                     if (ri.type.isBuilding()) {
-                        if (rc.getDirtCarrying() > 0) {
-                            protectDeposit();
-                            return;
-                        } else {
-                            rushDig();
-                            return;
-                        }
+                        protectDeposit();
+                        return;
                     }
                 }
                 // when the netgun has no dirt on it, try to maintain 2/3 dirt capacity
@@ -157,6 +161,15 @@ public class BotLandscaperRush extends BotLandscaper {
         }
 
         if (minEnemy != null) {
+            if (here.isAdjacentTo(minEnemy)) {
+                if (rc.getDirtCarrying() > 0) {
+                    protectDeposit();
+                    return;
+                } else {
+                    rushDig();
+                    return;
+                }
+            }
             moveLog(minEnemy);
             return;
         } else {
