@@ -59,20 +59,27 @@ public class Globals extends Constants {
     public static RobotInfo[] adjacentEnemies = null;
     public static RobotInfo[] adjacentCows = null;
 
+
+    // a soup deposit is a single soup location
+    public static int visibleSoup;
+    public static MapLocation centerOfVisibleSoup = null;
+
     public static MapLocation[] visibleSoupLocs = null;
 
     public static MapLocation closestVisibleSoupLoc = null;
     public static MapLocation targetVisibleSoupLoc = null;
-    public static MapLocation closestSoupZone = null;
-    public static MapLocation targetSoupZone = null;
-    public static MapLocation platformLoc = null;
-    public static int assignedID = -1;
+
+    public static int closestSoupClusterIndex = -1;
+    public static int targetSoupClusterIndex = -1;
 
     public static MapLocation closestUnexploredZone = null;
     public static MapLocation targetUnexploredZone = null;
     public static int unexploredZoneStartRound = -1;
 
     public static MapLocation targetNavLoc = null;
+
+    public static MapLocation platformLoc = null;
+    public static int platformerID = -1;
 
     public static boolean[] isDirMoveable = new boolean[8];
     public static boolean[] isDirDanger = new boolean[8];
@@ -183,8 +190,6 @@ public class Globals extends Constants {
             logi("WARNING: Extreme pollution has made actualSensorRadiusSquared < 2, so errors may occur. Ask Richard.");
         }
 
-        newSoupStatusesLength = 0;
-
         calculateDynamicCost();
 
         visibleAllies = rc.senseNearbyRobots(-1, us); // -1 uses all robots within sense radius
@@ -233,7 +238,6 @@ public class Globals extends Constants {
 
         if (!isLowBytecodeLimit(myType)) {
             checkZone();
-            locateSoup();
 
             // update moveable directions
             updateIsDirMoveable();

@@ -10,7 +10,7 @@ import static rush_bot.Map.*;
 import static rush_bot.Nav.*;
 import static rush_bot.Utils.*;
 import static rush_bot.Wall.*;
-import static rush_bot.Zones.*;
+
 
 public class BotMinerRush extends BotMiner {
     public static boolean initializedMinerRush = false;

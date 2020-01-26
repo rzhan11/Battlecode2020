@@ -21,8 +21,7 @@ public class Communication extends Globals {
 	// MUST BE LESS THAN 256
 	final public static int HQ_FIRST_TURN_SIGNAL = 0;
 	final public static int ENEMY_HQ_LOCATION_SIGNAL = 1;
-	final public static int EXPLORED_ZONE_STATUS = 2;
-	final public static int SOUP_ZONE_STATUS_SIGNAL = 3;
+	final public static int SOUP_CLUSTER_SIGNAL = 2;
 	final public static int REFINERY_BUILT_SIGNAL = 4;
 	final public static int BUILD_INSTRUCTION_SIGNAL = 5;
 	final public static int WALL_STATUS_SIGNAL = 6;
@@ -204,19 +203,11 @@ public class Communication extends Globals {
 					case ENEMY_HQ_LOCATION_SIGNAL:
 						readTransactionEnemyHQLoc(message, round);
 						break;
-					case EXPLORED_ZONE_STATUS:
-						if (!isLowBytecodeLimit(myType)) {
-							readTransactionExploredZoneStatus(message, round);
+					case SOUP_CLUSTER_SIGNAL:
+						if (myType == RobotType.MINER) {
+							readTransactionSoupCluster(message, round);
+							break;
 						}
-						break;
-					case SOUP_ZONE_STATUS_SIGNAL:
-						if (!isLowBytecodeLimit(myType)) {
-							if (Clock.getBytecodesLeft() < READ_BIG_TRANSACTION_MIN_BYTECODE && round != roundNum - 1) {
-								return -(index + 1);
-							}
-							readTransactionSoupStatus(message, round);
-						}
-						break;
 					case REFINERY_BUILT_SIGNAL:
 						if (myType == RobotType.MINER) {
 							if (Clock.getBytecodesLeft() < READ_BIG_TRANSACTION_MIN_BYTECODE && round != roundNum - 1) {
@@ -380,18 +371,18 @@ public class Communication extends Globals {
 		ttlog("Exists: " + isSymmetryHQLoc[message[2]]);
 		ttlog("Posted round: " + round);
 	}
-
 	/*
-	message[2] = xZone, yZone, status
-	message[3] =
+	message[2] = x coordinate of cluster
+	message[3] = y coordinate of cluster
 
-	 */
-	public static void writeTransactionExploredZoneStatus(int xZone, int yZone, int status) throws GameActionException {
-		log("Writing transaction for 'Explored Zone Status'");
+	*/
+	public static void writeTransactionSoupCluster (MapLocation soupClusterLocation) throws GameActionException {
+		tlog("Writing transaction for 'Soup Cluster' at " + soupClusterLocation);
 		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
-		message[1] = EXPLORED_ZONE_STATUS;
-		message[2] = xZone + (yZone << 6) + (status << 12);
+		message[1] = SOUP_CLUSTER_SIGNAL;
+		message[2] = soupClusterLocation.x;
+		message[3] = soupClusterLocation.y;
 
 		xorMessage(message);
 		if (rc.getTeamSoup() >= dynamicCost) {
@@ -403,74 +394,13 @@ public class Communication extends Globals {
 		}
 	}
 
-	public static void readTransactionExploredZoneStatus(int[] message, int round) throws GameActionException {
-		int xZone = message[2] & ((1 << 6) - 1);
-		int yZone = ((message[2] >>> 6) & ((1 << 6) - 1));
-		int status = message[2] >>> 12;
-
-		exploredZoneStatus[xZone][yZone] = status;
-
-		tlog("Reading transaction for 'Explored Zone Status'");
+	public static void readTransactionSoupCluster (int[] message, int round) {
+		MapLocation loc = new MapLocation(message[2], message[3]);
+		tlog("Reading 'Soup Cluster' transaction");
 		ttlog("Submitter ID: " + decryptID(message[0]));
-		ttlog("[xZone, yZone]: " + xZone + " " + yZone);
-		ttlog("status: " + status);
+		ttlog("Location: " + loc);
 		ttlog("Posted round: " + round);
-	}
-
-	/*
-	message[1] = signal & number of locations
-	Can report up to 10 zones
-	 */
-	public static void writeTransactionSoupZoneStatus(int[] soupZoneIndices, int[] statuses, int index, int length) throws GameActionException {
-		while (index < length) {
-			log("Writing transaction for 'Soup Zone Status'");
-			int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
-			message[0] = encryptID(myID);
-			message[1] = SOUP_ZONE_STATUS_SIGNAL;
-			int i_message = 4;
-			for (; index < length && (i_message / 2) < message.length; index++) {
-				int temp = soupZoneIndices[index] + (statuses[index] << 8);
-				if (i_message % 2 == 1) {
-					temp = temp << 16;
-				}
-				message[i_message / 2] |= temp;
-				i_message++;
-			}
-			message[1] += (i_message - 4) << 8;
-
-			xorMessage(message);
-			if (rc.getTeamSoup() >= dynamicCost) {
-				rc.submitTransaction(message, dynamicCost);
-
-			} else {
-				tlog("Could not afford transaction");
-				saveUnsentTransaction(message, dynamicCost);
-			}
-		}
-	}
-
-	public static void readTransactionSoupStatus(int[] message, int round) throws GameActionException {
-		tlog("Reading transaction for 'Soup Zone Status'");
-		ttlog("Submitter ID: " + decryptID(message[0]));
-		int numZones = message[1] >>> 8;
-		int i_message = 4;
-		for (int i = 0; i < numZones; i++) {
-			int m = message[i_message / 2];
-			if (i_message % 2 == 0) {
-				m = m & ((1 << 16) - 1);
-			} else {
-				m = m >>> 16;
-			}
-			int zoneIndex = m & ((1 << 8) - 1);
-			int status = m >>> 8;
-			int[] zone = zoneIndexToPair(zoneIndex);
-			ttlog("Zone " + zone[0] + " " + zone[1] + " status: " + status);
-			updateKnownSoupZones(zoneIndex, status, false);
-
-			i_message++;
-		}
-
-		ttlog("Posted round: " + round);
+		BotMinerResource.addToSoupClusters(new MapLocation(message[2], message[3]));
 	}
 
 	/*
@@ -720,10 +650,10 @@ public class Communication extends Globals {
 	}
 
 	public static void readTransactionAssignPlatform (int[] message, int round) {
-		assignedID = message[2];
+		platformerID = message[2];
 		tlog("Reading 'Assign Platform' transaction");
 		ttlog("Submitter ID: " + decryptID(message[0]));
-		ttlog("Location: " + assignedID);
+		ttlog("platformerID: " + platformerID);
 		ttlog("Posted round: " + round);
 	}
 

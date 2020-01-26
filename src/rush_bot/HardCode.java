@@ -14,10 +14,6 @@ import static rush_bot.Zones.*;
 
 public class HardCode {
 
-//	public static int[][][] netGunLU = new int[][][]{{{3,1},{3,2},{3,3},{2,3},{1,3}},{{-3,1},{-3,2},{-3,3},{-2,3},{-1,3}},{{-3,-1},{-3,-2},{-3,-3},{-2,-3},{-1,-3}},{{3,-1},{3,-2},{3,-3},{2,-3},{1,-3}}};
-	public static int[][][] netGunLU = new int[][][]{{{3,2},{2,3}},{{-3,2},{-2,3}},{{-3,-2},{-2,-3}},{{3,-2},{2,-3}}};
-	public static int[][] netGunBuildLocations = new int[][]{{2,2},{-2,2},{-2,-2},{2,-2}};
-
 	/*
 	Assigns an array to 'senseDirections' that contains all of the senseable dx/dy/mag positions for a given RobotType
 	Sorted by distanceSquared

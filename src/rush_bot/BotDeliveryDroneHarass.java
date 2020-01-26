@@ -15,7 +15,7 @@ import static rush_bot.Zones.*;
 public class BotDeliveryDroneHarass extends BotDeliveryDrone {
 
     public static boolean initializedDroneHarass = false;
-    // 0 = soup zone
+
     // 1 = unexplored zone
     // 2 = symmetry loc
     // 3 = random loc
@@ -42,14 +42,6 @@ public class BotDeliveryDroneHarass extends BotDeliveryDrone {
         harassType = type;
         harassTypeAssignRound = roundNum;
         targetLoc = null;
-    }
-
-    public static void assignSoupExploreHarassType () {
-        if (rand.nextInt(2) == 0) {
-            assignHarassType(0);
-        } else {
-            assignHarassType(1);
-        }
     }
 
     public static void assignSymmetryRandomHarassType () {
@@ -82,9 +74,7 @@ public class BotDeliveryDroneHarass extends BotDeliveryDrone {
 
         // STATE = not carrying/seeing enemy units
 
-        MapLocation[] locs = findClosestSoupAndUnexploredZone();
-        MapLocation soupLoc = locs[0];
-        MapLocation unexploredLoc = locs[1];
+        MapLocation unexploredLoc = findClosestUnexploredZone();
         if (unexploredLoc.equals(getSymmetryLoc())) {
             unexploredLoc = null;
         }
@@ -94,25 +84,6 @@ public class BotDeliveryDroneHarass extends BotDeliveryDrone {
         }
 
         switch (harassType) {
-            case 0:
-                log("SOUP HARASS");
-                if (targetLoc != null && inSameZone(here, targetLoc)) {
-                    targetLoc = null;
-                }
-                if (targetLoc == null) {;
-                    if (soupLoc == null) {
-                        assignSymmetryRandomHarassType();
-                    } else {
-                        int[] zone = locToZonePair(soupLoc);
-                        // if the reflection of the closest known soup location is unexplored, target it
-                        if (exploredZoneStatus[zone[0]][zone[1]] == 0) {
-                            targetLoc = soupLoc;
-                        } else {
-                            assignSymmetryRandomHarassType();
-                        }
-                    }
-                }
-                break;
             case 1:
                 log("EXPLORE HARASS");
                 if (targetLoc != null && inSameZone(here, targetLoc)) {

@@ -80,16 +80,16 @@ public class BotLandscaper extends Globals {
 			return;
 		}
 
-		if (!inArray(wallLocs, here, wallLocsLength) && !inArray(supportWallLocs, here, supportWallLocsLength)) {
-			for (RobotInfo ri : visibleEnemies) {
-				if (ri.type.isBuilding()) {
-					myRole = DEFENSE_ROLE;
-					enemyBuildingLoc = ri.location;
-				}
-			}
-		}
+//		if (!inArray(wallLocs, here, wallLocsLength) && !inArray(supportWallLocs, here, supportWallLocsLength)) {
+//			for (RobotInfo ri : visibleEnemies) {
+//				if (ri.type.isBuilding()) {
+//					myRole = DEFENSE_ROLE;
+//					enemyBuildingLoc = ri.location;
+//				}
+//			}
+//		}
 
-		if (myID == assignedID && !initPlatformLandscaper) initPlatformLandscaper();
+		if (myID == platformerID && !initPlatformLandscaper) initPlatformLandscaper();
 
 		ttlog("MY ROLE IS: " + myRole);
 		log("wallFull " + wallFull);
@@ -105,7 +105,9 @@ public class BotLandscaper extends Globals {
 			case PLATFORM_ROLE:
 				doPlatformRole();
 				break;
-
+//			case DEFENSE_ROLE:
+//				doDefenseRole();
+//				break;
 		}
 	}
 
@@ -367,12 +369,67 @@ public class BotLandscaper extends Globals {
 			}
 			return;
 		}
-		if (!inArray(platformLocations,here, 4)) {
+		if (!inArray(platformLocs,here, 4)) {
 			moveLog(platformLoc);
 			return;
 		}
 	}
 
+
+	private static void doPlatformerRole () throws GameActionException {
+
+	}
+
+	private static void platformerDig(Direction noDigDir) throws GameActionException {
+		Direction bestDir = null;
+		int bestScore = N_INF;
+		for (Direction dir: directions) {
+			if (dir.equals(noDigDir)) {
+				continue;
+			}
+			MapLocation loc = rc.adjacentLocation(dir);
+			if (!rc.onTheMap(loc)) {
+				continue;
+			}
+			if (maxXYDistance(HQLoc, loc) <= 2 && !inArray(digLocs2x2, loc, digLocs2x2.length)) {
+				continue;
+			}
+			if (inArray(platformLocs, loc, platformLocs.length)) {
+				continue;
+			}
+			int score = 0;
+			if (isLocEmpty(loc)) {
+				// prioritize highest tiles
+				score = rc.senseElevation(loc);
+			} else {
+				RobotInfo ri = rc.senseRobotAtLocation(loc);
+				if (ri.team == us) {
+					if (ri.type.isBuilding()) {
+						if (ri.dirtCarrying > 0) {
+							score = P_INF;
+						} else {
+							continue;
+						}
+					} else {
+						// prioritize allies farther from HQLoc
+						score = loc.distanceSquaredTo(HQLoc);
+					}
+				} else {
+					if (ri.type.isBuilding()) {
+						continue;
+					} else {
+						score = P_INF / 2;
+					}
+				}
+			}
+			if (score > bestScore) {
+				bestDir = dir;
+				bestScore = score;
+			}
+		}
+		Actions.doDigDirt(bestDir);
+		return;
+	}
 
 	private static void rerollRole() {
 		myRole = WALL_ROLE;

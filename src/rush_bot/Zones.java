@@ -22,24 +22,15 @@ public class Zones extends Globals {
     public static int numXZones;
     public static int numYZones;
 
+    public static MapLocation[] soupClusters = new MapLocation[BIG_ARRAY_SIZE];
+    public static boolean[] emptySoupClusters = new boolean[BIG_ARRAY_SIZE];
+    public static int soupClustersLength = 0;
+    private static int soupClusterIndex = -1;
+
     // holds if the zone has been fully explored, cannot be fully explored, heavily polluted, etc
     // 0 is unexplored
     // 1 is explored
-//    public static int[][] orderedZones = null;
     public static int[][] exploredZoneStatus = null;
-
-    // which locations in soupzones have soup (uses indices)
-    public static int[] newSoupStatusIndices = null;
-    public static int[] newSoupStatuses = null;
-    public static int newSoupStatusesLength = 0;
-
-    // 0 is unknown, 1 is confirmed soup, 2 is denied soup
-    public static int[][] hasSoupLocs = null;
-    // 0 is unknown, 1 is confirmed soup, 2 is denied soup
-    public static int[][] hasSoupZones = null;
-    // number of tiles in this zone that contains soup
-    public static int[][] numSoupLocsInZones = null;
-    public static int[][] numNoSoupLocsInZones = null;
 
     public static boolean hasLoadedZones = false;
 
@@ -67,16 +58,7 @@ public class Zones extends Globals {
         numXZones = (mapWidth + zoneSize - 1) / zoneSize;
         numYZones = (mapHeight + zoneSize - 1) / zoneSize;
 
-//        orderedZones = HardCode.getZoneLocations();
         exploredZoneStatus = new int[numXZones][numYZones];
-
-        newSoupStatusIndices = new int[senseDirections.length];
-        newSoupStatuses = new int[senseDirections.length];
-
-        hasSoupLocs = new int[mapWidth][mapHeight];
-        hasSoupZones = new int[numXZones][numYZones];
-        numSoupLocsInZones = new int[numXZones][numYZones];
-        numNoSoupLocsInZones = new int[numXZones][numYZones];
 
         log("FINISHED LOADING ZONE INFORMATION");
 
@@ -138,14 +120,6 @@ public class Zones extends Globals {
     }
 
     /*
-    Returns the hasSoupZone status of the given MapLocation's zone
-     */
-    public static int getHasSoupZonesAtLoc(MapLocation loc) throws GameActionException {
-        int[] zone = locToZonePair(loc);
-        return hasSoupZones[zone[0]][zone[1]];
-    }
-
-    /*
     Returns the zone status of the given MapLocation's zone
      */
     public static int getExploredZoneStatusAtLoc(MapLocation loc) throws GameActionException {
@@ -169,7 +143,6 @@ public class Zones extends Globals {
         if (exploredZoneStatus[myZone[0]][myZone[1]] == 0) {
             if (canSenseEntireCurrentZone()) {
                 exploredZoneStatus[myZone[0]][myZone[1]] = 1;
-                writeTransactionExploredZoneStatus(myZone[0], myZone[1], exploredZoneStatus[myZone[0]][myZone[1]]);
             }
         }
     }
@@ -190,7 +163,7 @@ public class Zones extends Globals {
     Also finds the closest unexplored zone
     Returns a size two array that contains these two zones
      */
-    public static MapLocation[] findClosestSoupAndUnexploredZone () throws GameActionException {
+    public static MapLocation findClosestUnexploredZone () throws GameActionException {
 //		int startByte = Clock.getBytecodesLeft();
         int range = 3;
         int x_lower = Math.max(0, myZone[0] - range);
@@ -198,20 +171,11 @@ public class Zones extends Globals {
         int y_lower = Math.max(0, myZone[1] - range);
         int y_upper = Math.min(numYZones - 1, myZone[1] + range);
 
-        int closestSoupDist = P_INF;
-        MapLocation closestSoupLoc = null;
         int closestUnexploredDist = P_INF;
         MapLocation closestUnexploredLoc = null;
         for (int x = x_lower; x <= x_upper; x++) {
             for (int y = y_lower; y <= y_upper; y++) {
                 MapLocation targetLoc = new MapLocation(x * zoneSize + zoneSize / 2, y * zoneSize + zoneSize / 2);
-                if (hasSoupZones[x][y] == 1) {
-                    int dist = here.distanceSquaredTo(targetLoc);
-                    if (dist < closestSoupDist) {
-                        closestSoupDist = dist;
-                        closestSoupLoc = targetLoc;
-                    }
-                }
                 if (exploredZoneStatus[x][y] == 0) {
                     int dist = here.distanceSquaredTo(targetLoc);
                     if (dist < closestUnexploredDist) {
@@ -225,76 +189,8 @@ public class Zones extends Globals {
             log("Cannot find nearby unexplored zone, going to symmetry location zone");
             closestUnexploredLoc = getSymmetryLoc();
         }
-//		tlog("FIND CLOSEST SOUP ZONE BYTES: " + (startByte - Clock.getBytecodesLeft()));
-        return new MapLocation[] {closestSoupLoc, closestUnexploredLoc};
-    }
-
-    public static void locateSoup () throws GameActionException {
-		/*
-		Updates soup locations of this zone
-		Only updates if this zone has not been denied of soup
-		 */
-        int x_lower = myZone[0] * zoneSize;
-        int x_upper = Math.min(mapWidth, x_lower + zoneSize);
-        int y_lower = myZone[1] * zoneSize;
-        int y_upper = Math.min(mapHeight, y_lower + zoneSize);
-        for (int x = x_lower; x < x_upper; x++) {
-            for (int y = y_lower; y < y_upper; y++) {
-                MapLocation loc = new MapLocation(x, y);
-                if (rc.canSenseLocation(loc)) {
-                    if (rc.senseSoup(loc) > 0) {
-                        if (isLocDry(loc) || isAdjLocDry(loc)) {
-                            updateKnownSoupLocs(loc, 1);
-                        } else {
-                            updateKnownSoupLocs(loc, 2);
-                        }
-                    } else {
-                        updateKnownSoupLocs(loc, 2);
-                    }
-                }
-            }
-        }
-
-        //
-        if (numNoSoupLocsInZones[myZone[0]][myZone[1]] == getExactNumLocsInZone(myZone)) {
-            // zone is completely devoid of soup
-            if (hasSoupZones[myZone[0]][myZone[1]] != 2) {
-                // this information is new and worth communicating
-                hasSoupZones[myZone[0]][myZone[1]] = 2;
-                newSoupStatusIndices[newSoupStatusesLength] = zonePairToIndex(myZone);
-                newSoupStatuses[newSoupStatusesLength] = 2;
-                newSoupStatusesLength++;
-            }
-        }
-
-		/*
-		Updates the known soup locations based on what we can sense
-		 */
-
-		if (visibleSoupLocs.length <= VISIBLE_SOUP_LOCS_LIMIT) {
-            for (MapLocation loc: visibleSoupLocs) {
-                if (isLocDry(loc) || isAdjLocDry(loc)) {
-                    updateKnownSoupLocs(loc, 1);
-                }
-            }
-        } else {
-            int startByte = Clock.getBytecodesLeft();
-            for (int i = 0; i < visibleSoupLocs.length; i++) {
-                if (startByte - Clock.getBytecodesLeft() > 2000) {
-                    log("Checked " + i + " random soup locations");
-                    break;
-                }
-                MapLocation loc = visibleSoupLocs[i];
-                if (isLocDry(loc) || isAdjLocDry(loc)) {
-                    updateKnownSoupLocs(loc, 1);
-                }
-            }
-
-        }
-
-        if (newSoupStatusesLength > 0) {
-            writeTransactionSoupZoneStatus(newSoupStatusIndices, newSoupStatuses, 0, newSoupStatusesLength);
-        }
+//		tlog("FIND CLOSEST UNEXPLORED ZONE BYTES: " + (startByte - Clock.getBytecodesLeft()));
+        return closestUnexploredLoc;
     }
 
     /*
@@ -302,7 +198,7 @@ public class Zones extends Globals {
 
      */
     public static MapLocation findClosestVisibleSoupLoc (boolean ignoreSelf) throws GameActionException {
-        
+
         if (visibleSoupLocs.length >= VISIBLE_SOUP_LOCS_LIMIT) {
             log("Approximating closest visible soup location");
             int[] radiusOrder = {2, 4, 9, 16, 25, 36, 49, 64};
@@ -339,95 +235,7 @@ public class Zones extends Globals {
         return closestLoc;
     }
 
-    /*
-    Updates based on vision
-    status = 2 means no soup
-    status = 1 means soup
-     */
-    public static void updateKnownSoupLocs(MapLocation loc, int status) throws GameActionException {
-
-        int[] zone = locToZonePair(loc);
-
-        if (status == 2) {
-            // no soup confirmed
-            if (hasSoupLocs[loc.x][loc.y] != 2) {
-                if (hasSoupLocs[loc.x][loc.y] == 0) {
-                    // this tile was previously unknown
-                    hasSoupLocs[loc.x][loc.y] = 2;
-                    numNoSoupLocsInZones[zone[0]][zone[1]]++;
-                } else if (hasSoupLocs[loc.x][loc.y] == 1) {
-                    // this tile previously had soup, but now is empty
-                    hasSoupLocs[loc.x][loc.y] = 2;
-                    numNoSoupLocsInZones[zone[0]][zone[1]]++;
-                    numSoupLocsInZones[zone[0]][zone[1]]--;
-                }
-
-                if (numNoSoupLocsInZones[zone[0]][zone[1]] == getExactNumLocsInZone(zone)) {
-                    // zone is completely devoid of soup
-                    if (hasSoupZones[zone[0]][zone[1]] != 2) {
-                        // this information is new and worth communicating
-                        hasSoupZones[zone[0]][zone[1]] = 2;
-                        newSoupStatusIndices[newSoupStatusesLength] = zonePairToIndex(zone);
-                        newSoupStatuses[newSoupStatusesLength] = 2;
-                        newSoupStatusesLength++;
-                    }
-                }
-            }
-        } else if (status == 1) {
-            // tile has soup confirmed
-            if (hasSoupLocs[loc.x][loc.y] != 1) {
-                if (hasSoupLocs[loc.x][loc.y] == 2) {
-                    // this tile was previously confirmed to not have soup
-                    hasSoupZones[zone[0]][zone[1]] = 1;
-                    newSoupStatusIndices[newSoupStatusesLength] = zonePairToIndex(zone);
-                    newSoupStatuses[newSoupStatusesLength] = 1;
-                    newSoupStatusesLength++;
-                    logi("WARNING: Sanity check failed - tile without soup now has soup");
-                } else if (hasSoupLocs[loc.x][loc.y] == 0) {
-                    // this tile was previously unknown
-
-                    if (hasSoupZones[zone[0]][zone[1]] == 0) {
-                        // the soup info about this zone was previously unknown
-                        hasSoupZones[zone[0]][zone[1]] = 1;
-                        newSoupStatusIndices[newSoupStatusesLength] = zonePairToIndex(zone);
-                        newSoupStatuses[newSoupStatusesLength] = 1;
-                        newSoupStatusesLength++;
-                    }
-
-                    numSoupLocsInZones[zone[0]][zone[1]]++;
-                    hasSoupLocs[loc.x][loc.y] = 1;
-                }
-            }
-        } else {
-            log ("WARNING: Weird status in updateKnownSoupLocs: " + status);
-        }
-    }
-
-    public static void updateKnownSoupZones(int index, int status, boolean fromVision) throws GameActionException {
-
-        int[] zone = zoneIndexToPair(index);
-
-        if (status == 2) {
-            if (hasSoupZones[zone[0]][zone[1]] != 2) {
-                hasSoupZones[zone[0]][zone[1]] = 2;
-                if (fromVision) {
-                    newSoupStatusIndices[newSoupStatusesLength] = zonePairToIndex(zone);
-                    newSoupStatuses[newSoupStatusesLength] = 2;
-                    newSoupStatusesLength++;
-                }
-            }
-        } else if (status == 1) {
-            // ignore if we have confirmed no soup or if we already know that there is soup in this zone
-            if (hasSoupZones[zone[0]][zone[1]] != 1) {
-                hasSoupZones[zone[0]][zone[1]] = 1;
-                if (fromVision) {
-                    newSoupStatusIndices[newSoupStatusesLength] = zonePairToIndex(zone);
-                    newSoupStatuses[newSoupStatusesLength] = 1;
-                    newSoupStatusesLength++;
-                }
-            }
-        } else {
-            log ("WARNING: Weird status in updateKnownSoupZones: " + status);
-        }
+    public static int findClosestSoupCluster () throws GameActionException {
+        return -1;
     }
 }
