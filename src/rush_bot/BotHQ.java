@@ -81,6 +81,12 @@ public class BotHQ extends Globals {
 			}
 		}*/
 
+		if (!enemyRush) {
+			if (visibleEnemies.length > 0) {
+				writeTransactionEnemyRush();
+			}
+		}
+
 		if (!wallFull) {
 			wallFull = true;
 			for (int i = 0; i < wallLocsLength; i++) {

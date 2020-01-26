@@ -30,8 +30,7 @@ public class BotLandscaperRush extends BotLandscaper {
     public static void turn() throws GameActionException {
         log("RUSH ROLE");
         if (maxXYDistance(here, enemyHQLoc) > 1) {
-            boolean enemyHQFull = true;
-            int totalCount = 0;
+            int openCount = 0;
             int enemyLandscaperCount = 0;
             int allyLandscaperCount = 0;
             for (Direction dir: directions) {
@@ -39,10 +38,13 @@ public class BotLandscaperRush extends BotLandscaper {
                 if (!rc.onTheMap(loc)) {
                     continue;
                 }
-                if (!rc.canSenseLocation(loc) || isLocDryEmpty(loc)) {
-                    enemyHQFull = false;
+                if (!rc.canSenseLocation(loc)) {
+                    openCount++;
+                    continue;
                 }
-                totalCount++;
+                if (isLocDryEmpty(loc)) {
+                    openCount++;
+                }
                 RobotInfo ri = rc.senseRobotAtLocation(loc);
                 if (ri != null && ri.type == RobotType.LANDSCAPER) {
                     if (ri.team == us) {
@@ -52,19 +54,24 @@ public class BotLandscaperRush extends BotLandscaper {
                     }
                 }
             }
-            log("full en al total " + enemyHQFull + " " + enemyLandscaperCount + " " + allyLandscaperCount + " " + totalCount);
-            if (enemyHQFull) {
+            log("o e a " + openCount + " " + enemyLandscaperCount + " " + allyLandscaperCount);
+            if (openCount == 0) {
                 doProtectRole();
                 return;
             }
-            if (2 * enemyLandscaperCount >= totalCount) {
+            if (enemyLandscaperCount >= openCount + allyLandscaperCount) {
                 // at least half are protected by enemy landscapers
                 doProtectRole();
                 return;
-            } else if (2 * allyLandscaperCount > totalCount) {
-                // at least half are protected by enemy landscapers
-                doProtectRole();
-                return;
+            }
+            // if not being rushed, only require a simple majority
+            // if being rushed, try to fill in all empty spots around enemy HQ
+            if (!enemyRush) {
+                if (allyLandscaperCount > enemyLandscaperCount + openCount) {
+                    // at least half are protected by enemy landscapers
+                    doProtectRole();
+                    return;
+                }
             }
         }
         doRushRole();
@@ -95,8 +102,20 @@ public class BotLandscaperRush extends BotLandscaper {
                         return;
                     }
                 }
-                // when the netgun has no dirt on it, try to maintain 1/2 dirt capacity
-                if (rc.getDirtCarrying() < myType.dirtLimit / 2) {
+                // try to kill adjacent enemy buildings
+                for (RobotInfo ri: adjacentEnemies) {
+                    if (ri.type.isBuilding()) {
+                        if (rc.getDirtCarrying() > 0) {
+                            protectDeposit();
+                            return;
+                        } else {
+                            rushDig();
+                            return;
+                        }
+                    }
+                }
+                // when the netgun has no dirt on it, try to maintain 2/3 dirt capacity
+                if (rc.getDirtCarrying() < myType.dirtLimit * 2 / 3) {
                     rushDig();
                     return;
                 } else {

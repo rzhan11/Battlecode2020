@@ -94,8 +94,8 @@ public class Globals extends Constants {
     public static MapLocation enemyHQLoc = null;
 
     public static int rushMinerID = -1;
-
     public static boolean abandonRush = false;
+    public static boolean enemyRush = false;
 
     public static void init(RobotController theRC) throws GameActionException {
 
