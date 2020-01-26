@@ -75,7 +75,7 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
             // pick up adjacent landscapers
             for (RobotInfo ri: adjacentAllies) {
                 if (ri.type == RobotType.LANDSCAPER) {
-                    if (ri.ID == platformerID) {
+                    if (ri.ID == platformerID && !platformCompleted) {
                         continue;
                     }
                     if (ri.location.isAdjacentTo(HQLoc)) {
@@ -94,7 +94,7 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
             int closestDist = P_INF;
             for (RobotInfo ri: visibleAllies) {
                 if (ri.type == RobotType.LANDSCAPER) {
-                    if (ri.ID == platformerID) {
+                    if (ri.ID == platformerID && !platformCompleted) {
                         continue;
                     }
                     if (maxXYDistance(HQLoc, ri.location) <= 2 && !inArray(digLocs2x2, ri.location, digLocs2x2.length)) {
