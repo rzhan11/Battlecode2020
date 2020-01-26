@@ -28,6 +28,7 @@ public class Communication extends Globals {
 	final public static int WALL_STATUS_SIGNAL = 6;
 	final public static int FLOODING_FOUND_SIGNAL = 7;
 	final public static int ENEMY_RUSH_SIGNAL = 8;
+	final public static int PLATFORM_LOCATION_SIGNAL = 9;
 
 	final public static int ALL_ZONE_STATUS_SIGNAL = 103;
 	final public static int REVIEW_SIGNAL = 104;
@@ -238,6 +239,9 @@ public class Communication extends Globals {
 						if (myType == RobotType.HQ || myType == RobotType.DELIVERY_DRONE) {
 							readTransactionFloodingFound(message, round);
 						}
+						break;
+					case PLATFORM_LOCATION_SIGNAL:
+						readTransactionPlatformLocation(message, round);
 						break;
 					case ENEMY_RUSH_SIGNAL:
 						readTransactionEnemyRush(message, round);
@@ -695,6 +699,33 @@ public class Communication extends Globals {
 			}
 		}
 		tlog("Posted round: " + round);
+	}
+
+	public static void writeTransactionPlatformLocation (MapLocation location) throws GameActionException {
+		// check money
+		log("Writing transaction for 'Platform Location' at " + location);
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
+		message[0] = encryptID(myID);
+		message[1] = PLATFORM_LOCATION_SIGNAL;
+		message[2] = location.x;
+		message[3] = location.y;
+
+		xorMessage(message);
+		if (rc.getTeamSoup() >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
+
+		} else {
+			tlog("Could not afford transaction");
+			saveUnsentTransaction(message, dynamicCost);
+		}
+	}
+
+	public static void readTransactionPlatformLocation (int[] message, int round) {
+		platformLoc = new MapLocation(message[2], message[3]);
+		tlog("Reading 'Platform Location' transaction");
+		ttlog("Submitter ID: " + decryptID(message[0]));
+		ttlog("Location: " + platformLoc);
+		ttlog("Posted round: " + round);
 	}
 
 	/*
