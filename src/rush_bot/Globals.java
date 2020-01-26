@@ -66,6 +66,7 @@ public class Globals extends Constants {
     public static MapLocation closestSoupZone = null;
     public static MapLocation targetSoupZone = null;
     public static MapLocation platformLoc = null;
+    public static int assignedID = -1;
 
     public static MapLocation closestUnexploredZone = null;
     public static MapLocation targetUnexploredZone = null;
