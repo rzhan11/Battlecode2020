@@ -2,13 +2,7 @@ package rush_bot;
 
 import battlecode.common.*;
 
-import static rush_bot.Actions.*;
-import static rush_bot.Communication.*;
 import static rush_bot.Debug.*;
-import static rush_bot.Globals.*;
-import static rush_bot.Map.*;
-import static rush_bot.Nav.*;
-import static rush_bot.Utils.*;
 import static rush_bot.Wall.*;
 import static rush_bot.Zones.*;
 
@@ -31,11 +25,9 @@ public class Communication extends Globals {
 	final public static int SOUP_ZONE_STATUS_SIGNAL = 3;
 	final public static int REFINERY_BUILT_SIGNAL = 4;
 	final public static int BUILD_INSTRUCTION_SIGNAL = 5;
-	final public static int WALL_COMPLETED_SIGNAL = 6;
+	final public static int WALL_STATUS_SIGNAL = 6;
 	final public static int VAPORATOR_STATUS_SIGNAL = 7;
 	final public static int FLOODING_FOUND_SIGNAL = 8;
-	final public static int SMALL_WALL_FULL_SIGNAL = 9;
-	final public static int SUPPORT_FULL_SIGNAL = 10;
 
 	final public static int ALL_ZONE_STATUS_SIGNAL = 103;
 	final public static int REVIEW_SIGNAL = 104;
@@ -237,9 +229,9 @@ public class Communication extends Globals {
 							readTransactionBuildInstruction(message, round);
 						}
 						break;
-					case WALL_COMPLETED_SIGNAL:
+					case WALL_STATUS_SIGNAL:
 						if (!isLowBytecodeLimit(myType)) {
-							readTransactionWallCompleted(message, round);
+							readTransactionWallStatus(message, round);
 						}
 						break;
 					case VAPORATOR_STATUS_SIGNAL:
@@ -250,12 +242,6 @@ public class Communication extends Globals {
 							readTransactionFloodingFound(message, round);
 						}
 						break;
-//					case SMALL_WALL_FULL_SIGNAL:
-//							readTransactionSmallWallFull(message, round);
-//						break;
-//					case SUPPORT_FULL_SIGNAL:
-//							readTransactionSupportFull(message, round);
-//						break;
 					/*case ALL_ZONE_STATUS_SIGNAL:
 						if (!isLowBytecodeLimit(myType)) {
 							readTransactionAllExploredZones(message, round);
@@ -567,15 +553,17 @@ public class Communication extends Globals {
 	}
 
 	/*
-message[2] = x coordinate of our HQ
-message[3] = y coordinate of our HQ
-
-*/
-	public static void writeTransactionWallCompleted() throws GameActionException {
-		log("Writing transaction for 'Wall Completed'");
+	status:
+		1 = wallCompleted
+		2 = smallWallFull
+		3 = supportFull
+	 */
+	public static void writeTransactionWallStatus(int status) throws GameActionException {
+		log("Writing transaction for 'Wall Status'");
 		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
-		message[1] = WALL_COMPLETED_SIGNAL;
+		message[1] = WALL_STATUS_SIGNAL;
+		message[2] = status;
 
 		xorMessage(message);
 		if (rc.getTeamSoup() >= dynamicCost) {
@@ -587,11 +575,22 @@ message[3] = y coordinate of our HQ
 		}
 	}
 
-	public static void readTransactionWallCompleted(int[] message, int round) throws GameActionException {
-		Wall.wallCompleted = true;
-		tlog("Reading transaction for 'Wall Completed'");
+	public static void readTransactionWallStatus(int[] message, int round) throws GameActionException {
+		tlog("Reading transaction for 'Wall Status'");
 		ttlog("Submitter ID: " + decryptID(message[0]));
+		ttlog("Wall Status " + message[2]);
 		ttlog("Posted round: " + round);
+		switch (message[2]) {
+			case 1:
+				wallCompleted = true;
+				break;
+			case 2:
+				smallWallFull = true;
+				break;
+			case 3:
+				supportFull = true;
+				break;
+		}
 	}
 
 	/*

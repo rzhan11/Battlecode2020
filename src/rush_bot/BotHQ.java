@@ -100,7 +100,7 @@ public class BotHQ extends Globals {
 				}
 			}
 			if (wallCompleted) {
-				writeTransactionWallCompleted();
+				writeTransactionWallStatus(1);
 			}
 		}
 
@@ -114,7 +114,7 @@ public class BotHQ extends Globals {
 				}
 			}
 			if (smallWallFull) {
-//				writeTransactionSmallWallFull();
+				writeTransactionWallStatus(2);
 			}
 		}
 
@@ -128,9 +128,12 @@ public class BotHQ extends Globals {
 				}
 			}
 			if (supportFull) {
-//				writeTransactionSupportFull();
+				writeTransactionWallStatus(3);
 			}
 		}
+
+		log("smallWallFull " + smallWallFull);
+		log("supportFull " + supportFull);
 
 		Communication.resubmitImportantTransactions();
 

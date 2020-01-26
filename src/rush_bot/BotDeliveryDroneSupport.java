@@ -31,6 +31,8 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
 
     public static void turn() throws GameActionException {
         log("SUPPORT DRONE");
+        log("smallWallFull " + smallWallFull);
+        log("supportFull " + supportFull);
 
         if (!initializedDroneSupport) {
             initDroneSupport();
@@ -42,8 +44,7 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
         }
 
         if (rc.isCurrentlyHoldingUnit()) {
-            MapLocation closestLoc = null;
-            int closestDist = P_INF;
+
             MapLocation[] targetLocs = null;
             int targetLocsLength = -1;
             if (!smallWallFull) {
@@ -53,9 +54,16 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
                 targetLocs = supportWallLocs;
                 targetLocsLength = supportWallLocsLength;
             }
+
+            MapLocation closestLoc = null;
+            int closestDist = P_INF;
             for (int i = 0; i < targetLocsLength; i++) {
                 MapLocation loc = targetLocs[i];
                 if (rc.canSenseLocation(loc) && isLocDryEmpty(loc)) {
+                    if (here.isAdjacentTo(loc)) {
+                        Actions.doDropUnit(here.directionTo(loc));
+                        return;
+                    }
                     int dist = getSymmetryLoc().distanceSquaredTo(loc);
                     if (dist < closestDist) {
                         closestDist = dist;
@@ -69,14 +77,16 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
             moveLog(closestLoc);
         } else {
             for (RobotInfo ri: adjacentAllies) {
-                if (ri.location.isAdjacentTo(HQLoc)) {
-                    continue;
+                if (ri.type.canBePickedUp()) {
+                    if (ri.location.isAdjacentTo(HQLoc)) {
+                        continue;
+                    }
+                    if (maxXYDistance(HQLoc, ri.location) <= 2 && !inArray(digLocs2x2, ri.location, digLocs2x2.length)) {
+                        continue;
+                    }
+                    Actions.doPickUpUnit(ri.ID);
+                    return;
                 }
-                if (maxXYDistance(HQLoc, ri.location) <= 2 && !inArray(digLocs2x2, ri.location, digLocs2x2.length)) {
-                    continue;
-                }
-                Actions.doPickUpUnit(ri.ID);
-                return;
             }
 
             MapLocation closestLoc = null;
