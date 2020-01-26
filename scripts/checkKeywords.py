@@ -29,17 +29,20 @@ while index < len(lines):
                 break
             if isHeader(lines[index]):
                 header = lines[index][:lines[index].index("]") + 1]
+                myTeam = header[header.index("[") + 1:header.index(":")]
                 myType = header[header.index(":") + 1:header.index("#")]
                 id = header[header.index("#") + 1:header.index("@")]
                 roundNum = header[header.index("@") + 1:header.index("]")]
+
             for k in keywords:
                 if k in lines[index]:
-                    temp = (k, myType)
+                    temp = (k, myType, myTeam)
                     if temp in seenEvents:
                         continue
                     seenEvents.add(temp)
                     print("\tFound keyword", "'" + k + "' on line", index)
                     print("\t\theader:", header)
+                    print("\t\tmyTeam:", myTeam)
                     print("\t\tmyType:", myType)
                     print("\t\tid:", id)
                     print("\t\troundNum:", roundNum)
