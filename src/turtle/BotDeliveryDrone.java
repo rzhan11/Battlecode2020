@@ -59,11 +59,11 @@ public class BotDeliveryDrone extends Globals {
 		// Uncomment for drone wall
 		myRole = DRONE_WALL_ROLE;
 
-		for (RobotInfo ri: visibleAllies) {
-			if (ri.ID == rushMinerID && rc.senseRobotAtLocation(ri.location).ID == rushMinerID) {
-				myRole = DRONE_RUSH_ROLE;
-			}
-		}
+//		for (RobotInfo ri: visibleAllies) {
+//			if (ri.ID == rushMinerID && rc.senseRobotAtLocation(ri.location).ID == rushMinerID) {
+//				myRole = DRONE_RUSH_ROLE;
+//			}
+//		}
 
 		initalizedDrone = true;
 
@@ -92,7 +92,7 @@ public class BotDeliveryDrone extends Globals {
 			updateIsDirMoveable();
 		}
 
-		if (true) {
+		if (false) {
 			for (int i = 1; i < directions.length; i+=2) {
 				isDirMoveable[i] = false;
 			}
