@@ -58,7 +58,7 @@ public class BotFulfillmentCenterRush extends BotFulfillmentCenter {
             if (!rc.onTheMap(loc)) {
                 continue;
             }
-            if (isLocDryEmpty(loc)) {
+            if (isLocEmpty(loc)) {
                 if (isMinAdjToRushMiner) {
                     if (loc.isAdjacentTo(rushMinerLoc)) {
                         int dist = loc.distanceSquaredTo(targetLoc);
