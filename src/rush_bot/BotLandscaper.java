@@ -11,9 +11,13 @@ import static rush_bot.Wall.*;
 public class BotLandscaper extends Globals {
 
 	private static int myRole, currentStep = 0;
-	final private static int RUSH_ROLE = 1, WALL_ROLE = 2, DEFENSE_ROLE = 3;
+	final private static int RUSH_ROLE = 1, WALL_ROLE = 2, DEFENSE_ROLE = 3, PLATFORM_ROLE = 4;
 
 	private static final int MAX_ELE_DIFF = 25;
+
+	private static MapLocation[] platformLocs;
+	private static int platformIndex;
+	private static boolean initPlatformLandscaper = false;
 
 	private static MapLocation enemyBuildingLoc;
 
@@ -54,6 +58,17 @@ public class BotLandscaper extends Globals {
 		Globals.update();
 	}
 
+	public static void initPlatformLandscaper() {
+		myRole = PLATFORM_ROLE;
+		platformLocs = new MapLocation[4];
+		platformLocs[0] = platformLoc;
+		platformLocs[1] = platformLoc.translate(1,0);
+		platformLocs[2] = platformLoc.translate(1,1);
+		platformLocs[3] = platformLoc.translate(0,1);
+		platformIndex = 0;
+		initPlatformLandscaper = true;
+	}
+
 	public static void turn() throws GameActionException {
 		if(!rc.isReady()) {
 			log("Not ready");
@@ -74,6 +89,8 @@ public class BotLandscaper extends Globals {
 			}
 		}
 
+		if (myID == assignedID && !initPlatformLandscaper) initPlatformLandscaper();
+
 		ttlog("MY ROLE IS: " + myRole);
 		log("wallFull " + wallFull);
 		log("supportFull " + supportFull);
@@ -85,6 +102,10 @@ public class BotLandscaper extends Globals {
 			case DEFENSE_ROLE:
 				doDefenseRole();
 				break;
+			case PLATFORM_ROLE:
+				doPlatformRole();
+				break;
+
 		}
 	}
 
@@ -336,6 +357,22 @@ public class BotLandscaper extends Globals {
 			}
 		}
 	}
+
+	private static void doPlatformRole() throws GameActionException {
+		if (isDirWetEmpty(here.directionTo(platformLoc))) {
+			if (rc.getDirtCarrying() > 0) {
+				rc.depositDirt(here.directionTo(platformLoc));
+			} else {
+				//Richards method
+			}
+			return;
+		}
+		if (!inArray(platformLocations,here, 4)) {
+			moveLog(platformLoc);
+			return;
+		}
+	}
+
 
 	private static void rerollRole() {
 		myRole = WALL_ROLE;
