@@ -7,6 +7,7 @@ import static rush_bot.Debug.*;
 import static rush_bot.Map.*;
 import static rush_bot.Utils.*;
 import static rush_bot.Wall.*;
+import static rush_bot.Communication.*;
 
 public class BotDesignSchool extends Globals {
 
@@ -63,7 +64,7 @@ public class BotDesignSchool extends Globals {
 
 		if (landscapersBuilt < wallLocsLength + supportWallLocsLength) {
 			int aID = buildLandscaper(getCloseDirections(here.directionTo(HQLoc)), RobotType.LANDSCAPER.cost);
-			if(aID == -1 && landscapersBuilt == 6) {
+			if(aID != -1 && landscapersBuilt == 6) {
 				writeTransactionAssignPlatform(aID);
 			}
 			return;
