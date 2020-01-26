@@ -1,13 +1,13 @@
-package rush;
+package landscaper_rush_bot;
 
 import battlecode.common.*;
 
-import static rush.Communication.*;
-import static rush.Constants.*;
-import static rush.Debug.*;
-import static rush.Map.*;
+import static landscaper_rush_bot.Communication.*;
+import static landscaper_rush_bot.Constants.*;
+import static landscaper_rush_bot.Debug.*;
+import static landscaper_rush_bot.Map.*;
 
-public class BotRefinery extends Globals {
+public class BotVaporator extends Globals {
 
 	public static void loop() throws GameActionException {
 		while (true) {
