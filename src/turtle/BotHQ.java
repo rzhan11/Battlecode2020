@@ -123,6 +123,53 @@ public class BotHQ extends Globals {
 			return;
 		}
 
+
+
+		if (roundNum >= 150) {
+			if (closeDesignSchoolInfo == null) {
+				log("Trying to assign design school");
+				for (RobotInfo ri: visibleAllies) {
+					if (ri.type == RobotType.DESIGN_SCHOOL) {
+						closeDesignSchoolInfo = ri;
+						lastAssignmentRound = N_INF;
+					}
+				}
+				if (closeDesignSchoolInfo == null && roundNum - lastAssignmentRound > REASSIGN_ROUND_NUM &&
+						rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost) {
+					int id = assignTask(BUILD_CLOSE_DESIGN_SCHOOL);
+					if (id >= 100000) {
+						// we built this turn
+						return;
+					}
+				}
+
+			} else if (closeFulfillmentCenterInfo == null) {
+				log("Trying to assign fulfillment center");
+				for (RobotInfo ri: visibleAllies) {
+					if (ri.type == RobotType.FULFILLMENT_CENTER) {
+						closeFulfillmentCenterInfo = ri;
+						lastAssignmentRound = N_INF;
+					}
+				}
+				if (closeFulfillmentCenterInfo == null && roundNum - lastAssignmentRound > REASSIGN_ROUND_NUM &&
+						rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost) {
+					int id = assignTask(BUILD_CLOSE_FULFILLMENT_CENTER);
+					if (id >= 100000) {
+						// we built this turn
+						return;
+					}
+				}
+			}
+		}
+
+
+
+
+
+
+
+
+
 //		if (closeDesignSchoolInfo == null) {
 //			log("Trying to assign design school");
 //			for (RobotInfo ri: visibleAllies) {

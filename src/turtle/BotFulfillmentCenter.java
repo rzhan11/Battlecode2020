@@ -13,10 +13,10 @@ import static turtle.Zones.*;
 
 public class BotFulfillmentCenter extends Globals {
 
-	final public static int NUM_EARLY_DRONE = 3;
 
 	public static int dronesBuilt = 0;
 	public static int lastBuildRound = N_INF;
+	final public static int MAX_DRONES = 24;
 
 	public static boolean isEarly = false;
 
@@ -68,20 +68,9 @@ public class BotFulfillmentCenter extends Globals {
 			BotFulfillmentCenterRush.turn();
 		}
 
-		if (isEarly && dronesBuilt < NUM_EARLY_DRONE && visibleEnemies.length > 0) {
+		if (dronesBuilt < MAX_DRONES) {
+			dronesBuilt++;
 			buildDrone(getCloseDirections(here.directionTo(getSymmetryLoc())), RobotType.DELIVERY_DRONE.cost);
-			return;
-		}
-
-		int incomePerRound = 1 + totalVaporators * RobotType.VAPORATOR.maxSoupProduced;
-		int spawnDelay = 4 * RobotType.LANDSCAPER.cost / incomePerRound;
-		if (roundNum < 400) {
-			spawnDelay = 3 * spawnDelay / 2;
-		}
-		if (roundNum - lastBuildRound > spawnDelay ||
-				roundNum >= 1000) {
-			buildDrone(getCloseDirections(here.directionTo(getSymmetryLoc())), RobotType.DELIVERY_DRONE.cost);
-			return;
 		}
 
 	}
