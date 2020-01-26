@@ -83,9 +83,6 @@ public class BotMinerBuilder extends BotMiner {
                 if (isDirDryFlatEmpty(dir)) {
                     if (rc.getTeamSoup() >= rt.cost) {
                         Actions.doBuildRobot(rt, dir);
-                        if (rt == RobotType.VAPORATOR) {
-                            writeTransactionVaporatorStatus(1);
-                        }
                         return true;
                     } else {
                         tlog("In position, not enough soup");

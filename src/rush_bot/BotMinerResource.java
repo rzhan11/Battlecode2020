@@ -24,6 +24,11 @@ public class BotMinerResource extends BotMiner {
     private static int visibleSoup;
     private static MapLocation centerOfVisibleSoup = null;
 
+    public static MapLocation[] soupClusters;
+    public static boolean[] emptySoupClusters;
+    public static int soupClustersSize = 0;
+    private static int soupClusterIndex = -1;
+
     public static boolean mustBuild = false;
     public static MapLocation[] refineries;
     public static boolean[] deadRefineries;
@@ -37,6 +42,9 @@ public class BotMinerResource extends BotMiner {
     public static boolean initializedMinerResource = false;
 
     public static void initMinerResource() throws GameActionException {
+
+        soupClusters = new MapLocation[BIG_ARRAY_SIZE];
+        emptySoupClusters = new boolean[BIG_ARRAY_SIZE];
 
         refineries = new MapLocation[BIG_ARRAY_SIZE];
         deadRefineries = new boolean[BIG_ARRAY_SIZE];
@@ -68,7 +76,7 @@ public class BotMinerResource extends BotMiner {
 
         log("soupCarrying " + rc.getSoupCarrying());
 
-        boolean seesAllyShoot = false;
+        /*boolean seesAllyShoot = false;
         for (RobotInfo ri: visibleAllies) {
             if (ri.type.canShoot()) {
                 seesAllyShoot = true;
@@ -85,52 +93,7 @@ public class BotMinerResource extends BotMiner {
                     }
                 }
             }
-        }
-
-        // create vaporators
-        while (totalVaporators >= BotHQ.NUM_CLOSE_VAPORATOR && rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
-            //checks to see if there are too many adjacent allies/vaporators
-            if (visibleAllies.length >= 25) {
-                break;
-            }
-            int count = 0;
-            for (RobotInfo ri: visibleAllies) {
-                if (ri.type == RobotType.VAPORATOR) {
-                    count++;
-                }
-            }
-            if (count >= 3) {
-                break;
-            }
-
-            // find the highest valid adjacent tile
-            Direction highestDir = null;
-            int highestElevation = N_INF;
-            for (Direction dir: directions) {
-                MapLocation loc = rc.adjacentLocation(dir);
-                if (!rc.onTheMap(loc)) {
-                    continue;
-                }
-                if (isDirDryFlatEmpty(dir) && isBuildLoc(loc) && maxXYDistance(HQLoc, loc) >= 2) {
-                    int elevation = rc.senseElevation(loc);
-                    if (elevation > highestElevation) {
-                        highestDir = dir;
-                        highestElevation = elevation;
-                    }
-                }
-            }
-            // checks to make sure it is worth it
-            if (highestDir != null) {
-                int minRevenue = (HardCode.getRoundFlooded(highestElevation) - roundNum) * RobotType.VAPORATOR.maxSoupProduced;
-                if (minRevenue >= 1.5 * RobotType.VAPORATOR.cost) {
-                    log("Trying to build vaporator with revenue " + minRevenue);
-                    Actions.doBuildRobot(RobotType.VAPORATOR, highestDir);
-                    writeTransactionVaporatorStatus(1);
-                    return;
-                }
-            }
-            break;
-        }
+        }*/
 
 		/*
 		If no more soup at target location and cannot sense another soup location, try to deposit at a refinery

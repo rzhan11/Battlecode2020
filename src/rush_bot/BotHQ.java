@@ -66,7 +66,7 @@ public class BotHQ extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
-		if (us == Team.A) {
+		/*if (us == Team.A) {
 			if (enemyHQLoc != null) {
 				drawDot(enemyHQLoc, PINK);
 			}
@@ -79,7 +79,7 @@ public class BotHQ extends Globals {
 					drawLine(here, symmetryHQLocs[i], RED);
 				}
 			}
-		}
+		}*/
 
 		if (!wallFull) {
 			wallFull = true;
@@ -91,7 +91,7 @@ public class BotHQ extends Globals {
 				}
 			}
 			if (wallFull) {
-				writeTransactionWallStatus(2);
+				writeTransactionWallStatus(1);
 			}
 		}
 
@@ -105,7 +105,7 @@ public class BotHQ extends Globals {
 				}
 			}
 			if (supportFull) {
-				writeTransactionWallStatus(3);
+				writeTransactionWallStatus(2);
 			}
 		}
 

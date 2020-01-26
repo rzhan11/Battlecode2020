@@ -171,15 +171,14 @@ public class BotLandscaper extends Globals {
 				if(rc.senseElevation(here) - waterLevel < 3) {
 					Actions.doDepositDirt(Direction.CENTER);
 					return;
-				} else {
-					// keep other tiles above water
-					if (unfloodWall()) {
-						return;
-					}
-					// build the wall
-					wallDeposit();
+				}
+				// keep other tiles above water
+				if (unfloodWall()) {
 					return;
 				}
+				// build the wall
+				wallDeposit();
+				return;
 			} else {
 				wallDig();
 				return;
@@ -200,7 +199,8 @@ public class BotLandscaper extends Globals {
 				continue;
 			}
 			if (inArray(wallLocs, loc, wallLocsLength) || inArray(supportWallLocs, loc, supportWallLocsLength)) {
-				if (isLocWet(loc) && waterLevel - rc.senseElevation(loc) < MAX_ELE_DIFF) {
+				if (rc.senseElevation(loc) - waterLevel < 2 ||
+						(isLocWet(loc) && waterLevel - rc.senseElevation(loc) < MAX_ELE_DIFF)) {
 					Actions.doDepositDirt(dir);
 					return true;
 				}
