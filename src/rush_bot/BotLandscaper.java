@@ -18,6 +18,8 @@ public class BotLandscaper extends Globals {
 	private static MapLocation[] platformLocs;
 	private static int platformIndex;
 	private static boolean initPlatformLandscaper = false;
+	private static int platformRole = 0;
+	private static boolean[] elevationChecker = {false, false, false, false};
 
 	private static MapLocation enemyBuildingLoc;
 
@@ -58,7 +60,7 @@ public class BotLandscaper extends Globals {
 		Globals.update();
 	}
 
-	public static void initPlatformLandscaper() {
+	public static void initLandscaperPlatform() {
 		myRole = PLATFORM_ROLE;
 		platformLocs = new MapLocation[4];
 		platformLocs[0] = platformCornerLoc;
@@ -89,7 +91,9 @@ public class BotLandscaper extends Globals {
 //			}
 //		}
 
-		if (myID == platformerID && !initPlatformLandscaper) initPlatformLandscaper();
+		if (myID == platformerID && !initPlatformLandscaper) {
+			initLandscaperPlatform();
+		}
 
 		ttlog("MY ROLE IS: " + myRole);
 		log("wallFull " + wallFull);
@@ -361,18 +365,62 @@ public class BotLandscaper extends Globals {
 	}
 
 	private static void doPlatformRole() throws GameActionException {
+		// checking if finished
+		if (myElevation >= PLATFORM_ELE) {
+			log("This spot is finished");
+			platformRole = 2;
+			elevationChecker[platformIndex] = true;
+			boolean temp = false;
+			for (int i = 0; i < elevationChecker.length; i++) {
+				if (!elevationChecker[i])
+					temp = true;
+			}
+			if (!temp)
+				rerollRole();
+		}
+
+
 		if (isDirWetEmpty(here.directionTo(platformCornerLoc))) {
+			log("Water in the way");
 			if (rc.getDirtCarrying() > 0) {
-				rc.depositDirt(here.directionTo(platformCornerLoc));
+				Actions.doDepositDirt(here.directionTo(platformCornerLoc));
 			} else {
-				//Richards method
+				platformerDig(here.directionTo(platformCornerLoc));
 			}
 			return;
 		}
 		if (!inArray(platformLocs,here, 4)) {
+			log("Going to corner");
 			moveLog(platformCornerLoc);
 			return;
 		}
+		if (platformRole == 0) {
+			log("Digging");
+			platformerDig(Direction.CENTER);
+			platformRole++;
+			return;
+		} else if (platformRole == 1) {
+			log("Depositing");
+			if (rc.getDirtCarrying() > 0) {
+				Actions.doDepositDirt(Direction.CENTER);
+			}
+			platformRole++;
+			return;
+		} else {
+			log("Moving to next spot");
+			platformIndex = (platformIndex+1) % 4;
+			if (isDirWetEmpty(here.directionTo(platformLocs[platformIndex]))) {
+				if (rc.getDirtCarrying() > 0) {
+					Actions.doDepositDirt(here.directionTo(platformLocs[platformIndex]));
+				} else {
+					platformerDig(here.directionTo(platformLocs[platformIndex]));
+				}
+			} else {
+				moveLog(platformLocs[platformIndex]);
+				platformRole = (platformRole + 1) % 3;
+			}
+		}
+		return;
 	}
 
 
