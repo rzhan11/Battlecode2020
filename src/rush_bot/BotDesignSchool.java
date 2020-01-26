@@ -6,6 +6,7 @@ import static rush_bot.Debug.*;
 import static rush_bot.Map.*;
 import static rush_bot.Utils.*;
 import static rush_bot.Wall.*;
+import static rush_bot.Communication.*;
 
 public class BotDesignSchool extends Globals {
 
@@ -62,14 +63,14 @@ public class BotDesignSchool extends Globals {
 
 		if (landscapersBuilt < wallLocsLength + supportWallLocsLength) {
 			int aID = buildLandscaper(getCloseDirections(here.directionTo(HQLoc)), RobotType.LANDSCAPER.cost);
-			if(aID == -1 && landscapersBuilt == 6) {
+			if(aID != -1 && landscapersBuilt == 6) {
 					writeTransactionAssignPlatform(aID);
 			}
 			return;
 		}
 	}
 
-	public static void buildLandscaper(Direction[] orderedDirs, int soupLimit) throws GameActionException{
+	public static int buildLandscaper(Direction[] orderedDirs, int soupLimit) throws GameActionException{
 		for (Direction dir : orderedDirs) {
 			MapLocation loc = rc.adjacentLocation(dir);
 			if (!rc.onTheMap(loc)) {
@@ -80,7 +81,7 @@ public class BotDesignSchool extends Globals {
 				Actions.doBuildRobot(RobotType.LANDSCAPER, dir);
 				landscapersBuilt++;
 				lastBuildRound = roundNum;
-				return rc.senseRobotAtLocation(here.add(dir)).id;
+				return rc.senseRobotAtLocation(here.add(dir)).ID;
 			}
 		}
 		return -1;

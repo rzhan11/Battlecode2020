@@ -734,7 +734,7 @@ public class Communication extends Globals {
 
 	public static void writeTransactionAssignPlatform (int assignID) throws GameActionException {
 		// check money
-		log("Writing transaction for 'Assign Platform' at " + location);
+		log("Writing transaction for 'Assign Platform'" + assignID);
 		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = ASSIGN_PLATFORM_SIGNAL;
