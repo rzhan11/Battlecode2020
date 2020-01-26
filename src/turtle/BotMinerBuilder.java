@@ -72,7 +72,7 @@ public class BotMinerBuilder extends BotMiner {
             if (!rc.onTheMap(loc)) {
                 continue;
             }
-            if (maxXYDistance(HQLoc, loc) == 1) {
+            if (maxXYDistance(HQLoc, loc) == 2) {
                 if (isDirDryFlatEmpty(dir)) {
                     if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost) {
                         Actions.doBuildRobot(RobotType.FULFILLMENT_CENTER, dir);
@@ -163,7 +163,7 @@ public class BotMinerBuilder extends BotMiner {
             if (!rc.onTheMap(loc)) {
                 continue;
             }
-            if (maxXYDistance(HQLoc, loc) == 1) {
+            if (maxXYDistance(HQLoc, loc) == 2) {
                 if (isDirDryFlatEmpty(dir)) {
                     if (rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost) {
                         Actions.doBuildRobot(RobotType.DESIGN_SCHOOL, dir);
