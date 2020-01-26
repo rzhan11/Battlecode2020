@@ -11,7 +11,7 @@ import static rush_bot.Wall.*;
 public class BotLandscaper extends Globals {
 
 	private static int myRole, currentStep = 0;
-	final private static int RUSH_ROLE = 1, WALL_ROLE = 2, DEFENSE_ROLE = 3;
+	final private static int RUSH_ROLE = 1, WALL_ROLE = 2, DEFENSE_ROLE = 3, PLATFORMER_ROLE = 4;
 
 	private static final int MAX_ELE_DIFF = 25;
 
@@ -65,14 +65,14 @@ public class BotLandscaper extends Globals {
 			return;
 		}
 
-		if (!inArray(wallLocs, here, wallLocsLength) && !inArray(supportWallLocs, here, supportWallLocsLength)) {
-			for (RobotInfo ri : visibleEnemies) {
-				if (ri.type.isBuilding()) {
-					myRole = DEFENSE_ROLE;
-					enemyBuildingLoc = ri.location;
-				}
-			}
-		}
+//		if (!inArray(wallLocs, here, wallLocsLength) && !inArray(supportWallLocs, here, supportWallLocsLength)) {
+//			for (RobotInfo ri : visibleEnemies) {
+//				if (ri.type.isBuilding()) {
+//					myRole = DEFENSE_ROLE;
+//					enemyBuildingLoc = ri.location;
+//				}
+//			}
+//		}
 
 		ttlog("MY ROLE IS: " + myRole);
 		log("wallFull " + wallFull);
@@ -82,9 +82,11 @@ public class BotLandscaper extends Globals {
 			case WALL_ROLE:
 				doWallRole();
 				break;
-			case DEFENSE_ROLE:
-				doDefenseRole();
-				break;
+			case PLATFORMER_ROLE:
+				doPlatformerRole();
+//			case DEFENSE_ROLE:
+//				doDefenseRole();
+//				break;
 		}
 	}
 
@@ -335,6 +337,10 @@ public class BotLandscaper extends Globals {
 				}
 			}
 		}
+	}
+
+	private static void doPlatformerRole () throws GameActionException {
+
 	}
 
 	private static void rerollRole() {
