@@ -264,7 +264,7 @@ public class BotHQ extends Globals {
 		}
 
 		// enter mid-game
-		if (wallCompleted) {
+		/*if (wallCompleted) {
 			if (minerBuiltCount >= 20) {
 				return;
 			}
@@ -277,7 +277,7 @@ public class BotHQ extends Globals {
 					return;
 				}
 			}
-		}
+		}*/
 	}
 
 	/*

@@ -18,8 +18,11 @@ public class Wall extends Globals {
     public static int wallMinX, wallMinY, wallMaxX, wallMaxY;
     public static MapLocation[] wallLocs = null;
     public static int wallLocsLength;
-    public static boolean wallCompleted;
     public static int terraDepth = 8;
+    
+    public static boolean wallCompleted;
+    public static boolean wallFull = false;
+    public static boolean supportFull = false;
 
     /*
     Loads wall information

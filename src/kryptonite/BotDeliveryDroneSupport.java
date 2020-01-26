@@ -42,6 +42,11 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
             return;
         }
 
+        if (wallCompleted) {
+            myRole = DRONE_ATTACK_ROLE;
+            return;
+        }
+
         // do not go into 3x3 plot, in order to avoid trapping the design school/fulfillment center
         if (wallCompleted) {
             int myRing = maxXYDistance(HQLoc, here);

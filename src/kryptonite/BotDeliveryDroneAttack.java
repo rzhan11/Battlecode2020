@@ -99,7 +99,9 @@ public class BotDeliveryDroneAttack extends BotDeliveryDrone {
         } else {
             boolean result = chaseEnemies(isAttacking);
             if (result) {
-                isCarryingEnemy = true;
+                if (rc.isCurrentlyHoldingUnit()) {
+                    isCarryingEnemy = true;
+                }
                 return;
             }
         }

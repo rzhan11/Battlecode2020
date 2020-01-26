@@ -38,8 +38,6 @@ public class Globals extends Constants {
 	Values that might change each turn
 	*/
 
-    public static boolean wallFull = false;
-    public static boolean supportFull = false;
     public static int roundNum;
     public static MapLocation here;
     public static int[] myZone;

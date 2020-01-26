@@ -4,6 +4,7 @@ import battlecode.common.*;
 
 
 import static kryptonite.Debug.*;
+import static kryptonite.Wall.*;
 import static kryptonite.Zones.*;
 
 public class Communication extends Globals {
