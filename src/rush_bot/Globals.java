@@ -78,7 +78,7 @@ public class Globals extends Constants {
 
     public static MapLocation targetNavLoc = null;
 
-    public static MapLocation platformLoc = null;
+    public static MapLocation platformCornerLoc = null;
     public static int platformerID = -1;
 
     public static boolean[] isDirMoveable = new boolean[8];

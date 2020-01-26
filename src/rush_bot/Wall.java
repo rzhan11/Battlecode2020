@@ -2,7 +2,6 @@ package rush_bot;
 
 import battlecode.common.*;
 
-import static rush_bot.Communication.*;
 import static rush_bot.Debug.*;
 import static rush_bot.Map.*;
 import static rush_bot.Utils.*;
@@ -223,7 +222,7 @@ public class Wall extends Globals {
             log("ERROR: Sanity check failed - No platform location found");
         } else {
             log("PLATFORM LOCATION: " + bestLoc);
-            platformLoc = bestLoc;
+            platformCornerLoc = bestLoc;
         }
 
     }
