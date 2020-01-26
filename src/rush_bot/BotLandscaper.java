@@ -19,7 +19,6 @@ public class BotLandscaper extends Globals {
 	private static MapLocation[] platformLocs;
 	private static int platformIndex;
 	private static boolean initPlatformLandscaper = false;
-	private static int platformRole = 0;
 	private static boolean[] elevationChecker = {false, false, false, false};
 
 	private static MapLocation enemyBuildingLoc;
@@ -367,10 +366,10 @@ public class BotLandscaper extends Globals {
 
 	private static void doPlatformRole() throws GameActionException {
 		// checking if finished
-		if (myElevation >= PLATFORM_ELE) {
+		if (rc.senseElevation(platformLocs[platformIndex]) >= PLATFORM_ELE) {
 			log("This spot is finished");
-			platformRole = 2;
 			elevationChecker[platformIndex] = true;
+			platformIndex = (platformIndex+1) % 4;
 			boolean temp = false;
 			for (int i = 0; i < elevationChecker.length; i++) {
 				if (!elevationChecker[i])
@@ -380,6 +379,7 @@ public class BotLandscaper extends Globals {
 				rerollRole();
 				writeTransactionPlatformComplete();
 			}
+			return;
 		}
 
 
@@ -397,33 +397,18 @@ public class BotLandscaper extends Globals {
 			moveLog(platformCornerLoc);
 			return;
 		}
-		if (platformRole == 0) {
+		if (rc.getDirtCarrying() <= 0) {
 			log("Digging");
 			platformerDig(Direction.CENTER);
-			platformRole++;
-			return;
-		} else if (platformRole == 1) {
-			log("Depositing");
-			if (rc.getDirtCarrying() > 0) {
-				Actions.doDepositDirt(Direction.CENTER);
-			}
-			platformRole++;
 			return;
 		} else {
-			log("Moving to next spot");
-			platformIndex = (platformIndex+1) % 4;
-			if (isDirWetEmpty(here.directionTo(platformLocs[platformIndex]))) {
-				if (rc.getDirtCarrying() > 0) {
-					Actions.doDepositDirt(here.directionTo(platformLocs[platformIndex]));
-				} else {
-					platformerDig(here.directionTo(platformLocs[platformIndex]));
-				}
-			} else {
-				moveLog(platformLocs[platformIndex]);
-				platformRole = (platformRole + 1) % 3;
+			log("Depositing");
+			if (rc.getDirtCarrying() > 0) {
+				Actions.doDepositDirt(here.directionTo(platformLocs[platformIndex]));
 			}
+			platformIndex = (platformIndex+1) % 4;
+			return;
 		}
-		return;
 	}
 
 
