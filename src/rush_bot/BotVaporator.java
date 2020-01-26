@@ -54,10 +54,10 @@ public class BotVaporator extends Globals {
 
 		if (signalDeathRound != -1) {
 			if (canBeKilled) {
-				writeTransactionVaporatorStatus(-1);
+//				writeTransactionVaporatorStatus(-1);
 				signalDeathRound = roundNum;
 			} else if (roundNum - signalDeathRound > NUM_ROUNDS_SIGNAL_STILL_ALIVE) {
-				writeTransactionVaporatorStatus(1);
+//				writeTransactionVaporatorStatus(1);
 				signalDeathRound = -1;
 			}
 		}

@@ -49,7 +49,7 @@ public class Globals extends Constants {
 
     public static int myPollution;
     public static int actualSensorRadiusSquared;
-    public static boolean extremePollution; // when
+    public static boolean extremePollution; // when sensor radius is less than 2
 
     public static RobotInfo[] visibleAllies = null;
     public static RobotInfo[] visibleEnemies = null;
@@ -92,8 +92,6 @@ public class Globals extends Constants {
     public static int[] isSymmetryHQLoc = new int[3]; // 0 is unknown, 1 is confirmed, 2 is denied
     public static int symmetryHQLocsIndex; // current symmetry that we are exploring
     public static MapLocation enemyHQLoc = null;
-
-    public static int totalVaporators = 0;
 
     public static int rushMinerID = -1;
 
