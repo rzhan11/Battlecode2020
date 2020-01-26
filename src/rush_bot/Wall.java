@@ -29,6 +29,10 @@ public class Wall extends Globals {
     public static int smallWallLocsLength;
     public static MapLocation[] supportWallLocs;
     public static int supportWallLocsLength;
+    public static MapLocation[] digLocs2x2 = new MapLocation[4];
+
+    public static boolean smallWallFull;
+    public static boolean supportFull;
 
     /*
     Loads wall information
@@ -41,6 +45,10 @@ public class Wall extends Globals {
         }
 
         log("LOADING WALL INFORMATION");
+
+        for (int i = 0; i < cardinalDirections.length; i++) {
+            digLocs2x2[i] = HQLoc.add(cardinalDirections[i]).add(cardinalDirections[i]);
+        }
 
         wallLocs = new MapLocation[wallRingRadius * 8];
         int index = 0;

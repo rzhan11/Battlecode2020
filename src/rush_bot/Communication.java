@@ -34,6 +34,8 @@ public class Communication extends Globals {
 	final public static int WALL_COMPLETED_SIGNAL = 6;
 	final public static int VAPORATOR_STATUS_SIGNAL = 7;
 	final public static int FLOODING_FOUND_SIGNAL = 8;
+	final public static int SMALL_WALL_FULL_SIGNAL = 9;
+	final public static int SUPPORT_FULL_SIGNAL = 10;
 
 	final public static int ALL_ZONE_STATUS_SIGNAL = 103;
 	final public static int REVIEW_SIGNAL = 104;
@@ -248,6 +250,12 @@ public class Communication extends Globals {
 							readTransactionFloodingFound(message, round);
 						}
 						break;
+//					case SMALL_WALL_FULL_SIGNAL:
+//							readTransactionSmallWallFull(message, round);
+//						break;
+//					case SUPPORT_FULL_SIGNAL:
+//							readTransactionSupportFull(message, round);
+//						break;
 					/*case ALL_ZONE_STATUS_SIGNAL:
 						if (!isLowBytecodeLimit(myType)) {
 							readTransactionAllExploredZones(message, round);
@@ -706,17 +714,22 @@ message[3] = y coordinate of our HQ
 	}
 
 	/*
-	message[2] = wallCompleted
+	message[2] = wallCompleted & smallWallFull && supportFull
 	message[3] = explored symmetries
-	message[4] = # of vaporators
 	 */
 	public static void writeTransactionReview() throws GameActionException{
 		log("Writing transaction for 'Review'");
 		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = REVIEW_SIGNAL;
-		if (Wall.wallCompleted) {
-			message[2] = 1;
+		if (wallCompleted) {
+			message[2] |= 1;
+		}
+		if (smallWallFull) {
+			message[2] |= (1 << 1);
+		}
+		if (supportFull) {
+			message[2] |= (1 << 2);
 		}
 		if (enemyHQLoc == null) {
 			for (int i = 0; i < symmetryHQLocs.length; i++) {
@@ -747,10 +760,10 @@ message[3] = y coordinate of our HQ
 		tlog("Reading transaction for 'Review'");
 		ttlog("Submitter ID: " + decryptID(message[0]));
 
-		if (message[2] == 1) {
-			Wall.wallCompleted = true;
+		if ((message[2] & 1) > 0) {
+			wallCompleted = true;
 		} else {
-			Wall.wallCompleted = false;
+			wallCompleted = false;
 		}
 		ttlog("wallCompleted " + Wall.wallCompleted);
 

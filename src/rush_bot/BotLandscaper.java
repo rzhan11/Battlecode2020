@@ -123,6 +123,9 @@ public class BotLandscaper extends Globals {
 			Direction maxDir = null;
 			for (Direction dir: directions) {
 				MapLocation loc = rc.adjacentLocation(dir);
+				if (!rc.onTheMap(loc)) {
+					continue;
+				}
 				if (isLocEmpty(loc) && inArray(smallWallLocs, loc, smallWallLocsLength)) {
 					int dist = loc.distanceSquaredTo(getSymmetryLoc());
 					if (dist > maxDist) {
@@ -151,16 +154,16 @@ public class BotLandscaper extends Globals {
 			}
 		}
 
+		if (smallWallFull && inArray(supportWallLocs, here, supportWallLocsLength)) {
+
+		}
+
 		moveLog(HQLoc);
 	}
 
 	private static void wallDig () throws GameActionException {
 		Direction bestDir = null;
 		int bestScore = N_INF;
-		MapLocation[] digLocs2x2 = new MapLocation[4];
-		for (int i = 0; i < cardinalDirections.length; i++) {
-			digLocs2x2[i] = HQLoc.add(cardinalDirections[i]).add(cardinalDirections[i]);
-		}
 		for (Direction dir: directions) {
 			MapLocation loc = rc.adjacentLocation(dir);
 			if (!rc.onTheMap(loc)) {

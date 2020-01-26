@@ -189,7 +189,7 @@ public class BotMinerResource extends BotMiner {
                 }
             }
             // if HQ is walled off, force a new refinery to be built
-			if (roundNum >= 150 && refineries[refineriesIndex].equals(HQLoc)) {
+			if (smallWallFull && refineries[refineriesIndex].equals(HQLoc)) {
 				deadRefineries[refineriesIndex] = true;
 				pickRefinery();
 			}

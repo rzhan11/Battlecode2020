@@ -104,6 +104,34 @@ public class BotHQ extends Globals {
 			}
 		}
 
+		if (!smallWallFull) {
+			smallWallFull = true;
+			for (int i = 0; i < smallWallLocsLength; i++) {
+				MapLocation loc = smallWallLocs[i];
+				if (rc.canSenseLocation(loc) && !isLocAllyLandscaper(loc)) {
+					smallWallFull = false;
+					break;
+				}
+			}
+			if (smallWallFull) {
+//				writeTransactionSmallWallFull();
+			}
+		}
+
+		if (!supportFull) {
+			supportFull = true;
+			for (int i = 0; i < supportWallLocsLength; i++) {
+				MapLocation loc = supportWallLocs[i];
+				if (rc.canSenseLocation(loc) && !isLocAllyLandscaper(loc)) {
+					supportFull = false;
+					break;
+				}
+			}
+			if (supportFull) {
+//				writeTransactionSupportFull();
+			}
+		}
+
 		Communication.resubmitImportantTransactions();
 
 

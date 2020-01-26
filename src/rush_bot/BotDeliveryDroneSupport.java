@@ -36,124 +36,65 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
             initDroneSupport();
         }
 
-        // do not go into 3x3 plot, in order to avoid trapping the design school/fulfillment center
-        if (wallCompleted) {
-            int myRing = maxXYDistance(HQLoc, here);
-            if (myRing > 1) {
-                for (int i = 0; i < directions.length; i++) {
-                    if (maxXYDistance(HQLoc, rc.adjacentLocation(directions[i])) <= 1) {
-                        isDirMoveable[i] = false;
-                    }
-                }
-            }
+        if (smallWallFull && supportFull) {
+            myRole = DRONE_WALL_ROLE;
+            return;
         }
 
         if (rc.isCurrentlyHoldingUnit()) {
-            // if adjacent to valid tile, drop unit down
-            for (Direction dir: directions) {
-                MapLocation loc = rc.adjacentLocation(dir);
-                if (isLocDryEmpty(loc) && !isDigLoc(loc) && maxXYDistance(HQLoc, loc) >= wallRingRadius) {
-                    Actions.doDropUnit(dir);
-                    return;
-                }
+            MapLocation closestLoc = null;
+            int closestDist = P_INF;
+            MapLocation[] targetLocs = null;
+            int targetLocsLength = -1;
+            if (!smallWallFull) {
+                targetLocs = smallWallLocs;
+                targetLocsLength = smallWallLocsLength;
+            } else if (!supportFull) {
+                targetLocs = supportWallLocs;
+                targetLocsLength = supportWallLocsLength;
             }
-
-            if (targetDropLoc != null && rc.canSenseLocation(targetDropLoc)) {
-                if (isLocDryEmpty(targetDropLoc)) {
-                    moveLog(targetDropLoc);
-                    return;
-                } else {
-                    targetDropLoc = null;
-                }
-            }
-
-            // find a safe tile OUTSIDE of the 5x5 plot where we can drop unit
-            if (maxXYDistance(HQLoc, here) < wallRingRadius) {
-                for (int i = 0; i < wallLocsLength; i++) {
-                    MapLocation loc = wallLocs[i];
-                    if (rc.canSenseLocation(loc)) {
-                        if (isLocDryEmpty(loc)) {
-                            targetDropLoc = loc;
-                            break;
-                        }
-                    }
-                }
-            } else {
-                for (int[] dir : senseDirections) {
-                    // ignore locs that are out of sensor range or within drop range (since not safe)
-                    if (dir[2] <= 2 || actualSensorRadiusSquared < dir[2]) {
-                        continue;
-                    }
-                    MapLocation loc = here.translate(dir[0], dir[1]);
-                    if (!rc.onTheMap(loc)) {
-                        continue;
-                    }
-
-                    if (isLocDryEmpty(loc) && !isDigLoc(loc) && maxXYDistance(HQLoc, loc) >= wallRingRadius) {
-                        targetDropLoc = loc;
-                        break;
+            for (int i = 0; i < targetLocsLength; i++) {
+                MapLocation loc = targetLocs[i];
+                if (rc.canSenseLocation(loc) && isLocDryEmpty(loc)) {
+                    int dist = getSymmetryLoc().distanceSquaredTo(loc);
+                    if (dist < closestDist) {
+                        closestDist = dist;
+                        closestLoc = loc;
                     }
                 }
             }
-
-            if (targetDropLoc == null) {
-                moveLog(getSymmetryLoc());
-            } else {
-                moveLog(targetDropLoc);
+            if (closestLoc == null) {
+                closestLoc = HQLoc;
             }
-            return;
-
+            moveLog(closestLoc);
         } else {
-            // STATE = not holding unit
-            if (targetID != -1) {
-                if (rc.canSenseRobot(targetID)) {
-                    RobotInfo ri = rc.senseRobot(targetID);
-                    // resets target if they are out of the 5x5 plot
-                    // or is currently being carried by another drone
-                    if (maxXYDistance(HQLoc, ri.location) >= wallRingRadius ||
-                        !ri.equals(rc.senseRobotAtLocation(ri.location))) {
-                        targetID = -1;
-                    }
-                } else {
-                    // resets target since we cannot see them anymore
-                    log("Lost track of " + targetID);
-                    targetID = -1;
+            for (RobotInfo ri: adjacentAllies) {
+                if (ri.location.isAdjacentTo(HQLoc)) {
+                    continue;
                 }
+                if (maxXYDistance(HQLoc, ri.location) <= 2 && !inArray(digLocs2x2, ri.location, digLocs2x2.length)) {
+                    continue;
+                }
+                Actions.doPickUpUnit(ri.ID);
+                return;
             }
 
-            if (targetID == -1) {
-                // finds closest transportable robot in the 5x5 plot
-                int closestDist = P_INF;
-                for (RobotInfo ri: visibleAllies) {
-                    if (ri.type == RobotType.LANDSCAPER ||
-                            (ri.type == RobotType.MINER && wallCompleted)) {
-                        if (maxXYDistance(HQLoc, ri.location) < wallRingRadius) {
-                            int dist = here.distanceSquaredTo(ri.location);
-                            if (dist < closestDist) {
-                                closestDist = dist;
-                                targetID = ri.ID;
-                            }
-                        }
-                    }
+            MapLocation closestLoc = null;
+            int closestDist = P_INF;
+            for (RobotInfo ri: visibleAllies) {
+                if (ri.location.isAdjacentTo(HQLoc)) {
+                    continue;
+                }
+                if (maxXYDistance(HQLoc, ri.location) <= 2 && !inArray(digLocs2x2, ri.location, digLocs2x2.length)) {
+                    continue;
+                }
+                int dist = here.distanceSquaredTo(ri.location);
+                if (dist < closestDist) {
+                    closestDist = dist;
+                    closestLoc = ri.location;
                 }
             }
-
-            if (targetID != -1) {
-                int result = tryPickUpUnit(targetID);
-                if (result == 1) {
-                    // successfully picked up unit
-                    targetID = -1;
-                }
-            } else {
-                // STATE == no valid visible, pick-up-able robots
-                // Rotate around HQ and try to find one
-
-                Direction dirToHQ = HQLoc.directionTo(here);
-                Direction targetDir = dirToHQ.rotateRight().rotateRight();
-                MapLocation targetLoc = HQLoc.add(targetDir).add(targetDir).add(targetDir);
-                log("Trying to rotate around ally HQ");
-                moveLog(targetLoc);
-            }
+            moveLog(closestLoc);
         }
     }
 }
