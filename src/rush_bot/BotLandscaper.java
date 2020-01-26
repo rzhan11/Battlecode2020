@@ -155,7 +155,35 @@ public class BotLandscaper extends Globals {
 		}
 
 		if (smallWallFull && inArray(supportWallLocs, here, supportWallLocsLength)) {
+			int maxDist = N_INF;
+			Direction maxDir = null;
+			for (Direction dir: directions) {
+				MapLocation loc = rc.adjacentLocation(dir);
+				if (!rc.onTheMap(loc)) {
+					continue;
+				}
+				if (isLocEmpty(loc) && inArray(supportWallLocs, loc, supportWallLocsLength)) {
+					int dist = loc.distanceSquaredTo(getSymmetryLoc());
+					if (dist > maxDist) {
+						maxDist = dist;
+						maxDir = dir;
+					}
+				}
+			}
+			int curDist = here.distanceSquaredTo(getSymmetryLoc());
+			if (maxDist > curDist) {
+				log("Moving to farther support loc");
+				Actions.doMove(maxDir);
+				return;
+			}
 
+			if (rc.getDirtCarrying() > 0) {
+				Actions.doDepositDirt(Direction.CENTER);
+				return;
+			} else {
+				wallDig();
+				return;
+			}
 		}
 
 		moveLog(HQLoc);
