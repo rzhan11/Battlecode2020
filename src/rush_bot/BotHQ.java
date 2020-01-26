@@ -89,8 +89,6 @@ public class BotHQ extends Globals {
 			}
 		}
 
-		log("num v " + totalVaporators);
-
 		// checks if wall is completed
 		if (!wallCompleted) {
 			wallCompleted = true;

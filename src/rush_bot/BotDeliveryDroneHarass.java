@@ -67,6 +67,19 @@ public class BotDeliveryDroneHarass extends BotDeliveryDrone {
             initDroneHarass();
         }
 
+        for (int i = 1; i < directions.length; i+=2) {
+            isDirMoveable[i] = false;
+        }
+
+        boolean sawEnemy = tryKillRobots(visibleEnemies, them);
+        if (sawEnemy) {
+            return;
+        }
+        boolean sawCow = tryKillRobots(visibleCows, cowTeam);
+        if (sawCow) {
+            return;
+        }
+
         // STATE = not carrying/seeing enemy units
 
         MapLocation[] locs = findClosestSoupAndUnexploredZone();

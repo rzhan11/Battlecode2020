@@ -96,6 +96,9 @@ public class BotMinerRush extends BotMiner {
 
         int avoidDangerResult = Nav.avoidDanger();
         if (avoidDangerResult == 1) {
+            // for rush miner, reset closest dist if distracted by enemies
+            closestDistToSymmetry = here.distanceSquaredTo(rushSymmetryLoc);
+            movesSinceCloser = 0;
             return;
         }
         if (avoidDangerResult == -1) {
@@ -103,7 +106,6 @@ public class BotMinerRush extends BotMiner {
             updateIsDirMoveable();
         }
 
-        log("closest " + closestDistToSymmetry + " v " + myType.sensorRadiusSquared);
         if (closestDistToSymmetry > myType.sensorRadiusSquared) {
             if (rushFCLoc != null && !usedDrone) {
                 log("Waiting for drone");

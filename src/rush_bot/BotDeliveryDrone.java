@@ -47,17 +47,7 @@ public class BotDeliveryDrone extends Globals {
 
 	public static void initDeliveryDrone() throws GameActionException {
 
-		// if close to the HQ, be a support drone and move landscapers out of the 5x5 to the 7x7
-//		if (wallCompleted && here.distanceSquaredTo(HQLoc) <= myType.sensorRadiusSquared)
-
-		if (myID % 2 == 0) {
-			myRole = DRONE_SUPPORT_ROLE;
-		} else {
-			myRole = DRONE_HARASS_ROLE;
-		}
-
-		// Uncomment for drone wall
-		//myRole = DRONE_WALL_ROLE;
+		myRole = DRONE_SUPPORT_ROLE;
 
 		for (RobotInfo ri: visibleAllies) {
 			if (ri.ID == rushMinerID && rc.senseRobotAtLocation(ri.location).ID == rushMinerID) {
@@ -88,27 +78,11 @@ public class BotDeliveryDrone extends Globals {
 		}
 		if (avoidDangerResult == -1) {
 			// when danger is unavoidable, reset isDirMoveable to ignore danger tiles
-			log("avoidresult -1 " + avoidDangerResult);
 			updateIsDirMoveable();
-		}
-
-		if (true) {
-			for (int i = 1; i < directions.length; i+=2) {
-				isDirMoveable[i] = false;
-			}
 		}
 
 		if (myRole == DRONE_RUSH_ROLE) {
 			BotDeliveryDroneRush.turn();
-			return;
-		}
-
-		boolean sawEnemy = tryKillRobots(visibleEnemies, them);
-		if (sawEnemy) {
-			return;
-		}
-		boolean sawCow = tryKillRobots(visibleCows, cowTeam);
-		if (sawCow) {
 			return;
 		}
 
@@ -119,11 +93,11 @@ public class BotDeliveryDrone extends Globals {
 			case DRONE_HARASS_ROLE:
 				BotDeliveryDroneHarass.turn();
 				break;
-			case DRONE_WALL_ROLE:
-				BotDeliveryDroneWall.turn();
-				break;
-			case DRONE_ATTACK_ROLE:
-				break;
+//			case DRONE_WALL_ROLE:
+//				BotDeliveryDroneWall.turn();
+//				break;
+//			case DRONE_ATTACK_ROLE:
+//				break;
 		}
 	}
 

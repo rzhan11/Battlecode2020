@@ -65,6 +65,7 @@ public class BotFulfillmentCenter extends Globals {
 			return;
 		}
 
+		log();
 		if (dronesBuilt < 1) {
 			buildDrone(getCloseDirections(here.directionTo(HQLoc)), RobotType.DELIVERY_DRONE.cost);
 			return;
