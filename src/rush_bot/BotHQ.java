@@ -57,8 +57,33 @@ public class BotHQ extends Globals {
 		tlog("" + symmetryHQLocs[1]);
 		tlog("" + symmetryHQLocs[2]);
 
+		// finding optimal platform locations
+		int minChange = 1000;
+		MapLocation leastML = null;
+		for(int i = -5; i < 5; i++) for(int j = -5; j < 5; j++) {
+			MapLocation[] arr = {here.translate(i,j), here.translate(i,j+1), here.translate(i+1,j), here.translate(i+1,j+1)};
+			int change = 0;
+			boolean flag = true;
+			for(int k = 0; k < 4; k++) {
+				if(maxXYDistance(here, arr[k]) < 4 || maxXYDistance(here, arr[k]) > 5 || !rc.canSenseLocation(arr[k])) {
+					flag = false;
+					break;
+				}
+				change += Math.abs(8 - rc.senseElevation(arr[k]));
+			}
+			if(minChange > change) {
+				minChange = change;
+				leastML = arr[0];
+			}
+		}
+		if(leastML == null) {
+			ttlog("PROBLEM: NO APPROPRIATE LOCATION FOUND");
+		}
+		else {
+			ttlog("LOCATION SENT: " + leastML);
+			writeTransactionPlatformLocation(leastML);
+		}
 		// finds visible soup locations
-
 		closestVisibleSoupLoc = findClosestVisibleSoupLoc(true);
 		log("closestVisibleSoupLocation: " + closestVisibleSoupLoc);
 
@@ -66,21 +91,6 @@ public class BotHQ extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
-		/*if (us == Team.A) {
-			if (enemyHQLoc != null) {
-				drawDot(enemyHQLoc, PINK);
-			}
-			for (int i = 0; i < symmetryHQLocs.length; i++) {
-				if (isSymmetryHQLoc[i] == 0) {
-					drawLine(here, symmetryHQLocs[i], YELLOW);
-				} else if (isSymmetryHQLoc[i] == 1) {
-					drawLine(here, symmetryHQLocs[i], GREEN);
-				} else if (isSymmetryHQLoc[i] == 2) {
-					drawLine(here, symmetryHQLocs[i], RED);
-				}
-			}
-		}*/
-
 		if (!wallFull) {
 			wallFull = true;
 			for (int i = 0; i < wallLocsLength; i++) {
@@ -108,6 +118,8 @@ public class BotHQ extends Globals {
 				writeTransactionWallStatus(2);
 			}
 		}
+
+
 
 		log("wallFull " + wallFull);
 		log("supportFull " + supportFull);
