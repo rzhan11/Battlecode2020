@@ -60,29 +60,19 @@ public class BotLandscaper extends Globals {
 			return;
 		}
 
-		// rushers
 		if (myRole == RUSH_ROLE) {
-			doRushRole();
+			BotLandscaperRush.turn();
 			return;
 		}
 
-//		for(int i = 0; i < directions.length; i++) {
-//			if(isDigLoc(rc.adjacentLocation(directions[i]))) {
-//				isDirMoveable[i] = false;
-//			}
-//		}
-
-//		for (RobotInfo ri : visibleEnemies) {
-//			if (ri.type.isBuilding()) {
-//				role = DEFENSE_ROLE;
-//				buildingLocation = ri.location;
-//			}
-//		}
-
-//		if(isDigLoc(here) || maxXYDistance(here, HQLoc) <= 2) {
-//			bugNavigate(getSymmetryLoc());
-//			return;
-//		}
+		if (!inArray(wallLocs, here, wallLocsLength) && !inArray(supportWallLocs, here, supportWallLocsLength)) {
+			for (RobotInfo ri : visibleEnemies) {
+				if (ri.type.isBuilding()) {
+					myRole = DEFENSE_ROLE;
+					enemyBuildingLoc = ri.location;
+				}
+			}
+		}
 
 		ttlog("MY ROLE IS: " + myRole);
 		log("wallFull " + wallFull);
@@ -232,7 +222,7 @@ public class BotLandscaper extends Globals {
 		}
 	}
 
-	private static void wallDig () throws GameActionException {
+	private static void wallDig() throws GameActionException {
 		Direction bestDir = null;
 		int bestScore = N_INF;
 		for (Direction dir: directions) {
@@ -277,65 +267,26 @@ public class BotLandscaper extends Globals {
 		return;
 	}
 
-	private static void doRushRole() throws GameActionException {
-		if (here.isAdjacentTo(enemyHQLoc)) {
-			if (rc.getDirtCarrying() > 0) {
-				Actions.doDepositDirt(here.directionTo(enemyHQLoc));
-			} else {
-				rushDig();
-			}
-		} else {
-			moveLog(enemyHQLoc);
-		}
-	}
-	private static void rushDig () throws GameActionException {
-		Direction bestDir = null;
-		int bestScore = N_INF;
-		for (Direction dir: allDirections) {
+	private static void doDefenseRole() throws GameActionException {
+		for (Direction dir: directions) {
 			MapLocation loc = rc.adjacentLocation(dir);
-			if (!rc.onTheMap(loc)) {
+			if (rc.onTheMap(loc)) {
 				continue;
 			}
-			int score = 0;
-			if (isLocEmpty(loc)) {
-				// prioritize empty tiles farther from enemy HQ
-				score = loc.distanceSquaredTo(enemyHQLoc);
-			} else {
-				RobotInfo ri = rc.senseRobotAtLocation(loc);
-				if (ri.team == us) {
-					if (ri.type.isBuilding()) {
-						if (ri.dirtCarrying > 0) {
-							score = P_INF;
-						} else {
-							continue;
-						}
-					} else {
-						// prioritize allies closer to enemy HQ
-						score = -loc.distanceSquaredTo(enemyHQLoc);
-					}
+			if (isLocEnemyBuilding(loc)) {
+				if (rc.getDirtCarrying() > 0) {
+					Actions.doDepositDirt(dir);
+					return;
 				} else {
-					if (ri.type.isBuilding()) {
-						continue;
-					} else {
-						score = P_INF / 2;
-					}
+					landscaperDig();
+					return;
 				}
 			}
-			if (score > bestScore) {
-				bestDir = dir;
-				bestScore = score;
-			}
 		}
-		Actions.doDigDirt(bestDir);
-		return;
-	}
-
-	private static void doDefenseRole() throws GameActionException {
 		if(here.isAdjacentTo(enemyBuildingLoc)) {
 			if(rc.senseRobotAtLocation(enemyBuildingLoc) == null) {
 				rerollRole();
-			}
-			else {
+			} else {
 				if(currentStep == 0) {
 					if(rc.getDirtCarrying() == 0) {
 						landscaperDig();
