@@ -12,6 +12,8 @@ public class BotDesignSchool extends Globals {
 	public static int landscapersBuilt = 0;
 	public static int lastBuildRound = N_INF;
 	public static boolean isRushDS = false;
+	public static boolean assignedPlatform = false;
+
 
 	public static void loop() throws GameActionException {
 		while (true) {
@@ -59,20 +61,24 @@ public class BotDesignSchool extends Globals {
 		}
 
 		if (landscapersBuilt < wallLocsLength + supportWallLocsLength) {
-			buildLandscaper(getCloseDirections(here.directionTo(HQLoc)), RobotType.LANDSCAPER.cost);
+			int aID = buildLandscaper(getCloseDirections(here.directionTo(HQLoc)), RobotType.LANDSCAPER.cost);
+			if(aID == -1 && landscapersBuilt == 6) {
+					writeTransactionAssignPlatform(aID);
+			}
 			return;
 		}
 	}
 
-	public static void buildLandscaper(Direction[] dirs, int soupLimit) throws GameActionException{
+	public static int buildLandscaper(Direction[] dirs, int soupLimit) throws GameActionException{
 		for (Direction dir : dirs) {
 			if (rc.getTeamSoup() >= soupLimit && isDirDryFlatEmpty(dir)) {
 				tlog("BUILDING LANDSCAPER " + dir);
 				Actions.doBuildRobot(RobotType.LANDSCAPER, dir);
 				landscapersBuilt++;
 				lastBuildRound = roundNum;
-				return;
+				return rc.senseRobotAtLocation(here.add(dir)).id;
 			}
 		}
+		return -1;
 	}
 }

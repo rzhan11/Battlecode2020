@@ -29,6 +29,7 @@ public class Communication extends Globals {
 	final public static int FLOODING_FOUND_SIGNAL = 7;
 	final public static int ENEMY_RUSH_SIGNAL = 8;
 	final public static int PLATFORM_LOCATION_SIGNAL = 9;
+	final public static int ASSIGN_PLATFORM_SIGNAL = 10;
 
 	final public static int ALL_ZONE_STATUS_SIGNAL = 103;
 	final public static int REVIEW_SIGNAL = 104;
@@ -245,6 +246,9 @@ public class Communication extends Globals {
 						break;
 					case ENEMY_RUSH_SIGNAL:
 						readTransactionEnemyRush(message, round);
+						break;
+					case ASSIGN_PLATFORM_SIGNAL:
+						readTransactionAssignPlatform(message, round);
 						break;
 					/*case ALL_ZONE_STATUS_SIGNAL:
 						if (!isLowBytecodeLimit(myType)) {
@@ -725,6 +729,32 @@ public class Communication extends Globals {
 		tlog("Reading 'Platform Location' transaction");
 		ttlog("Submitter ID: " + decryptID(message[0]));
 		ttlog("Location: " + platformLoc);
+		ttlog("Posted round: " + round);
+	}
+
+	public static void writeTransactionAssignPlatform (int assignID) throws GameActionException {
+		// check money
+		log("Writing transaction for 'Assign Platform' at " + location);
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
+		message[0] = encryptID(myID);
+		message[1] = ASSIGN_PLATFORM_SIGNAL;
+		message[2] = assignID;
+
+		xorMessage(message);
+		if (rc.getTeamSoup() >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
+
+		} else {
+			tlog("Could not afford transaction");
+			saveUnsentTransaction(message, dynamicCost);
+		}
+	}
+
+	public static void readTransactionAssignPlatform (int[] message, int round) {
+		assignedID = message[2];
+		tlog("Reading 'Assign Platform' transaction");
+		ttlog("Submitter ID: " + decryptID(message[0]));
+		ttlog("Location: " + assignedID);
 		ttlog("Posted round: " + round);
 	}
 
