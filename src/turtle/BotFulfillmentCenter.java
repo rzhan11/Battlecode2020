@@ -80,7 +80,7 @@ public class BotFulfillmentCenter extends Globals {
 			if (!rc.onTheMap(loc)) {
 				continue;
 			}
-			if (rc.getTeamSoup() >= soupLimit && isDirDryFlatEmpty(dir)) {
+			if (rc.getTeamSoup() >= soupLimit && isDirEmpty(dir)) {
 				tlog("BUILDING DRONE " + dir);
 				Actions.doBuildRobot(RobotType.DELIVERY_DRONE, dir);
 				dronesBuilt++;
