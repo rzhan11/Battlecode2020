@@ -22,7 +22,7 @@ public class BotDeliveryDroneWall extends BotDeliveryDrone {
     public static void initDroneWall() throws GameActionException {
 
         initializedDroneWall = true;
-        wallLocations = new MapLocation[25];
+        wallLocations = new MapLocation[24];
         int temp = 0;
         for (int i = -3; i <= 3; i++) {
             for (int j = -3; j <= 3; j++) {
@@ -38,7 +38,6 @@ public class BotDeliveryDroneWall extends BotDeliveryDrone {
 
     public static void turn() throws GameActionException {
         log("WALL DRONE ");
-
         if (!initializedDroneWall) {
             initDroneWall();
         }
@@ -47,18 +46,40 @@ public class BotDeliveryDroneWall extends BotDeliveryDrone {
             log("Not Ready");
             return;
         }
-
+        if (inArray(wallLocations, here, wallLocations.length)) {
+            atWall = true;
+        }
         // Move to wall
         if (!atWall) {
+            log("Moving to wall");
+            int min = Integer.MAX_VALUE;
+            MapLocation wanted = null;
             for (MapLocation ml : wallLocations) {
-                if (rc.senseRobotAtLocation(ml) == null) {
-                    moveLog(ml);
-                    if (inArray(wallLocations, here, wallLocations.length)) {
-                        atWall = true;
+                if (here.distanceSquaredTo(ml) < min
+                        && here.distanceSquaredTo(ml) <= actualSensorRadiusSquared
+                        && rc.senseRobotAtLocation(ml) == null) {
+                    min = here.distanceSquaredTo(ml);
+                    wanted = ml;
+                }
+            }
+            if (wanted == null) {
+                for (MapLocation ml : wallLocations) {
+                    if (here.distanceSquaredTo(ml) > actualSensorRadiusSquared) {
+                        moveLog(ml);
+                        return;
                     }
+                }
+            }
+            for (Direction d : directions) {
+                if (rc.adjacentLocation(d).equals(wanted)) {
+                    rc.move(d);
                     return;
                 }
             }
+            moveLog(wanted);
+            return;
+        } else {
+            log("At Position");
         }
         return;
 

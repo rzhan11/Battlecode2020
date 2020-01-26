@@ -2,176 +2,75 @@ package turtle;
 
 import battlecode.common.*;
 
-import java.awt.*;
-
+import static turtle.Constants.*;
 import static turtle.Debug.*;
 import static turtle.Map.*;
-import static turtle.Nav.*;
+import static turtle.Utils.*;
 import static turtle.Wall.*;
 
 public class BotLandscaper extends Globals {
 
 	private static int role, currentStep = 0;
-	private static final int TERRA_ROLE = 1, DEFENSE_ROLE = 2, ATTACK_ROLE = 3, TERRA_TARGET_ROLE = 4, TERRA_FILLER_ROLE = 5, RUSH_ROLE = 6;
+	private static final int WALL_ROLE = 1;
+	private static Direction[] landscaperDirections = {Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST, Direction.NORTHEAST, Direction.SOUTHWEST, Direction.SOUTHEAST, Direction.NORTHWEST}; // 8 directions
 
-	// TERRA Variables
-	private static MapLocation terraFillerLocation;
-	private static MapLocation terraRotateLocation;
-	private static boolean foundWallTerraLocation;
-	private static boolean shouldUpdateFillerLocation = true;
-	private static final int MAX_ELE_DIFF = 25;
 
-	// Defense Variables
-	private static MapLocation buildingLocation;
+	// WALL_ROLE Variables
+	private static MapLocation wallBuildLocation;
 
 	public static void loop() throws GameActionException {
 		while (true) {
-			try {
 				Globals.update();
 
-				if (!initializedLandscaper) {
-					initLandscaper();
-				}
-
 				turn();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+
 			Globals.endTurn();
 		}
 	}
 
-	public static boolean initializedLandscaper = false;
-
-	public static void initLandscaper() throws GameActionException {
-
-		rerollRole();
-
-		if (rc.canSenseLocation(getSymmetryLoc())) {
-			RobotInfo ri = rc.senseRobotAtLocation(getSymmetryLoc());
-			if (ri != null && ri.type == RobotType.HQ && ri.team == them) {
-				role = RUSH_ROLE;
-			}
-		}
-
-		initializedLandscaper = true;
-
-		Globals.endTurn();
-		Globals.update();
-	}
-
 	public static void turn() throws GameActionException {
 		if(!rc.isReady()) {
-			log("Not ready");
 			return;
 		}
 
-		// rushers
-		if (role == RUSH_ROLE) {
-			doRushRole();
-			return;
+
+		landscaperDirections = getCloseDirections(HQLoc.directionTo(getSymmetryLoc()).opposite());
+		role = WALL_ROLE;
+
+		if(maxXYDistance(HQLoc, here) == 1) {
+			wallBuildLocation = here;
 		}
 
-		for(int i = 0; i < directions.length; i++) {
-			if(isDigLoc(rc.adjacentLocation(directions[i]))) {
-				isDirMoveable[i] = false;
-			}
-		}
 
-		for (RobotInfo ri : visibleEnemies) {
-			if (ri.type.isBuilding()) {
-				role = DEFENSE_ROLE;
-				buildingLocation = ri.location;
-			}
-		}
-
-		if(isDigLoc(here) || maxXYDistance(here, HQLoc) <= 2) {
-			bugNavigate(getSymmetryLoc());
-			return;
-		}
 
 		ttlog("MY ROLE IS: " + role);
 
-
-		switch(role) {
-			case DEFENSE_ROLE:
-				doDefenseRole();
-				break;
-			case TERRA_ROLE:
-				if(rc.getID() % 2 == 0) role = TERRA_TARGET_ROLE; else role = TERRA_FILLER_ROLE;
-				break;
-			case TERRA_TARGET_ROLE:
-				doTerraTargetRole();
-				break;
-			case TERRA_FILLER_ROLE:
-				doTerraFillRole();
-				break;
-		}
-	}
-
-	private static void doRushRole() throws GameActionException {
-		if (here.isAdjacentTo(enemyHQLoc)) {
-			if (rc.getDirtCarrying() > 0) {
-				Actions.doDepositDirt(here.directionTo(enemyHQLoc));
-			} else {
-				rushDig();
-			}
-		} else {
-			moveLog(enemyHQLoc);
-		}
-	}
-	private static void rushDig () throws GameActionException {
-		Direction bestDir = null;
-		int bestScore = N_INF;
-		for (Direction dir: allDirections) {
+		if(wallBuildLocation == null) rerollRole();
+		ttlog("My Building Location is: " + wallBuildLocation);
+		for (Direction dir: directions) {
 			MapLocation loc = rc.adjacentLocation(dir);
 			if (!rc.onTheMap(loc)) {
 				continue;
 			}
-			int score = 0;
-			if (isLocEmpty(loc)) {
-				// prioritize empty tiles farther from enemy HQ
-				score = loc.distanceSquaredTo(enemyHQLoc);
-			} else {
-				RobotInfo ri = rc.senseRobotAtLocation(loc);
-				if (ri.team == us) {
-					if (ri.type.isBuilding()) {
-						if (ri.dirtCarrying > 0) {
-							score = P_INF;
-						} else {
-							continue;
-						}
-					} else {
-						// prioritize allies closer to enemy HQ
-						score = -loc.distanceSquaredTo(enemyHQLoc);
-					}
-				} else {
-					if (ri.type.isBuilding()) {
-						continue;
-					} else {
-						score = P_INF / 2;
-					}
+			if (isLocEnemyBuilding(loc)) {
+				if(rc.getDirtCarrying() == 0) {
+					ttlog("DIGGING DIRT");
+					landscaperDig();
 				}
-			}
-			if (score > bestScore) {
-				bestDir = dir;
-				bestScore = score;
+				else {
+					ttlog("Attacking enemy buildings");
+					Actions.doDepositDirt(dir);
+				}
+				return;
 			}
 		}
-		Actions.doDigDirt(bestDir);
-		return;
-	}
 
-	private static void doDefenseRole() throws GameActionException {
-		if(here.isAdjacentTo(buildingLocation)) {
-			if(rc.senseRobotAtLocation(buildingLocation) == null) {
-				rerollRole();
-			}
-			else {
+		if(here.equals(wallBuildLocation)) {
+			if(wallCompleted) {
 				if(currentStep == 0) {
 					if(rc.getDirtCarrying() == 0) {
+						ttlog("DIGGING DIRT");
 						landscaperDig();
-						return;
 					}
 					else {
 						currentStep = 1;
@@ -179,9 +78,42 @@ public class BotLandscaper extends Globals {
 				}
 				if(currentStep == 1) {
 					if(rc.getDirtCarrying() > 0) {
-						Direction dropLoc = here.directionTo(buildingLocation);
-						if(rc.canDepositDirt(dropLoc)) Actions.doDepositDirt(dropLoc);
-						return;
+						int minDirt = P_INF;
+						Direction minDir = null;
+						for(Direction d : allDirections) {
+							MapLocation loc = rc.adjacentLocation(d);
+							if (!rc.onTheMap(loc)) {
+								continue;
+							}
+							if(maxXYDistance(HQLoc, loc) == 1) {
+								if(minDirt > rc.senseElevation(loc)) {
+									minDirt = rc.senseElevation(loc);
+									minDir = d;
+								}
+							}
+						}
+						ttlog("DEPOSITING DIRT IN DIRECTION: " + minDir);
+						if(rc.canDepositDirt(minDir)) Actions.doDepositDirt(minDir);
+					}
+					else {
+						currentStep = 0;
+					}
+				}
+			}
+			else {
+				if(currentStep == 0) {
+					if(rc.getDirtCarrying() == 0) {
+						ttlog("DIGGING DIRT");
+						landscaperDig();
+					}
+					else {
+						currentStep = 1;
+					}
+				}
+				if(currentStep == 1) {
+					if(rc.getDirtCarrying() > 0) {
+						ttlog("DEPOSITING DIRT IN DIRECTION: " + Direction.CENTER);
+						if(rc.canDepositDirt(Direction.CENTER)) Actions.doDepositDirt(Direction.CENTER);
 					}
 					else {
 						currentStep = 0;
@@ -189,191 +121,53 @@ public class BotLandscaper extends Globals {
 				}
 			}
 		}
-		else if(rc.canSenseLocation(buildingLocation)) {
-			if(rc.senseRobotAtLocation(buildingLocation) == null) {
-				rerollRole();
+		else {
+			if(rc.canSenseLocation(wallBuildLocation)) {
+				if(rc.senseRobotAtLocation(wallBuildLocation) != null) {
+					rerollRole();
+				}
+				else {
+					Nav.bugNavigate(wallBuildLocation);
+				}
 			}
 			else {
-				bugNavigate(buildingLocation);
-				return;
+				Nav.bugNavigate(wallBuildLocation);
 			}
 		}
-		else {
-			bugNavigate(buildingLocation);
-			return;
-		}
-	}
-	private static void doTerraTargetRole() throws GameActionException {
-		updateTerraDepth();
-		if(terraTargetCheck()) {
-			bugNavigate(getSymmetryLoc());
-			return;
-		}
-		else {
-			if(currentStep == 0) {
-				if(rc.getDirtCarrying() == 0) {
-					boolean flag = false;
-					for(Direction d : Direction.allDirections()) {
-						MapLocation loc = rc.adjacentLocation(d);
-						if (!rc.onTheMap(loc)) {
-							continue;
-						}
-						if(rc.senseElevation(loc) > terraDepth && Math.abs(terraDepth-rc.senseElevation(loc)) < MAX_ELE_DIFF) {
-							flag = true;
-							if(rc.canDigDirt(d)) {
-								Actions.doDigDirt(d);
-								return;
-							}
-						}
-					}
-					if(!flag) landscaperDig();
-				}
-				else {
-					currentStep = 1;
-				}
-			}
-			if(currentStep == 1) {
-				if(rc.getDirtCarrying() == 0) {
-					currentStep = 0;
-				}
-				else {
-					for(Direction d : Direction.allDirections()) {
-						MapLocation loc = rc.adjacentLocation(d);
-						if (!rc.onTheMap(loc)) {
-							continue;
-						}
-						if(rc.senseElevation(loc) < terraDepth && !isDigLoc(loc) && !isLocBuilding(loc) && maxXYDistance(rc.adjacentLocation(d), HQLoc) > 2 && Math.abs(terraDepth-rc.senseElevation(loc)) < MAX_ELE_DIFF) {
-							if(rc.canDepositDirt(d)) Actions.doDepositDirt(d);
-							return;
-						}
-					}
-				}
-			}
-		}
-	}
 
-	private static void doTerraFillRole() throws GameActionException {
-		updateTerraDepth();
-		if(shouldUpdateFillerLocation || terraFillerLocation == null || !rc.canSenseLocation(terraFillerLocation) || rc.senseElevation(terraFillerLocation) == terraDepth) {
-			shouldUpdateFillerLocation = findNewFillerLocation();
-		}
-		ttlog("My Terra Fill Location is: " + terraFillerLocation);
-		if (!here.isAdjacentTo(terraFillerLocation)) {
-			bugNavigate(terraFillerLocation);
-			return;
-		} else {
-			if (currentStep == 0) {
-				if (rc.getDirtCarrying() == 0) {
-					boolean flag = false;
-					for (Direction d : Direction.allDirections()) {
-						MapLocation loc = rc.adjacentLocation(d);
-						if (!rc.onTheMap(loc)) {
-							continue;
-						}
-						if (rc.senseElevation(loc) > terraDepth && Math.abs(terraDepth - rc.senseElevation(loc)) < MAX_ELE_DIFF) {
-							flag = true;
-							if (rc.canDigDirt(d)) {
-								Actions.doDigDirt(d);
-								return;
-							}
-						}
-					}
-					if (!flag) landscaperDig();
-					return;
-				} else {
-					currentStep = 1;
-				}
-			}
-			if (currentStep == 1) {
-				if (rc.getDirtCarrying() == 0) {
-					currentStep = 0;
-				} else {
-					for (Direction d : Direction.allDirections()) {
-						MapLocation loc = rc.adjacentLocation(d);
-						if (!rc.onTheMap(loc)) {
-							continue;
-						}
-						if (rc.senseElevation(loc) < terraDepth && !isDigLoc(loc) && !isLocBuilding(loc) && maxXYDistance(rc.adjacentLocation(d), HQLoc) > 2 && Math.abs(terraDepth - rc.senseElevation(loc)) < MAX_ELE_DIFF) {
-							if (rc.canDepositDirt(d)) Actions.doDepositDirt(d);
-							return;
-						}
-					}
-				}
-			}
-		}
 	}
 
 	private static void landscaperDig() throws GameActionException {
-		for (Direction d : allDirections) {
+		for(Direction d : allDirections) {
 			MapLocation loc = rc.adjacentLocation(d);
 			if (!rc.onTheMap(loc)) {
 				continue;
 			}
-			if (isDigLoc(loc)) {
-				if (rc.canDigDirt(d)) {
-					Actions.doDigDirt(d);
+			if(isDigLoc(loc)) {
+				ttlog("DIGGING IN DIRECTION: " + d);
+				if(rc.canDigDirt(d)) Actions.doDigDirt(d);
+			}
+		}
+	}
+
+	private static void rerollRole() throws GameActionException {
+
+		if (role == WALL_ROLE) {
+			wallBuildLocation = null;
+			for(Direction d : landscaperDirections) {
+				MapLocation loc = HQLoc.add(d);
+				if (!rc.onTheMap(loc)) {
+					continue;
+				}
+				if(!rc.canSenseLocation(HQLoc.add(d)) || rc.senseRobotAtLocation(HQLoc.add(d)) == null) {
+					wallBuildLocation = HQLoc.add(d);
+					break;
 				}
 			}
+			ttlog("BUILDING WALL IN LOCATION: " + wallBuildLocation);
 		}
+
 	}
 
-	private static boolean terraTargetCheck() throws GameActionException {
-		for(Direction d : allDirections) {
-			MapLocation loc = rc.adjacentLocation(d);
-			if (!rc.onTheMap(loc))  continue;
-			if(maxXYDistance(HQLoc, loc) <= 2) continue;
-			if(rc.senseElevation(loc) < terraDepth && !isDigLoc(loc) && !isLocBuilding(loc) && Math.abs(terraDepth-rc.senseElevation(loc)) < MAX_ELE_DIFF) {
-				ttlog("TERRA CHECK: FAILED CHECK IN DIRECTION " + d);
-				return false;
-			}
-		}
-		return true;
-	}
 
-	private static boolean terraFillerCheck() throws GameActionException {
-		for(int i = -5; i <= 5; i++) for(int j = -5; j <= 5; j++) {
-			MapLocation loc = here.translate(i,j);
-			if(!rc.canSenseLocation(loc)) continue;
-			if (!rc.onTheMap(loc))  continue;
-			if(maxXYDistance(HQLoc, loc) <= 2) continue;
-			if(rc.senseElevation(loc) < terraDepth && !isDigLoc(loc) && !isLocBuilding(loc) && Math.abs(terraDepth-rc.senseElevation(loc)) < MAX_ELE_DIFF) {
-				ttlog("TERRA CHECK: FAILED CHECK IN MAP LOCATION: " + loc);
-				return false;
-			}
-		}
-		return true;
-	}
-
-	private static void updateTerraDepth() {
-		terraDepth = 8;
-	}
-
-	private static void rerollRole() {
-		role = TERRA_ROLE;
-	}
-
-	private static boolean findNewFillerLocation() throws GameActionException {
-		MapLocation ml = null;
-		int maxCirc = 10;
-		for(int i = -5; i <= 5; i++) for(int j = -5; j <= 5; j++) {
-			MapLocation loc = here.translate(i,j);
-			if(!rc.canSenseLocation(loc)) continue;
-			if (!rc.onTheMap(loc))  continue;
-			if(maxXYDistance(HQLoc, loc) <= 2) continue;
-			if(rc.senseElevation(loc) < terraDepth && !isDigLoc(loc) && !isLocBuilding(loc) && Math.abs(terraDepth-rc.senseElevation(loc)) < MAX_ELE_DIFF) {
-				if(maxCirc > maxXYDistance(here, loc)) {
-					ml = loc;
-					maxCirc = maxXYDistance(here, loc);
-				}
-			}
-		}
-		if(ml == null) {
-			terraFillerLocation = getSymmetryLoc();
-			return false;
-		}
-		else {
-			terraFillerLocation = ml;
-			return true;
-		}
-	}
 }

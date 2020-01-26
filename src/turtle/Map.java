@@ -14,8 +14,9 @@ import static turtle.Zones.*;
 
 public class Map extends Globals {
 
-    public static boolean isDigLoc(MapLocation ml) {
-        return Math.abs(ml.x - HQLoc.x) % 2 == 0 &&  Math.abs(ml.y - HQLoc.y) % 2 == 0 && maxXYDistance(ml, HQLoc) > 2;
+    public static boolean isDigLoc(MapLocation ml) throws GameActionException{
+        return maxXYDistance(ml, HQLoc) >= 2
+                && rc.senseRobotAtLocation(ml) == null;
     }
 
     public static boolean isBuildLoc(MapLocation ml) {
