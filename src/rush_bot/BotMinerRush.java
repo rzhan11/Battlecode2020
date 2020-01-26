@@ -74,18 +74,40 @@ public class BotMinerRush extends BotMiner {
         // build netgun if potential drone threat is seen
         if (enemyHQLoc != null && rushDSLoc != null && rushNGLoc == null) {
             if (seesEnemyDrone || seesEnemyFulfillmentCenter) {
+
                 Direction buildDir = null;
-                if (rushNGLoc == null) {
-                    for (Direction dir: directions) {
-                        MapLocation loc = rc.adjacentLocation(dir);
+                int openCardinals = 0;
+                for (Direction dir: cardinalDirections) {
+                    MapLocation loc = enemyHQLoc.add(dir);
+                    if (!rc.onTheMap(loc)) {
+                        continue;
+                    }
+                    if (here.isAdjacentTo(loc)) {
+                        if (isLocDryFlatEmpty(loc)) {
+                            buildDir = here.directionTo(loc);
+                        }
+                    }
+                    if (isLocDryEmpty(loc)) {
+                        openCardinals++;
+                    }
+                }
+
+                // try diagonals if no cardinal directions are available
+                if (openCardinals == 0) {
+                    for (Direction dir: diagonalDirections) {
+                        MapLocation loc = enemyHQLoc.add(dir);
                         if (!rc.onTheMap(loc)) {
                             continue;
                         }
-                        if (isLocDryFlatEmpty(loc) && loc.isAdjacentTo(enemyHQLoc)) {
-                            buildDir = dir;
+                        if (here.isAdjacentTo(loc)) {
+                            if (isLocDryFlatEmpty(loc)) {
+                                buildDir = here.directionTo(loc);
+                            }
                         }
                     }
                 }
+
+                // build netgun
                 if (buildDir != null && rc.getTeamSoup() >= RobotType.NET_GUN.cost) {
                     Actions.doBuildRobot(RobotType.NET_GUN, buildDir);
                     rushNGLoc = rc.adjacentLocation(buildDir);

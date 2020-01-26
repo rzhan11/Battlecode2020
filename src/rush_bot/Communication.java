@@ -27,7 +27,8 @@ public class Communication extends Globals {
 	final public static int BUILD_INSTRUCTION_SIGNAL = 5;
 	final public static int WALL_STATUS_SIGNAL = 6;
 	final public static int FLOODING_FOUND_SIGNAL = 7;
-	final public static int PLATFORM_LOCATION_SIGNAL = 8;
+	final public static int ENEMY_RUSH_SIGNAL = 8;
+	final public static int PLATFORM_LOCATION_SIGNAL = 9;
 
 	final public static int ALL_ZONE_STATUS_SIGNAL = 103;
 	final public static int REVIEW_SIGNAL = 104;
@@ -241,6 +242,9 @@ public class Communication extends Globals {
 						break;
 					case PLATFORM_LOCATION_SIGNAL:
 						readTransactionPlatformLocation(message, round);
+						break;
+					case ENEMY_RUSH_SIGNAL:
+						readTransactionEnemyRush(message, round);
 						break;
 					/*case ALL_ZONE_STATUS_SIGNAL:
 						if (!isLowBytecodeLimit(myType)) {
@@ -617,6 +621,34 @@ public class Communication extends Globals {
 		log("Reading transaction for 'Flooding Found'");
 		log("Submitter ID: " + decryptID(message[0]));
 		log("Location: " + BotDeliveryDrone.floodingMemory);
+		log("Posted round: " + round);
+	}
+
+	/*
+	message[2] = flooded tile x
+	message[3] = flooded tile y
+	 */
+
+	public static void writeTransactionEnemyRush () throws GameActionException{
+		log("Writing transaction for 'Enemy Rush'");
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
+		message[0] = encryptID(myID);
+		message[1] = ENEMY_RUSH_SIGNAL;
+
+		xorMessage(message);
+		if (rc.getTeamSoup() >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
+
+		} else {
+			tlog("Could not afford transaction");
+			saveUnsentTransaction(message, dynamicCost);
+		}
+	}
+
+	public static void readTransactionEnemyRush (int[] message, int round) throws GameActionException {
+		enemyRush = true;
+		log("Reading transaction for 'Enemy Rush'");
+		log("Submitter ID: " + decryptID(message[0]));
 		log("Posted round: " + round);
 	}
 

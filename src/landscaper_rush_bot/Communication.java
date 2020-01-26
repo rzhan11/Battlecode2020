@@ -1,8 +1,8 @@
-package rush;
+package landscaper_rush_bot;
 
 import battlecode.common.*;
 
-import static rush.Debug.*;
+import static landscaper_rush_bot.Debug.*;
 
 public class Communication extends Globals {
 

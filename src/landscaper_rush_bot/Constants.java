@@ -1,4 +1,4 @@
-package rush;
+package landscaper_rush_bot;
 
 public class Constants {
     /*
