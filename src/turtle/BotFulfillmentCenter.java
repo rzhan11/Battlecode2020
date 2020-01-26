@@ -69,7 +69,6 @@ public class BotFulfillmentCenter extends Globals {
 		}
 
 		if (dronesBuilt < MAX_DRONES) {
-			dronesBuilt++;
 			buildDrone(getCloseDirections(here.directionTo(getSymmetryLoc())), RobotType.DELIVERY_DRONE.cost);
 		}
 

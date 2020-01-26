@@ -50,14 +50,14 @@ public class BotDeliveryDrone extends Globals {
 		// if close to the HQ, be a support drone and move landscapers out of the 5x5 to the 7x7
 //		if (wallCompleted && here.distanceSquaredTo(HQLoc) <= myType.sensorRadiusSquared)
 
-		if (myID % 2 == 0) {
-			myRole = DRONE_SUPPORT_ROLE;
-		} else {
-			myRole = DRONE_HARASS_ROLE;
-		}
+//		if (myID % 2 == 0) {
+//			myRole = DRONE_SUPPORT_ROLE;
+//		} else {
+//			myRole = DRONE_HARASS_ROLE;
+//		}
 
 		// Uncomment for drone wall
-		//myRole = DRONE_WALL_ROLE;
+		myRole = DRONE_WALL_ROLE;
 
 		for (RobotInfo ri: visibleAllies) {
 			if (ri.ID == rushMinerID && rc.senseRobotAtLocation(ri.location).ID == rushMinerID) {
