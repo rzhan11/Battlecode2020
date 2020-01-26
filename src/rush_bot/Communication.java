@@ -246,10 +246,10 @@ public class Communication extends Globals {
 						if (!isLowBytecodeLimit(myType)) {
 							readTransactionAllExploredZones(message, round);
 						}
-						break;
-					case REVIEW_SIGNAL:
-						readTransactionAllExploredZones(message, round);
 						break;*/
+					case REVIEW_SIGNAL:
+						readTransactionReview(message, round);
+						break;
 				}
 			}
 
@@ -759,12 +759,12 @@ public class Communication extends Globals {
 		tlog("Reading transaction for 'Review'");
 		ttlog("Submitter ID: " + decryptID(message[0]));
 
-		if ((message[2] & 1) > 0) {
-			wallCompleted = true;
-		} else {
-			wallCompleted = false;
-		}
+		wallCompleted = (message[2] & 1) > 0;
+		smallWallFull = (message[2] & 2) > 0;
+		supportFull = (message[2] & 4) > 0;
 		ttlog("wallCompleted " + Wall.wallCompleted);
+		ttlog("smallWallFull " + Wall.wallCompleted);
+		ttlog("supportFull " + Wall.wallCompleted);
 
 		if ((message[3] & (1 << 16)) == 0) {
 			for (int i = 0; i < symmetryHQLocs.length; i++) {

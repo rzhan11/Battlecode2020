@@ -95,7 +95,8 @@ public class BotLandscaper extends Globals {
 //		}
 
 		ttlog("MY ROLE IS: " + role);
-
+		log("smallWallFull " + smallWallFull);
+		log("supportFull " + supportFull);
 
 		switch(role) {
 			case WALL_ROLE:
@@ -142,9 +143,16 @@ public class BotLandscaper extends Globals {
 			}
 
 			if (rc.getDirtCarrying() > 0) {
-				if (startBuildInnerWall) {
-
+				// keep other tiles unflooded
+				if (unfloodWall()) {
+					return;
+				}
+				if (smallWallFull) {
+					// build wall
+					wallDeposit();
+					return;
 				} else {
+					// build only my tile
 					Actions.doDepositDirt(Direction.CENTER);
 					return;
 				}
@@ -178,8 +186,19 @@ public class BotLandscaper extends Globals {
 			}
 
 			if (rc.getDirtCarrying() > 0) {
-				Actions.doDepositDirt(Direction.CENTER);
-				return;
+				// save myself from flooding
+				if(rc.senseElevation(here) - waterLevel < 3) {
+					Actions.doDepositDirt(Direction.CENTER);
+					return;
+				} else {
+					// keep other tiles above water
+					if (unfloodWall()) {
+						return;
+					}
+					// build the wall
+					wallDeposit();
+					return;
+				}
 			} else {
 				wallDig();
 				return;
@@ -187,6 +206,49 @@ public class BotLandscaper extends Globals {
 		}
 
 		moveLog(HQLoc);
+	}
+
+	private static boolean unfloodWall() throws GameActionException {
+		if (waterLevel > 5) {
+			return false;
+		}
+		// adds dirt to flooded support tiles
+		for (Direction dir: directions) {
+			MapLocation loc = rc.adjacentLocation(dir);
+			if (!rc.onTheMap(loc)) {
+				continue;
+			}
+			if (maxXYDistance(HQLoc, loc) <= 2 && !inArray(digLocs2x2, loc, digLocs2x2.length)) {
+				if (isLocWet(loc) && waterLevel - rc.senseElevation(loc) < 25) {
+					Actions.doDepositDirt(dir);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private static void wallDeposit() throws GameActionException {
+		// adds dirt to 3x3 wall
+		int minElevation = P_INF;
+		Direction minDir = null;
+		for (Direction dir: directions) {
+			MapLocation loc = rc.adjacentLocation(dir);
+			if (!rc.onTheMap(loc)) {
+				continue;
+			}
+			if (maxXYDistance(HQLoc, loc) == 1) {
+				int elevation = rc.senseElevation(loc);
+				if (elevation < minElevation) {
+					minDir = dir;
+					minElevation = elevation;
+				}
+			}
+		}
+		if (minDir != null) {
+			Actions.doDepositDirt(minDir);
+			return;
+		}
 	}
 
 	private static void wallDig () throws GameActionException {

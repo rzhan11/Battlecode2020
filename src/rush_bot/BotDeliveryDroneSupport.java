@@ -76,8 +76,9 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
             }
             moveLog(closestLoc);
         } else {
+            // STATE == NOT HOLDING UNIT
             for (RobotInfo ri: adjacentAllies) {
-                if (ri.type.canBePickedUp()) {
+                if (ri.type == RobotType.LANDSCAPER) {
                     if (ri.location.isAdjacentTo(HQLoc)) {
                         continue;
                     }
@@ -92,19 +93,51 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
             MapLocation closestLoc = null;
             int closestDist = P_INF;
             for (RobotInfo ri: visibleAllies) {
-                if (ri.location.isAdjacentTo(HQLoc)) {
-                    continue;
-                }
-                if (maxXYDistance(HQLoc, ri.location) <= 2 && !inArray(digLocs2x2, ri.location, digLocs2x2.length)) {
-                    continue;
-                }
-                int dist = here.distanceSquaredTo(ri.location);
-                if (dist < closestDist) {
-                    closestDist = dist;
-                    closestLoc = ri.location;
+                if (ri.type == RobotType.LANDSCAPER) {
+                    if (ri.location.isAdjacentTo(HQLoc)) {
+                        continue;
+                    }
+                    if (maxXYDistance(HQLoc, ri.location) <= 2 && !inArray(digLocs2x2, ri.location, digLocs2x2.length)) {
+                        continue;
+                    }
+                    int dist = here.distanceSquaredTo(ri.location);
+                    if (dist < closestDist) {
+                        closestDist = dist;
+                        closestLoc = ri.location;
+                    }
                 }
             }
-            moveLog(closestLoc);
+            if (closestLoc == null) {
+                // 90 clockwise
+                Direction dirToHQ = HQLoc.directionTo(here);
+                Direction targetDir = dirToHQ.rotateRight().rotateRight();
+                MapLocation targetLoc = HQLoc.add(targetDir).add(targetDir).add(targetDir);
+                if (!rc.onTheMap(targetLoc)) {
+                    // 90 counterclockwise
+                    targetDir = dirToHQ.rotateLeft().rotateLeft();
+                    targetLoc = HQLoc.add(targetDir).add(targetDir).add(targetDir);
+                    if (!rc.onTheMap(targetLoc)) {
+                        // 45 clockwise
+                        targetDir = dirToHQ.rotateRight();
+                        targetLoc = HQLoc.add(targetDir).add(targetDir).add(targetDir);
+                        if (!rc.onTheMap(targetLoc)) {
+                            // 45 counterclockwise
+                            targetDir = dirToHQ.rotateLeft();
+                            targetLoc = HQLoc.add(targetDir).add(targetDir).add(targetDir);
+                            if (!rc.onTheMap(targetLoc)) {
+                                targetDir = HQLoc.directionTo(getSymmetryLoc());
+                                targetLoc = HQLoc.add(targetDir).add(targetDir).add(targetDir);
+                            }
+                        }
+                    }
+                }
+                log("Trying to rotate around ally HQ");
+                moveLog(targetLoc);
+                return;
+            } else {
+                moveLog(closestLoc);
+                return;
+            }
         }
     }
 }
