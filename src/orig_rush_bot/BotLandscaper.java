@@ -1,23 +1,19 @@
-package rush_bot;
+package orig_rush_bot;
 
 import battlecode.common.*;
 
-import static rush_bot.Debug.*;
-import static rush_bot.Map.*;
-import static rush_bot.Nav.*;
-import static rush_bot.Utils.*;
-import static rush_bot.Wall.*;
+import static orig_rush_bot.Debug.*;
+import static orig_rush_bot.Map.*;
+import static orig_rush_bot.Nav.*;
+import static orig_rush_bot.Utils.*;
+import static orig_rush_bot.Wall.*;
 
 public class BotLandscaper extends Globals {
 
 	private static int myRole, currentStep = 0;
-	final private static int RUSH_ROLE = 1, WALL_ROLE = 2, DEFENSE_ROLE = 3, PLATFORM_ROLE = 4;
+	final private static int RUSH_ROLE = 1, WALL_ROLE = 2, DEFENSE_ROLE = 3;
 
 	private static final int MAX_ELE_DIFF = 25;
-
-	private static MapLocation[] platformLocs;
-	private static int platformIndex;
-	private static boolean initPlatformLandscaper = false;
 
 	private static MapLocation enemyBuildingLoc;
 
@@ -58,17 +54,6 @@ public class BotLandscaper extends Globals {
 		Globals.update();
 	}
 
-	public static void initPlatformLandscaper() {
-		myRole = PLATFORM_ROLE;
-		platformLocs = new MapLocation[4];
-		platformLocs[0] = platformCornerLoc;
-		platformLocs[1] = platformCornerLoc.translate(1,0);
-		platformLocs[2] = platformCornerLoc.translate(1,1);
-		platformLocs[3] = platformCornerLoc.translate(0,1);
-		platformIndex = 0;
-		initPlatformLandscaper = true;
-	}
-
 	public static void turn() throws GameActionException {
 		if(!rc.isReady()) {
 			log("Not ready");
@@ -80,16 +65,14 @@ public class BotLandscaper extends Globals {
 			return;
 		}
 
-//		if (!inArray(wallLocs, here, wallLocsLength) && !inArray(supportWallLocs, here, supportWallLocsLength)) {
-//			for (RobotInfo ri : visibleEnemies) {
-//				if (ri.type.isBuilding()) {
-//					myRole = DEFENSE_ROLE;
-//					enemyBuildingLoc = ri.location;
-//				}
-//			}
-//		}
-
-		if (myID == platformerID && !initPlatformLandscaper) initPlatformLandscaper();
+		if (!inArray(wallLocs, here, wallLocsLength) && !inArray(supportWallLocs, here, supportWallLocsLength)) {
+			for (RobotInfo ri : visibleEnemies) {
+				if (ri.type.isBuilding()) {
+					myRole = DEFENSE_ROLE;
+					enemyBuildingLoc = ri.location;
+				}
+			}
+		}
 
 		ttlog("MY ROLE IS: " + myRole);
 		log("wallFull " + wallFull);
@@ -102,12 +85,6 @@ public class BotLandscaper extends Globals {
 			case DEFENSE_ROLE:
 				doDefenseRole();
 				break;
-			case PLATFORM_ROLE:
-				doPlatformRole();
-				break;
-//			case DEFENSE_ROLE:
-//				doDefenseRole();
-//				break;
 		}
 	}
 
@@ -258,8 +235,8 @@ public class BotLandscaper extends Globals {
 			}
 			int score = 0;
 			if (isLocEmpty(loc)) {
-				// prioritize lowest tiles
-				score = -rc.senseElevation(loc);
+				// prioritize highest tiles
+				score = rc.senseElevation(loc);
 			} else {
 				RobotInfo ri = rc.senseRobotAtLocation(loc);
 				if (ri.team == us) {
@@ -271,7 +248,7 @@ public class BotLandscaper extends Globals {
 						}
 					} else {
 						// prioritize allies farther from HQLoc
-						score = -P_INF / 3 + loc.distanceSquaredTo(HQLoc);
+						score = loc.distanceSquaredTo(HQLoc);
 					}
 				} else {
 					if (ri.type.isBuilding()) {
@@ -358,73 +335,6 @@ public class BotLandscaper extends Globals {
 				}
 			}
 		}
-	}
-
-	private static void doPlatformRole() throws GameActionException {
-		if (isDirWetEmpty(here.directionTo(platformCornerLoc))) {
-			if (rc.getDirtCarrying() > 0) {
-				rc.depositDirt(here.directionTo(platformCornerLoc));
-			} else {
-				//Richards method
-			}
-			return;
-		}
-		if (!inArray(platformLocs,here, 4)) {
-			moveLog(platformCornerLoc);
-			return;
-		}
-	}
-
-
-	private static void platformerDig(Direction noDigDir) throws GameActionException {
-		Direction bestDir = null;
-		int bestScore = N_INF;
-		for (Direction dir: directions) {
-			if (dir.equals(noDigDir)) {
-				continue;
-			}
-			MapLocation loc = rc.adjacentLocation(dir);
-			if (!rc.onTheMap(loc)) {
-				continue;
-			}
-			if (maxXYDistance(HQLoc, loc) <= 2 && !inArray(digLocs2x2, loc, digLocs2x2.length)) {
-				continue;
-			}
-			if (inArray(platformLocs, loc, platformLocs.length)) {
-				continue;
-			}
-			int score = 0;
-			if (isLocEmpty(loc)) {
-				// prioritize highest tiles
-				score = rc.senseElevation(loc);
-			} else {
-				RobotInfo ri = rc.senseRobotAtLocation(loc);
-				if (ri.team == us) {
-					if (ri.type.isBuilding()) {
-						if (ri.dirtCarrying > 0) {
-							score = P_INF;
-						} else {
-							continue;
-						}
-					} else {
-						// prioritize allies farther from HQLoc
-						score = loc.distanceSquaredTo(HQLoc);
-					}
-				} else {
-					if (ri.type.isBuilding()) {
-						continue;
-					} else {
-						score = P_INF / 2;
-					}
-				}
-			}
-			if (score > bestScore) {
-				bestDir = dir;
-				bestScore = score;
-			}
-		}
-		Actions.doDigDirt(bestDir);
-		return;
 	}
 
 	private static void rerollRole() {
