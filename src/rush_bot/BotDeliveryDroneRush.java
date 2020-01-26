@@ -58,7 +58,7 @@ public class BotDeliveryDroneRush extends BotDeliveryDrone {
                 for (Direction dir: orderedDirections) {
                     if (isLocDryEmpty(rc.adjacentLocation(dir))) {
                         Actions.doDropUnit(dir);
-                        myRole = DRONE_HARASS_ROLE;
+                        myRole = DRONE_SUPPORT_ROLE;
                         return;
                     }
                 }
