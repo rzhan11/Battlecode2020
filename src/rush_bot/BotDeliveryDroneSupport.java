@@ -81,7 +81,7 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
                     if (ri.location.isAdjacentTo(HQLoc)) {
                         continue;
                     }
-                    if (maxXYDistance(HQLoc, ri.location) <= 2 && !inArray(digLocs2x2, ri.location, digLocs2x2.length)) {
+                    if (wallFull && maxXYDistance(HQLoc, ri.location) == 2 && !inArray(digLocs2x2, ri.location, digLocs2x2.length)) {
                         continue;
                     }
                     Actions.doPickUpUnit(ri.ID);
@@ -97,7 +97,10 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
                     if (ri.ID == platformerID && !platformCompleted) {
                         continue;
                     }
-                    if (maxXYDistance(HQLoc, ri.location) <= 2 && !inArray(digLocs2x2, ri.location, digLocs2x2.length)) {
+                    if (ri.location.isAdjacentTo(HQLoc)) {
+                        continue;
+                    }
+                    if (wallFull && maxXYDistance(HQLoc, ri.location) == 2 && !inArray(digLocs2x2, ri.location, digLocs2x2.length)) {
                         continue;
                     }
                     int dist = here.distanceSquaredTo(ri.location);
