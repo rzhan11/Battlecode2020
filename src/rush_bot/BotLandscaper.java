@@ -2,6 +2,7 @@ package rush_bot;
 
 import battlecode.common.*;
 
+import static rush_bot.Communication.*;
 import static rush_bot.Debug.*;
 import static rush_bot.Map.*;
 import static rush_bot.Nav.*;
@@ -375,8 +376,10 @@ public class BotLandscaper extends Globals {
 				if (!elevationChecker[i])
 					temp = true;
 			}
-			if (!temp)
+			if (!temp) {
 				rerollRole();
+				writeTransactionPlatformComplete();
+			}
 		}
 
 

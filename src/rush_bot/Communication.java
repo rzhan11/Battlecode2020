@@ -28,6 +28,7 @@ public class Communication extends Globals {
 	final public static int FLOODING_FOUND_SIGNAL = 7;
 	final public static int ENEMY_RUSH_SIGNAL = 8;
 	final public static int ASSIGN_PLATFORM_SIGNAL = 9;
+	final public static int PLATFORM_SIGNAL = 10;
 
 	final public static int ALL_ZONE_STATUS_SIGNAL = 103;
 	final public static int REVIEW_SIGNAL = 104;
@@ -239,6 +240,8 @@ public class Communication extends Globals {
 					case REVIEW_SIGNAL:
 						readTransactionReview(message, round);
 						break;
+					case PLATFORM_SIGNAL:
+						readTransactionPlatformComplete(message, round);
 				}
 			}
 
@@ -661,6 +664,31 @@ public class Communication extends Globals {
 		log("Platform loc " + platformCornerLoc);
 		log("platformerID " + platformerID);
 
+		ttlog("Posted round: " + round);
+	}
+
+	public static void writeTransactionPlatformComplete() throws GameActionException {
+		log("Writing transaction for 'Platform'");
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
+		message[0] = encryptID(myID);
+		message[1] = PLATFORM_SIGNAL;
+		message[2] = 1;
+		xorMessage(message);
+		if (rc.getTeamSoup() >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
+		} else {
+			tlog("Could not afford transaction");
+			saveUnsentTransaction(message, dynamicCost);
+		}
+	}
+
+	public static void readTransactionPlatformComplete(int[] message, int round) throws GameActionException {
+		tlog("Reading transaction for 'Review'");
+		ttlog("Submitter ID: " + decryptID(message[0]));
+
+		if (message[2] == 1) {
+			platformCompleted = true;
+		}
 		ttlog("Posted round: " + round);
 	}
 }
