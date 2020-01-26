@@ -165,28 +165,28 @@ public class Wall extends Globals {
 
         int ringRadius = 4;
         int ringSize = 2 * ringRadius + 1;
-        MapLocation[] possibleLocs = new MapLocation[8 * ringRadius];
+        MapLocation[] possibleLocs = new MapLocation[9 * ringRadius];
         int index = 0;
         MapLocation templ = HQLoc.translate(ringRadius, ringRadius);
-        for(int i = 0; i < ringSize - 1; i++) {
+        for(int i = 0; i < ringSize; i++) {
             MapLocation newl = templ.translate(0, -i);
             possibleLocs[index] = newl;
             index++;
         }
-        templ = HQLoc.translate(ringRadius, -ringRadius);
-        for(int i = 0; i < ringSize - 1; i++) {
+        templ = HQLoc.translate(ringRadius, -ringRadius - 1);
+        for(int i = 0; i < ringSize; i++) {
             MapLocation newl = templ.translate(-i, 0);
             possibleLocs[index] = newl;
             index++;
         }
-        templ = HQLoc.translate(-ringRadius, -ringRadius);
-        for(int i = 0; i < ringSize - 1; i++) {
+        templ = HQLoc.translate(-ringRadius - 1, -ringRadius - 1);
+        for(int i = 0; i < ringSize; i++) {
             MapLocation newl = templ.translate(0, i);
             possibleLocs[index] = newl;
             index++;
         }
-        templ = HQLoc.translate(-ringRadius, ringRadius);
-        for(int i = 0; i < ringSize - 1; i++) {
+        templ = HQLoc.translate(-ringRadius - 1, ringRadius);
+        for(int i = 0; i < ringSize; i++) {
             MapLocation newl = templ.translate(i, 0);
             possibleLocs[index] = newl;
             index++;
@@ -194,35 +194,36 @@ public class Wall extends Globals {
 
         // finding optimal platform locations
         int minChange = P_INF;
-        MapLocation leastML = null;
+        MapLocation bestLoc = null;
         outer: for (MapLocation initLoc: possibleLocs) {
-                MapLocation[] arr = {initLoc, initLoc.translate(1,0), initLoc.translate(1, 0), initLoc.translate(1,1)};
-                int change = 0;
-                for (MapLocation loc: arr) {
-                    if (!rc.onTheMap(loc)) {
-                        continue outer;
-                    }
-                    int ring = maxXYDistance(HQLoc, loc);
-                    if(ring < 4 || ring > 5) {
-                        continue outer;
-                    }
-                    if (rc.canSenseLocation(loc)) {
-                        change += Math.abs(PLATFORM_ELE - rc.senseElevation(loc));
-                    } else {
-                        change += P_INF / arr.length;
-                    }
+            log("i " + initLoc);
+            MapLocation[] arr = {initLoc, initLoc.translate(1,0), initLoc.translate(0, 1), initLoc.translate(1,1)};
+            int change = 0;
+            for (MapLocation loc: arr) {
+                if (!rc.onTheMap(loc)) {
+                    continue outer;
                 }
-                if(change < minChange) {
-                    minChange = change;
-                    leastML = arr[0];
+                int ring = maxXYDistance(HQLoc, loc);
+                if(ring < 4 || ring > 5) {
+                    continue outer;
                 }
+                if (rc.canSenseLocation(loc)) {
+                    change += Math.abs(PLATFORM_ELE - rc.senseElevation(loc));
+                } else {
+                    change += P_INF / arr.length;
+                }
+            }
+            log("change " + change + " " + minChange);
+            if(change < minChange) {
+                minChange = change;
+                bestLoc = initLoc;
+            }
         }
-        if(leastML == null) {
-            ttlog("PROBLEM: NO APPROPRIATE LOCATION FOUND");
-        }
-        else {
-            ttlog("LOCATION SENT: " + leastML);
-            writeTransactionPlatformLocation(leastML);
+        if(bestLoc == null) {
+            log("ERROR: Sanity check failed - No platform location found");
+        } else {
+            log("PLATFORM LOCATION: " + bestLoc);
+            platformLoc = bestLoc;
         }
 
     }
