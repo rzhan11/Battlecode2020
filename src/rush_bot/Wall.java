@@ -2,7 +2,9 @@ package rush_bot;
 
 import battlecode.common.*;
 
+import static rush_bot.Communication.*;
 import static rush_bot.Debug.*;
+import static rush_bot.Map.*;
 import static rush_bot.Utils.*;
 
 public class Wall extends Globals {
@@ -155,5 +157,73 @@ public class Wall extends Globals {
         log("FINISHED LOADING WALL INFORMATION");
 
         hasLoadedWall = true;
+    }
+
+    final public static int PLATFORM_ELE = 8;
+
+    public static void loadPlatformInfo() throws GameActionException {
+
+        int ringRadius = 4;
+        int ringSize = 2 * ringRadius + 1;
+        MapLocation[] possibleLocs = new MapLocation[8 * ringRadius];
+        int index = 0;
+        MapLocation templ = HQLoc.translate(ringRadius, ringRadius);
+        for(int i = 0; i < ringSize - 1; i++) {
+            MapLocation newl = templ.translate(0, -i);
+            possibleLocs[index] = newl;
+            index++;
+        }
+        templ = HQLoc.translate(ringRadius, -ringRadius);
+        for(int i = 0; i < ringSize - 1; i++) {
+            MapLocation newl = templ.translate(-i, 0);
+            possibleLocs[index] = newl;
+            index++;
+        }
+        templ = HQLoc.translate(-ringRadius, -ringRadius);
+        for(int i = 0; i < ringSize - 1; i++) {
+            MapLocation newl = templ.translate(0, i);
+            possibleLocs[index] = newl;
+            index++;
+        }
+        templ = HQLoc.translate(-ringRadius, ringRadius);
+        for(int i = 0; i < ringSize - 1; i++) {
+            MapLocation newl = templ.translate(i, 0);
+            possibleLocs[index] = newl;
+            index++;
+        }
+
+        // finding optimal platform locations
+        int minChange = P_INF;
+        MapLocation leastML = null;
+        outer: for (MapLocation initLoc: possibleLocs) {
+                MapLocation[] arr = {initLoc, initLoc.translate(1,0), initLoc.translate(1, 0), initLoc.translate(1,1)};
+                int change = 0;
+                for (MapLocation loc: arr) {
+                    if (!rc.onTheMap(loc)) {
+                        continue outer;
+                    }
+                    int ring = maxXYDistance(HQLoc, loc);
+                    if(ring < 4 || ring > 5) {
+                        continue outer;
+                    }
+                    if (rc.canSenseLocation(loc)) {
+                        change += Math.abs(PLATFORM_ELE - rc.senseElevation(loc));
+                    } else {
+                        change += P_INF / arr.length;
+                    }
+                }
+                if(change < minChange) {
+                    minChange = change;
+                    leastML = arr[0];
+                }
+        }
+        if(leastML == null) {
+            ttlog("PROBLEM: NO APPROPRIATE LOCATION FOUND");
+        }
+        else {
+            ttlog("LOCATION SENT: " + leastML);
+            writeTransactionPlatformLocation(leastML);
+        }
+
     }
 }
