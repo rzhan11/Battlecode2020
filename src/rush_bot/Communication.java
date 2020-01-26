@@ -137,7 +137,6 @@ public class Communication extends Globals {
 	public static void resubmitImportantTransactions () throws GameActionException {
 		if (roundNum % RESUBMIT_INTERVAL == RESUBMIT_INTERVAL - RESUBMIT_EARLY) {
 			writeTransactionReview();
-			writeTransactionAllExploredZones();
 		}
 	}
 
@@ -237,11 +236,6 @@ public class Communication extends Globals {
 					case ASSIGN_PLATFORM_SIGNAL:
 						readTransactionAssignPlatform(message, round);
 						break;
-					/*case ALL_ZONE_STATUS_SIGNAL:
-						if (!isLowBytecodeLimit(myType)) {
-							readTransactionAllExploredZones(message, round);
-						}
-						break;*/
 					case REVIEW_SIGNAL:
 						readTransactionReview(message, round);
 						break;
@@ -254,12 +248,10 @@ public class Communication extends Globals {
 		return index;
 	}
 
-	public static boolean[] hasReadAllExploredZones = {false, false};
 	public static boolean hasReadReviewTransaction = false;
-	public static boolean hasReadAllReviews = false;
 
 	public static void readReviewBlock (int round, int count) throws GameActionException {
-		if (hasReadAllReviews) {
+		if (hasReadReviewTransaction) {
 			return;
 		}
 
@@ -282,19 +274,11 @@ public class Communication extends Globals {
 			int submitterID = decryptID(message[0]);
 			if (submitterID !=-1) {
 				switch (message[1] & ((1 << 8) - 1)) {
-					case ALL_ZONE_STATUS_SIGNAL:
-						if (!isLowBytecodeLimit(myType)) {
-							readTransactionAllExploredZones(message, round);
-						}
-						break;
 					case REVIEW_SIGNAL:
 						readTransactionReview(message, round);
 						break;
 				}
 			}
-		}
-		if (hasReadAllExploredZones[0] && hasReadAllExploredZones[1] && hasReadReviewTransaction) {
-			hasReadAllReviews = true;
 		}
 		readReviewBlock(round + 1, count + 1);
 	}
@@ -582,55 +566,6 @@ public class Communication extends Globals {
 		log("Posted round: " + round);
 	}
 
-	public static void writeTransactionAllExploredZones() throws GameActionException{
-		for (int part = 0; part < 2; part++) {
-			log("Writing transaction for 'All Explored Zones' part " + part);
-			int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
-			message[0] = encryptID(myID);
-			message[1] = ALL_ZONE_STATUS_SIGNAL;
-			message[2] = part;
-			for (int i = part * 8; i < Math.min(part * 8 + 8, numYZones); i++) {
-				int i_message = (i % 8) / 2 + 3;
-				for (int j = 0; j < numYZones; j++) {
-					if (exploredZoneStatus[i][j] == 1) {
-						int bitLoc = (i % 2) * 16 + j;
-						message[i_message] |= (exploredZoneStatus[i][j] << bitLoc);
-					}
-				}
-			}
-
-			xorMessage(message);
-			if (rc.getTeamSoup() >= dynamicCost) {
-				rc.submitTransaction(message, dynamicCost);
-
-			} else {
-				tlog("Could not afford transaction");
-				saveUnsentTransaction(message, dynamicCost);
-			}
-		}
-	}
-
-	public static void readTransactionAllExploredZones(int[] message, int round) throws GameActionException {
-		int part = message[2];
-		if (hasReadAllExploredZones[part]) {
-			return;
-		}
-		hasReadAllExploredZones[part] = true;
-		ttlog("Reading transaction for 'All Explored Zones'");
-		tlog("Submitter ID: " + decryptID(message[0]));
-		tlog("Part: " + part);
-		for (int i = part * 8; i < Math.min(part * 8 + 8, numYZones); i++) {
-			int i_message = (i % 8) / 2 + 3;
-			for (int j = 0; j < numYZones; j++) {
-				int bitLoc = (i % 2) * 16 + j;
-				if ((message[i_message] & (1 << bitLoc)) > 0) {
-					exploredZoneStatus[i][j] = 1;
-				}
-			}
-		}
-		tlog("Posted round: " + round);
-	}
-
 	public static void writeTransactionAssignPlatform (int assignID) throws GameActionException {
 		// check money
 		log("Writing transaction for 'Assign Platform'" + assignID);
@@ -661,6 +596,7 @@ public class Communication extends Globals {
 	message[2] = wallFull and supportFull
 	message[3] = explored symmetries
 	message[4] = location.x + location.y
+	message[5] = platformerID
 	 */
 	public static void writeTransactionReview() throws GameActionException{
 		log("Writing transaction for 'Review'");
@@ -683,6 +619,7 @@ public class Communication extends Globals {
 			message[3] = (1 << 16) | symmetryHQLocsIndex;
 		}
 		message[4] = (platformCornerLoc.x << 16) | platformCornerLoc.y;
+		message[5] = platformerID;
 
 		xorMessage(message);
 		if (rc.getTeamSoup() >= dynamicCost) {
@@ -695,9 +632,6 @@ public class Communication extends Globals {
 	}
 
 	public static void readTransactionReview(int[] message, int round) throws GameActionException {
-		if (hasReadReviewTransaction) {
-			return;
-		}
 		hasReadReviewTransaction = true;
 
 		tlog("Reading transaction for 'Review'");
@@ -723,7 +657,9 @@ public class Communication extends Globals {
 		}
 
 		platformCornerLoc = new MapLocation(message[4] >>> 16, message[4] & ((1 << 16) - 1));
+		platformerID = message[5];
 		log("Platform loc " + platformCornerLoc);
+		log("platformerID " + platformerID);
 
 		ttlog("Posted round: " + round);
 	}
