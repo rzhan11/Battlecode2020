@@ -63,12 +63,8 @@ public class BotDeliveryDroneWall extends BotDeliveryDrone {
                 }
             }
             if (wanted == null) {
-                for (MapLocation ml : wallLocations) {
-                    if (here.distanceSquaredTo(ml) > actualSensorRadiusSquared) {
-                        moveLog(ml);
-                        return;
-                    }
-                }
+                Direction d = HQLoc.directionTo(here).rotateRight();
+                wanted = HQLoc.add(d).add(d);
             }
             for (Direction d : directions) {
                 if (rc.adjacentLocation(d).equals(wanted)) {
