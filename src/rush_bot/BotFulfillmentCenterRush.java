@@ -58,25 +58,28 @@ public class BotFulfillmentCenterRush extends BotFulfillmentCenter {
             if (!rc.onTheMap(loc)) {
                 continue;
             }
-            if (isMinAdjToRushMiner) {
-                if (loc.isAdjacentTo(rushMinerLoc)) {
+            if (isLocDryEmpty(loc)) {
+                if (isMinAdjToRushMiner) {
+                    if (loc.isAdjacentTo(rushMinerLoc)) {
+                        int dist = loc.distanceSquaredTo(targetLoc);
+                        if (dist < minDist) {
+                            minDir = dir;
+                            minDist = dist;
+                        }
+                    }
+                } else {
                     int dist = loc.distanceSquaredTo(targetLoc);
-                    if (dist < minDist) {
+                    if (loc.isAdjacentTo(rushMinerLoc) || dist < minDist) {
                         minDir = dir;
                         minDist = dist;
+                        isMinAdjToRushMiner = true;
                     }
-                }
-            } else {
-                int dist = loc.distanceSquaredTo(targetLoc);
-                if (loc.isAdjacentTo(rushMinerLoc) || dist < minDist) {
-                    minDir = dir;
-                    minDist = dist;
-                    isMinAdjToRushMiner = true;
                 }
             }
         }
         if (minDir != null) {
             Actions.doBuildRobot(RobotType.DELIVERY_DRONE, minDir);
+            dronesBuilt++;
             return;
         }
     }
