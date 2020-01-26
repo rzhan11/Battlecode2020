@@ -376,10 +376,6 @@ public class BotLandscaper extends Globals {
 	}
 
 
-	private static void doPlatformerRole () throws GameActionException {
-
-	}
-
 	private static void platformerDig(Direction noDigDir) throws GameActionException {
 		Direction bestDir = null;
 		int bestScore = N_INF;
