@@ -20,15 +20,6 @@ public class BotMinerResource extends BotMiner {
 
     final private static int NUM_ROUNDS_BEFORE_RANDOMIZE_ZONE = 25;
 
-    // a soup deposit is a single soup location
-    private static int visibleSoup;
-    private static MapLocation centerOfVisibleSoup = null;
-
-    public static MapLocation[] soupClusters;
-    public static boolean[] emptySoupClusters;
-    public static int soupClustersSize = 0;
-    private static int soupClusterIndex = -1;
-
     public static boolean mustBuild = false;
     public static MapLocation[] refineries;
     public static boolean[] deadRefineries;
@@ -120,11 +111,12 @@ public class BotMinerResource extends BotMiner {
         }
 
 		/*
-		If targetSoupZone has been denied of soup, reset it
+		If targetSoupCluster has been denied of soup, reset it
 		 */
-        if (targetSoupZone != null && getHasSoupZonesAtLoc(targetSoupZone) == 2) {
-            log("Resetting targetSoupZone");
-            targetSoupZone = null;
+        if (targetSoupClusterIndex != -1 && here.distanceSquaredTo(soupClusters[targetSoupClusterIndex]) <= 8) {
+            tlog("Reached and removing soupCluster at " + soupClusters[targetSoupClusterIndex]);
+            emptySoupClusters[targetSoupClusterIndex] = true;
+            targetSoupClusterIndex = -1;
             targetNavLoc = null;
         }
 
@@ -350,28 +342,27 @@ public class BotMinerResource extends BotMiner {
 
             if (closestVisibleSoupLoc != null) {
                 targetVisibleSoupLoc = closestVisibleSoupLoc;
-                targetSoupZone = null;
+                targetSoupClusterIndex = -1;
                 targetUnexploredZone = null;
                 targetNavLoc = targetVisibleSoupLoc;
                 log("Targeting visible soup at " + targetVisibleSoupLoc);
-            } else if (targetSoupZone == null) {
-                MapLocation[] twoZones = findClosestSoupAndUnexploredZone();
-                closestSoupZone = twoZones[0];
-                log("closestSoupZone: " + closestSoupZone);
+            } else if (targetSoupClusterIndex == -1) {
+                closestSoupClusterIndex = findClosestSoupCluster();
+                log("closestSoupClusterIndex: " + closestSoupClusterIndex);
 
-                if (closestSoupZone != null) {
+                if (closestSoupClusterIndex != -1) {
                     targetVisibleSoupLoc = null;
-                    targetSoupZone = closestSoupZone;
+                    targetSoupClusterIndex = closestSoupClusterIndex;
                     targetUnexploredZone = null;
-                    targetNavLoc = targetSoupZone;
-                    log("Targeting soup zone at " + targetSoupZone);
+                    targetNavLoc = soupClusters[targetSoupClusterIndex];
+                    log("Targeting soup zone at " + soupClusters[targetSoupClusterIndex]);
                 } else if (targetUnexploredZone == null) {
-                    closestUnexploredZone = twoZones[1];
+                    closestUnexploredZone = findClosestUnexploredZone();
                     log("closestUnexploredZone: " + closestUnexploredZone);
 
                     if (closestUnexploredZone != null) {
                         targetVisibleSoupLoc = null;
-                        targetSoupZone = null;
+                        targetSoupClusterIndex = -1;
                         targetUnexploredZone = closestUnexploredZone;
                         unexploredZoneStartRound = roundNum;
                         targetNavLoc = targetUnexploredZone;
@@ -380,7 +371,7 @@ public class BotMinerResource extends BotMiner {
                 }
                 if (roundNum - unexploredZoneStartRound >= NUM_ROUNDS_BEFORE_RANDOMIZE_ZONE) {
                     targetVisibleSoupLoc = null;
-                    targetSoupZone = null;
+                    targetSoupClusterIndex = -1;
                     targetUnexploredZone = getRandomUnexploredZone();
                     unexploredZoneStartRound = roundNum;
                     targetNavLoc = targetUnexploredZone;
@@ -415,8 +406,8 @@ public class BotMinerResource extends BotMiner {
         if (targetNavLoc == null) {
             if (targetVisibleSoupLoc != null) {
                 targetNavLoc = targetVisibleSoupLoc;
-            } else if (targetSoupZone != null) {
-                targetNavLoc = targetSoupZone;
+            } else if (targetSoupClusterIndex != -1) {
+                targetNavLoc = soupClusters[targetSoupClusterIndex];
             } else if (targetUnexploredZone != null) {
                 targetNavLoc = targetUnexploredZone;
             }
@@ -434,26 +425,6 @@ public class BotMinerResource extends BotMiner {
             moveLog(targetNavLoc);
             return;
         }
-    }
-
-    public static boolean addToRefineries (MapLocation loc) {
-        boolean isNew = true;
-        for (int i = 0; i < refineriesSize; i++) {
-            if (loc.equals(refineries[i])) {
-                isNew = false;
-                break;
-            }
-        }
-        if (isNew) {
-            if (refineriesSize == BIG_ARRAY_SIZE) {
-                logi("ERROR: refineriesSize reached BIG_ARRAY_SIZE limit");
-                return false;
-            }
-            refineries[refineriesSize] = loc;
-            refineriesSize++;
-            log("Added a refinery at " + loc);
-        }
-        return isNew;
     }
 
     /*
@@ -486,6 +457,49 @@ public class BotMinerResource extends BotMiner {
         } else {
             centerOfVisibleSoup = here;
         }
+    }
+
+    /*
+    Adds a location to soupClusters if not already added
+    */
+    public static boolean addToSoupClusters (MapLocation loc) {
+        boolean isNew = true;
+        for (int i = 0; i < soupClustersLength; i++) {
+            if (loc.equals(soupClusters[i])) {
+                isNew = false;
+                break;
+            }
+        }
+        if (isNew) {
+            if (soupClustersLength == BIG_ARRAY_SIZE) {
+                tlogi("ERROR: soupClustersSize reached BIG_ARRAY_SIZE limit");
+                return false;
+            }
+            soupClusters[soupClustersLength] = loc;
+            soupClustersLength++;
+            Debug.tlog("Added a soupCluster at " + loc);
+        }
+        return isNew;
+    }
+
+    public static boolean addToRefineries (MapLocation loc) {
+        boolean isNew = true;
+        for (int i = 0; i < refineriesSize; i++) {
+            if (loc.equals(refineries[i])) {
+                isNew = false;
+                break;
+            }
+        }
+        if (isNew) {
+            if (refineriesSize == BIG_ARRAY_SIZE) {
+                logi("ERROR: refineriesSize reached BIG_ARRAY_SIZE limit");
+                return false;
+            }
+            refineries[refineriesSize] = loc;
+            refineriesSize++;
+            log("Added a refinery at " + loc);
+        }
+        return isNew;
     }
 
     /*

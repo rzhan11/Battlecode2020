@@ -12,6 +12,7 @@ import static rush_bot.Utils.*;
 import static rush_bot.Wall.*;
 import static rush_bot.Zones.*;
 
+
 public class BotDeliveryDrone extends Globals {
 
 	final public static int
@@ -96,8 +97,6 @@ public class BotDeliveryDrone extends Globals {
 //			case DRONE_WALL_ROLE:
 //				BotDeliveryDroneWall.turn();
 //				break;
-//			case DRONE_ATTACK_ROLE:
-//				break;
 		}
 	}
 
@@ -140,8 +139,8 @@ public class BotDeliveryDrone extends Globals {
 			}
 
 			// explore
-			MapLocation loc = findClosestSoupAndUnexploredZone()[1];
-			log("Moving to unexplored zones to find water");
+			MapLocation loc = getSymmetryLoc();
+			log("Moving to symmetry loc to find water");
 			moveLog(loc);
 			return true;
 		} else {

@@ -139,28 +139,4 @@ public class Debug extends Globals {
 			rc.setIndicatorDot(loc, color[0], color[1], color[2]);
 		}
 	}
-
-	public static void drawZoneStatus () {
-		if (roundNum == 1 || us == Team.B) {
-			return;
-		}
-		for (int i = 0; i < numXZones*3/5; i++) {
-			for (int j = 0; j < numYZones; j++) {
-				MapLocation loc = new MapLocation(i * zoneSize, j * zoneSize);
-				MapLocation loc2 = loc.translate(1, 0);
-				if (exploredZoneStatus[i][j] == 0) {
-					drawDot(loc, BLACK);
-				} else if (exploredZoneStatus[i][j] == 1) {
-					drawDot(loc, WHITE);
-				}
-				if (hasSoupZones[i][j] == 0) {
-					drawDot(loc2, YELLOW);
-				} else if (hasSoupZones[i][j] == 1) {
-					drawDot(loc2, CYAN);
-				} else if (hasSoupZones[i][j] == 2) {
-					drawDot(loc2, RED);
-				}
-			}
-		}
-	}
 }
