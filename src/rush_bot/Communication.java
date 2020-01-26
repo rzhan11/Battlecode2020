@@ -554,9 +554,8 @@ public class Communication extends Globals {
 
 	/*
 	status:
-		1 = wallCompleted
-		2 = smallWallFull
-		3 = supportFull
+		1 = wallFull
+		2 = supportFull
 	 */
 	public static void writeTransactionWallStatus(int status) throws GameActionException {
 		log("Writing transaction for 'Wall Status'");
@@ -582,12 +581,9 @@ public class Communication extends Globals {
 		ttlog("Posted round: " + round);
 		switch (message[2]) {
 			case 1:
-				wallCompleted = true;
+				wallFull = true;
 				break;
 			case 2:
-				smallWallFull = true;
-				break;
-			case 3:
 				supportFull = true;
 				break;
 		}
@@ -713,7 +709,7 @@ public class Communication extends Globals {
 	}
 
 	/*
-	message[2] = wallCompleted & smallWallFull && supportFull
+	message[2] = wallFull and supportFull
 	message[3] = explored symmetries
 	 */
 	public static void writeTransactionReview() throws GameActionException{
@@ -721,14 +717,11 @@ public class Communication extends Globals {
 		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = REVIEW_SIGNAL;
-		if (wallCompleted) {
+		if (wallFull) {
 			message[2] |= 1;
 		}
-		if (smallWallFull) {
-			message[2] |= (1 << 1);
-		}
 		if (supportFull) {
-			message[2] |= (1 << 2);
+			message[2] |= 2;
 		}
 		if (enemyHQLoc == null) {
 			for (int i = 0; i < symmetryHQLocs.length; i++) {
@@ -759,12 +752,10 @@ public class Communication extends Globals {
 		tlog("Reading transaction for 'Review'");
 		ttlog("Submitter ID: " + decryptID(message[0]));
 
-		wallCompleted = (message[2] & 1) > 0;
-		smallWallFull = (message[2] & 2) > 0;
-		supportFull = (message[2] & 4) > 0;
-		ttlog("wallCompleted " + Wall.wallCompleted);
-		ttlog("smallWallFull " + Wall.wallCompleted);
-		ttlog("supportFull " + Wall.wallCompleted);
+		wallFull = (message[2] & 1) > 0;
+		supportFull = (message[2] & 2) > 0;
+		ttlog("wallFull " + wallFull);
+		ttlog("supportFull " + supportFull);
 
 		if ((message[3] & (1 << 16)) == 0) {
 			for (int i = 0; i < symmetryHQLocs.length; i++) {

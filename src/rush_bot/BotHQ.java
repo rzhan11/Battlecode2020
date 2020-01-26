@@ -2,12 +2,9 @@ package rush_bot;
 
 import battlecode.common.*;
 
-import static rush_bot.Actions.*;
 import static rush_bot.Communication.*;
 import static rush_bot.Debug.*;
-import static rush_bot.Globals.*;
 import static rush_bot.Map.*;
-import static rush_bot.Nav.*;
 import static rush_bot.Utils.*;
 import static rush_bot.Wall.*;
 import static rush_bot.Zones.*;
@@ -66,11 +63,6 @@ public class BotHQ extends Globals {
 		log("closestVisibleSoupLocation: " + closestVisibleSoupLoc);
 
 		initializedHQ = true;
-
-//		for (int i = 0; i < wallLocsLength; i++) {
-//			log("wall loc " + wallLocs[i]);
-//			drawDot(wallLocs[i], BLACK);
-//		}
 	}
 
 	public static void turn() throws GameActionException {
@@ -89,31 +81,16 @@ public class BotHQ extends Globals {
 			}
 		}
 
-		// checks if wall is completed
-		if (!wallCompleted) {
-			wallCompleted = true;
+		if (!wallFull) {
+			wallFull = true;
 			for (int i = 0; i < wallLocsLength; i++) {
 				MapLocation loc = wallLocs[i];
-				if (rc.canSenseLocation(loc) && rc.senseElevation(loc) < terraDepth) {
-					wallCompleted = false;
-					break;
-				}
-			}
-			if (wallCompleted) {
-				writeTransactionWallStatus(1);
-			}
-		}
-
-		if (!smallWallFull) {
-			smallWallFull = true;
-			for (int i = 0; i < smallWallLocsLength; i++) {
-				MapLocation loc = smallWallLocs[i];
 				if (rc.canSenseLocation(loc) && !isLocAllyLandscaper(loc)) {
-					smallWallFull = false;
+					wallFull = false;
 					break;
 				}
 			}
-			if (smallWallFull) {
+			if (wallFull) {
 				writeTransactionWallStatus(2);
 			}
 		}
@@ -132,7 +109,7 @@ public class BotHQ extends Globals {
 			}
 		}
 
-		log("smallWallFull " + smallWallFull);
+		log("wallFull " + wallFull);
 		log("supportFull " + supportFull);
 
 		Communication.resubmitImportantTransactions();

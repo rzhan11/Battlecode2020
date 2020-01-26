@@ -2,12 +2,9 @@ package rush_bot;
 
 import battlecode.common.*;
 
-import static rush_bot.Actions.*;
 import static rush_bot.Communication.*;
 import static rush_bot.Debug.*;
-import static rush_bot.Globals.*;
 import static rush_bot.Map.*;
-import static rush_bot.Nav.*;
 import static rush_bot.Utils.*;
 import static rush_bot.Wall.*;
 import static rush_bot.Zones.*;
@@ -189,7 +186,7 @@ public class BotMinerResource extends BotMiner {
                 }
             }
             // if HQ is walled off, force a new refinery to be built
-			if (smallWallFull && refineries[refineriesIndex].equals(HQLoc)) {
+			if (wallFull && refineries[refineriesIndex].equals(HQLoc)) {
 				deadRefineries[refineriesIndex] = true;
 				pickRefinery();
 			}

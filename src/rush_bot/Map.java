@@ -19,9 +19,6 @@ public class Map extends Globals {
     }
 
     public static boolean isBuildLoc(MapLocation ml) {
-        if (maxXYDistance(HQLoc, ml) == wallRingRadius) {
-            return false;
-        }
         return Math.abs(ml.x - HQLoc.x) % 2 == 1 &&  Math.abs(ml.y - HQLoc.y) % 2 == 1;
     }
 

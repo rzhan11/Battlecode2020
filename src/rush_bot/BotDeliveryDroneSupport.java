@@ -2,15 +2,10 @@ package rush_bot;
 
 import battlecode.common.*;
 
-import static rush_bot.Actions.*;
-import static rush_bot.Communication.*;
 import static rush_bot.Debug.*;
-import static rush_bot.Globals.*;
 import static rush_bot.Map.*;
-import static rush_bot.Nav.*;
 import static rush_bot.Utils.*;
 import static rush_bot.Wall.*;
-import static rush_bot.Zones.*;
 
 
 public class BotDeliveryDroneSupport extends BotDeliveryDrone {
@@ -31,14 +26,14 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
 
     public static void turn() throws GameActionException {
         log("SUPPORT DRONE");
-        log("smallWallFull " + smallWallFull);
+        log("wallFull " + wallFull);
         log("supportFull " + supportFull);
 
         if (!initializedDroneSupport) {
             initDroneSupport();
         }
 
-        if (smallWallFull && supportFull) {
+        if (wallFull && supportFull) {
             myRole = DRONE_WALL_ROLE;
             return;
         }
@@ -47,9 +42,9 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
 
             MapLocation[] targetLocs = null;
             int targetLocsLength = -1;
-            if (!smallWallFull) {
-                targetLocs = smallWallLocs;
-                targetLocsLength = smallWallLocsLength;
+            if (!wallFull) {
+                targetLocs = wallLocs;
+                targetLocsLength = wallLocsLength;
             } else if (!supportFull) {
                 targetLocs = supportWallLocs;
                 targetLocsLength = supportWallLocsLength;

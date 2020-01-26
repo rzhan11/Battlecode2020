@@ -2,15 +2,10 @@ package rush_bot;
 
 import battlecode.common.*;
 
-import static rush_bot.Actions.*;
-import static rush_bot.Communication.*;
 import static rush_bot.Debug.*;
-import static rush_bot.Globals.*;
 import static rush_bot.Map.*;
-import static rush_bot.Nav.*;
 import static rush_bot.Utils.*;
 import static rush_bot.Wall.*;
-import static rush_bot.Zones.*;
 
 public class BotDesignSchool extends Globals {
 
@@ -50,7 +45,7 @@ public class BotDesignSchool extends Globals {
 			}
 		}
 
-		loadInnerWallInfo();
+		loadWallInfo();
 
 		initializedDesignSchool = true;
 
@@ -63,7 +58,7 @@ public class BotDesignSchool extends Globals {
 			return;
 		}
 
-		if (landscapersBuilt < smallWallLocsLength + supportWallLocsLength) {
+		if (landscapersBuilt < wallLocsLength + supportWallLocsLength) {
 			buildLandscaper(getCloseDirections(here.directionTo(HQLoc)), RobotType.LANDSCAPER.cost);
 			return;
 		}
