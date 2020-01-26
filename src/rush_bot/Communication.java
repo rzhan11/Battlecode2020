@@ -682,7 +682,7 @@ public class Communication extends Globals {
 		} else {
 			message[3] = (1 << 16) | symmetryHQLocsIndex;
 		}
-		message[4] = (platformLoc.x << 16) | platformLoc.y;
+		message[4] = (platformCornerLoc.x << 16) | platformCornerLoc.y;
 
 		xorMessage(message);
 		if (rc.getTeamSoup() >= dynamicCost) {
@@ -722,8 +722,8 @@ public class Communication extends Globals {
 			ttlog("Symmetry " + symmetryHQLocsIndex + " confirmed");
 		}
 
-		platformLoc = new MapLocation(message[4] >>> 16, message[4] & ((1 << 16) - 1));
-		log("Platform loc " + platformLoc);
+		platformCornerLoc = new MapLocation(message[4] >>> 16, message[4] & ((1 << 16) - 1));
+		log("Platform loc " + platformCornerLoc);
 
 		ttlog("Posted round: " + round);
 	}

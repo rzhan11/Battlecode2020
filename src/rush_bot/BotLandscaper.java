@@ -61,10 +61,10 @@ public class BotLandscaper extends Globals {
 	public static void initPlatformLandscaper() {
 		myRole = PLATFORM_ROLE;
 		platformLocs = new MapLocation[4];
-		platformLocs[0] = platformLoc;
-		platformLocs[1] = platformLoc.translate(1,0);
-		platformLocs[2] = platformLoc.translate(1,1);
-		platformLocs[3] = platformLoc.translate(0,1);
+		platformLocs[0] = platformCornerLoc;
+		platformLocs[1] = platformCornerLoc.translate(1,0);
+		platformLocs[2] = platformCornerLoc.translate(1,1);
+		platformLocs[3] = platformCornerLoc.translate(0,1);
 		platformIndex = 0;
 		initPlatformLandscaper = true;
 	}
@@ -361,16 +361,16 @@ public class BotLandscaper extends Globals {
 	}
 
 	private static void doPlatformRole() throws GameActionException {
-		if (isDirWetEmpty(here.directionTo(platformLoc))) {
+		if (isDirWetEmpty(here.directionTo(platformCornerLoc))) {
 			if (rc.getDirtCarrying() > 0) {
-				rc.depositDirt(here.directionTo(platformLoc));
+				rc.depositDirt(here.directionTo(platformCornerLoc));
 			} else {
 				//Richards method
 			}
 			return;
 		}
 		if (!inArray(platformLocs,here, 4)) {
-			moveLog(platformLoc);
+			moveLog(platformCornerLoc);
 			return;
 		}
 	}
