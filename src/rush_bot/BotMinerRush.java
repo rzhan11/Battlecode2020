@@ -232,13 +232,25 @@ public class BotMinerRush extends BotMiner {
                 movesSinceCloser++;
                 return;
             } else {
-                if (here.equals(annoyLoc)) {
-                    log("At annoy loc");
-                    return;
+                log("rush " + rushNGLoc);
+                if (rushNGLoc == null) {
+                    if (here.equals(annoyLoc)) {
+                        log("At annoy loc");
+                        return;
+                    } else {
+                        log("Trying to move to annoy loc");
+                        moveLog(annoyLoc);
+                        return;
+                    }
                 } else {
-                    log("Trying to move to annoy loc");
-                    moveLog(annoyLoc);
-                    return;
+                    if (here.isAdjacentTo(enemyHQLoc)) {
+                        log("At hq annoy loc");
+                        return;
+                    } else {
+                        log("Trying to move to any annoy loc");
+                        moveLog(enemyHQLoc);
+                        return;
+                    }
                 }
             }
         }

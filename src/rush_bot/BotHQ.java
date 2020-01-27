@@ -134,7 +134,7 @@ public class BotHQ extends Globals {
 			return;
 		}
 
-		if (roundNum >= 150 || abortRush) {
+		if (abortRush) {
 			if (closeDesignSchoolInfo == null) {
 				log("Trying to assign design school");
 				for (RobotInfo ri: visibleAllies) {

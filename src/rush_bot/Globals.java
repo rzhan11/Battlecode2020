@@ -229,7 +229,6 @@ public class Globals extends Constants {
         }
         lastActiveTurn = rc.getRoundNum();
 
-        log("rush id " + rushMinerID);
         if (myID != rushMinerID) {
             if (roundNum > START_RUSH_STATUS_ROUND && roundNum - Math.max(continueRushSignalRound, START_RUSH_STATUS_ROUND) >= RUSH_STATUS_INTERVAL + 5) {
                 abortRush = true;
