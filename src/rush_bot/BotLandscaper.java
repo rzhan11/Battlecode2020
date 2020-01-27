@@ -16,7 +16,6 @@ public class BotLandscaper extends Globals {
 
 	private static final int MAX_ELE_DIFF = 25;
 
-	private static MapLocation[] platformLocs;
 	private static int platformIndex;
 	private static boolean initPlatformLandscaper = false;
 	private static boolean[] elevationChecker = {false, false, false, false};
@@ -62,12 +61,9 @@ public class BotLandscaper extends Globals {
 
 	public static void initLandscaperPlatform() {
 		myRole = PLATFORM_ROLE;
-		platformLocs = new MapLocation[4];
-		platformLocs[0] = platformCornerLoc;
-		platformLocs[1] = platformCornerLoc.translate(1,0);
-		platformLocs[2] = platformCornerLoc.translate(1,1);
-		platformLocs[3] = platformCornerLoc.translate(0,1);
+
 		platformIndex = 0;
+
 		initPlatformLandscaper = true;
 	}
 
@@ -91,7 +87,7 @@ public class BotLandscaper extends Globals {
 //			}
 //		}
 
-		if (myID == platformerID && !initPlatformLandscaper) {
+		if (myID == platformLandscaperID && !initPlatformLandscaper) {
 			initLandscaperPlatform();
 		}
 
@@ -297,7 +293,7 @@ public class BotLandscaper extends Globals {
 	private static void doDefenseRole() throws GameActionException {
 		for (Direction dir: directions) {
 			MapLocation loc = rc.adjacentLocation(dir);
-			if (rc.onTheMap(loc)) {
+			if (!rc.onTheMap(loc)) {
 				continue;
 			}
 			if (isLocEnemyBuilding(loc)) {
@@ -365,50 +361,62 @@ public class BotLandscaper extends Globals {
 	}
 
 	private static void doPlatformRole() throws GameActionException {
-		// checking if finished
-		if (rc.senseElevation(platformLocs[platformIndex]) >= PLATFORM_ELE) {
-			log("This spot is finished");
-			elevationChecker[platformIndex] = true;
-			platformIndex = (platformIndex+1) % 4;
-			boolean temp = false;
-			for (int i = 0; i < elevationChecker.length; i++) {
-				if (!elevationChecker[i])
-					temp = true;
+		if (inArray(platformLocs, here, platformLocs.length)) {
+			// checking if finished
+			for (MapLocation loc : platformLocs) {
+				int elevation = rc.senseElevation(loc);
+				if (elevation < PLATFORM_ELEVATION) {
+					if (rc.getDirtCarrying() > 0) {
+						Actions.doDepositDirt(here.directionTo(loc));
+						return;
+					} else {
+						platformerDig(Direction.CENTER);
+						return;
+					}
+				}
 			}
-			if (!temp) {
-				rerollRole();
-				writeTransactionPlatformComplete();
-			}
+			rerollRole();
+			writeTransactionPlatformCompleted();
 			return;
 		}
 
-
-		if (isDirWetEmpty(here.directionTo(platformCornerLoc))) {
-			log("Water in the way");
-			if (rc.getDirtCarrying() > 0) {
-				Actions.doDepositDirt(here.directionTo(platformCornerLoc));
+		// STATE == not on platform
+		Direction dirToPlatform = here.directionTo(platformCornerLoc);
+		MapLocation locToPlatform = rc.adjacentLocation(dirToPlatform);
+		if (isLocEmpty(locToPlatform)) {
+			if (isLocWet(locToPlatform)) {
+				log("Water to platform");
+				if (rc.getDirtCarrying() > 0) {
+					Actions.doDepositDirt(dirToPlatform);
+					return;
+				} else {
+					platformerDig(dirToPlatform);
+					return;
+				}
+			} else if (!isLocFlat(locToPlatform)) {
+				log("Not flat to platform");
+				if (rc.getDirtCarrying() > 0) {
+					if (myElevation < rc.senseElevation(locToPlatform)) {
+						Actions.doDepositDirt(Direction.CENTER);
+						return;
+					} else {
+						Actions.doDepositDirt(dirToPlatform);
+						return;
+					}
+				} else {
+					platformerDig(dirToPlatform);
+					return;
+				}
 			} else {
-				platformerDig(here.directionTo(platformCornerLoc));
+				// loc is empty, wet, flat
+				moveLog(locToPlatform);
+				return;
 			}
-			return;
-		}
-		if (!inArray(platformLocs,here, 4)) {
-			log("Going to corner");
-			moveLog(platformCornerLoc);
-			return;
-		}
-		if (rc.getDirtCarrying() <= 0) {
-			log("Digging");
-			platformerDig(Direction.CENTER);
-			return;
 		} else {
-			log("Depositing");
-			if (rc.getDirtCarrying() > 0) {
-				Actions.doDepositDirt(here.directionTo(platformLocs[platformIndex]));
-			}
-			platformIndex = (platformIndex+1) % 4;
+			moveLog(locToPlatform);
 			return;
 		}
+
 	}
 
 

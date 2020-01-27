@@ -168,10 +168,23 @@ public class BotHQ extends Globals {
 						rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost) {
 					int id = assignTask(BUILD_CLOSE_FULFILLMENT_CENTER);
 					if (id >= 100000) {
-						// we built this turn
+						// we built this tur
 						return;
 					}
 				}
+			}
+		}
+
+		// assign platform builder
+		if (platformLandscaperID != -1 && !platformBuildingsCompleted && platformMinerID == -1) {
+			log("Trying to assign platform miner");
+			int id = assignTask(BUILD_PLATFORM);
+			if (id >= 100000) {
+				// we built this turn
+				return;
+			}
+			if (id != -1) {
+				platformMinerID = id;
 			}
 		}
 

@@ -15,7 +15,7 @@ public class BotFulfillmentCenter extends Globals {
 	public static int lastBuildRound = N_INF;
 
 	public static boolean helpRush = false;
-
+	public static boolean onPlatform = false;
 
 	public static void loop() throws GameActionException {
 		while (true) {
@@ -38,15 +38,15 @@ public class BotFulfillmentCenter extends Globals {
 
 	public static void initFulfillmentCenter() throws GameActionException {
 
-		// determines if I am the first building of my type
-
-
 		for (RobotInfo ri: visibleAllies) {
 			if (ri.ID == rushMinerID && rc.senseRobotAtLocation(ri.location).ID == rushMinerID) {
 				helpRush = true;
 			}
 		}
 
+		if (platformCornerLoc != null && inArray(platformLocs, here, platformLocs.length)) {
+			return;
+		}
 	}
 
 	public static void turn() throws GameActionException {
@@ -60,10 +60,27 @@ public class BotFulfillmentCenter extends Globals {
 			return;
 		}
 
-		log();
-		if (dronesBuilt < 1 || (wallFull && supportFull)) {
+		if (dronesBuilt < 1) {
 			buildDrone(getCloseDirections(here.directionTo(HQLoc)), RobotType.DELIVERY_DRONE.cost);
 			return;
+		}
+
+		if (wallFull) {
+			// spam drones
+			if (supportFull) {
+				buildDrone(getCloseDirections(here.directionTo(HQLoc)), RobotType.DELIVERY_DRONE.cost);
+			}
+
+			boolean seesDrone = false;
+			for (RobotInfo ri: visibleAllies) {
+				if (ri.type == RobotType.DELIVERY_DRONE) {
+					seesDrone = true;
+					break;
+				}
+			}
+			if (!seesDrone) {
+				buildDrone(getCloseDirections(here.directionTo(HQLoc)), RobotType.DELIVERY_DRONE.cost);
+			}
 		}
 
 	}
@@ -74,8 +91,7 @@ public class BotFulfillmentCenter extends Globals {
 			if (!rc.onTheMap(loc)) {
 				continue;
 			}
-			if (rc.getTeamSoup() >= soupLimit && isDirDryFlatEmpty(dir)) {
-				tlog("BUILDING DRONE " + dir);
+			if (rc.getTeamSoup() >= soupLimit && isLocEmpty(loc)) {
 				Actions.doBuildRobot(RobotType.DELIVERY_DRONE, dir);
 				dronesBuilt++;
 				lastBuildRound = roundNum;

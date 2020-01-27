@@ -66,28 +66,6 @@ public class Map extends Globals {
         return Math.abs(ml1.x - ml2.x) + Math.abs(ml1.y - ml2.y);
     }
 
-    public static boolean isDirEmpty (Direction dir) throws GameActionException {
-        return rc.senseRobotAtLocation(rc.adjacentLocation(dir)) == null;
-    }
-
-    /*
-    Returns true if this direction's elevation is within +/-3 of our tile's elevation
-    Returns false otherwise
-    */
-    public static boolean isDirFlat(Direction dir) throws GameActionException {
-        return Math.abs(rc.senseElevation(rc.adjacentLocation(dir)) - myElevation) <= GameConstants.MAX_DIRT_DIFFERENCE;
-    }
-
-    public static boolean isDirWetEmpty (Direction dir) throws GameActionException {
-        MapLocation loc = rc.adjacentLocation(dir);
-        return rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null;
-    }
-
-    public static boolean isDirDryFlatEmpty (Direction dir) throws GameActionException {
-        MapLocation loc = rc.adjacentLocation(dir);
-        return !rc.senseFlooding(loc) && rc.senseRobotAtLocation(loc) == null && Math.abs(rc.senseElevation(loc) - rc.senseElevation(here)) <= GameConstants.MAX_DIRT_DIFFERENCE;
-    }
-
     /*
     Assumes that we can sense this tile
     Returns true if this tile's elevation is within +/-3 of our tile's elevation
@@ -179,13 +157,13 @@ public class Map extends Globals {
             }
 
             if (myType == RobotType.DELIVERY_DRONE) {
-                if (!isDirEmpty(directions[i])) {
+                if (!isLocEmpty(adjLoc)) {
                     isDirMoveable[i] = false;
                     continue;
                 }
             } else {
                 // STATE == I am a miner/landscaper
-                if (!isDirDryFlatEmpty(directions[i])) {
+                if (!isLocDryFlatEmpty(adjLoc)) {
                     isDirMoveable[i] = false;
                     continue;
                 }

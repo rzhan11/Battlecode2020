@@ -158,7 +158,7 @@ public class Wall extends Globals {
         hasLoadedWall = true;
     }
 
-    final public static int PLATFORM_ELE = 8;
+    final public static int PLATFORM_ELEVATION = 8;
 
     public static void loadPlatformInfo() throws GameActionException {
 
@@ -207,7 +207,7 @@ public class Wall extends Globals {
                     continue outer;
                 }
                 if (rc.canSenseLocation(loc)) {
-                    change += Math.abs(PLATFORM_ELE - rc.senseElevation(loc));
+                    change += Math.abs(PLATFORM_ELEVATION - rc.senseElevation(loc));
                 } else {
                     change += P_INF / arr.length;
                 }
@@ -223,7 +223,97 @@ public class Wall extends Globals {
         } else {
             log("PLATFORM LOCATION: " + bestLoc);
             platformCornerLoc = bestLoc;
+            platformLocs = new MapLocation[4];
+            platformLocs[0] = platformCornerLoc;
+            platformLocs[1] = platformCornerLoc.translate(1,0);
+            platformLocs[2] = platformCornerLoc.translate(1,1);
+            platformLocs[3] = platformCornerLoc.translate(0,1);
+        }
+    }
+
+    public static MapLocation[] droneWallLocs;
+    public static int droneWallLocsLength;
+
+    public static void loadDroneWallInfo () {
+        int ringRadius = 3;
+        int ringSize = 2 * ringRadius + 1;
+
+        droneWallLocs = new MapLocation[8 *ringRadius];
+
+        // move right along right wall
+        int index = 0;
+        MapLocation templ = HQLoc.translate(ringRadius, ringRadius);
+        for(int i = 0; i < ringSize - 1; i++) {
+            MapLocation newl = templ.translate(0, -i);
+            if(rc.onTheMap(newl)) {
+                for (Direction dir: directions) {
+                    MapLocation loc = newl.add(dir);
+                    if (!rc.onTheMap(loc)) {
+                        continue;
+                    }
+                    if (maxXYDistance(HQLoc, loc) == ringRadius + 1) {
+                        droneWallLocs[index] = newl;
+                        index++;
+                    }
+                }
+            }
         }
 
+        // move right along bottom wall
+        templ = HQLoc.translate(ringRadius, -ringRadius);
+        for(int i = 0; i < ringSize - 1; i++) {
+            MapLocation newl = templ.translate(-i, 0);
+            if(rc.onTheMap(newl)) {
+                for (Direction dir: directions) {
+                    MapLocation loc = newl.add(dir);
+                    if (!rc.onTheMap(loc)) {
+                        continue;
+                    }
+                    if (maxXYDistance(HQLoc, loc) == ringRadius + 1) {
+                        droneWallLocs[index] = newl;
+                        index++;
+                    }
+                }
+            }
+        }
+
+        // move right along left wall
+        templ = HQLoc.translate(-ringRadius, -ringRadius);
+        for(int i = 0; i < ringSize - 1; i++) {
+            MapLocation newl = templ.translate(0, i);
+            if(rc.onTheMap(newl)) {
+                for (Direction dir: directions) {
+                    MapLocation loc = newl.add(dir);
+                    if (!rc.onTheMap(loc)) {
+                        continue;
+                    }
+                    if (maxXYDistance(HQLoc, loc) == ringRadius + 1) {
+                        droneWallLocs[index] = newl;
+                        index++;
+                    }
+                }
+            }
+        }
+
+        // move right along top wall
+        templ = HQLoc.translate(-ringRadius, ringRadius);
+        for(int i = 0; i < ringSize - 1; i++) {
+            MapLocation newl = templ.translate(i, 0);
+            if(rc.onTheMap(newl)) {
+                for (Direction dir: directions) {
+                    MapLocation loc = newl.add(dir);
+                    if (!rc.onTheMap(loc)) {
+                        continue;
+                    }
+                    if (maxXYDistance(HQLoc, loc) == ringRadius + 1) {
+                        droneWallLocs[index] = newl;
+                        index++;
+                    }
+                }
+            }
+        }
+
+        droneWallLocsLength = index;
+        tlog("DRONE_WALL_LOCS_LENGTH: " + droneWallLocsLength);
     }
 }

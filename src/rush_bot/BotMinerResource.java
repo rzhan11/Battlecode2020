@@ -292,7 +292,8 @@ public class BotMinerResource extends BotMiner {
 				then try to build in any direction
 			 */
             Direction dirToRef = here.directionTo(buildRefineryLocation);
-            if (!isDirDryFlatEmpty(dirToRef)) {
+            MapLocation locToRef = rc.adjacentLocation(dirToRef);
+            if (!isLocDryFlatEmpty(locToRef)) {
                 log("Path to buildRefineryLocation is blocked");
                 Direction newDir = tryBuild(RobotType.REFINERY, directions);
                 if (newDir != null) {
@@ -385,7 +386,10 @@ public class BotMinerResource extends BotMiner {
             log("Trying to move away from HQ to unclog it");
             for (Direction dir: directions) {
                 MapLocation loc = rc.adjacentLocation(dir);
-                if (isDirDryFlatEmpty(dir) && !loc.isAdjacentTo(HQLoc)) {
+                if (!rc.onTheMap(loc)) {
+                    continue;
+                }
+                if (isLocDryFlatEmpty(loc) && !loc.isAdjacentTo(HQLoc)) {
                     Actions.doMove(dir);
                     tlog("Moved " + dir);
                     return;

@@ -4,7 +4,6 @@ import battlecode.common.*;
 
 import static rush_bot.Debug.*;
 import static rush_bot.Wall.*;
-import static rush_bot.Zones.*;
 
 public class Communication extends Globals {
 
@@ -28,7 +27,8 @@ public class Communication extends Globals {
 	final public static int FLOODING_FOUND_SIGNAL = 7;
 	final public static int ENEMY_RUSH_SIGNAL = 8;
 	final public static int ASSIGN_PLATFORM_SIGNAL = 9;
-	final public static int PLATFORM_SIGNAL = 10;
+	final public static int PLATFORM_COMPLETED_SIGNAL = 10;
+	final public static int PLATFORM_BUILDINGS_COMPLETED_SIGNAL = 11;
 
 	final public static int ALL_ZONE_STATUS_SIGNAL = 103;
 	final public static int REVIEW_SIGNAL = 104;
@@ -217,14 +217,10 @@ public class Communication extends Globals {
 						}
 						break;
 					case BUILD_INSTRUCTION_SIGNAL:
-						if (myType == RobotType.MINER) {
-							readTransactionBuildInstruction(message, round);
-						}
+						readTransactionBuildInstruction(message, round);
 						break;
 					case WALL_STATUS_SIGNAL:
-						if (!isLowBytecodeLimit(myType)) {
-							readTransactionWallStatus(message, round);
-						}
+						readTransactionWallStatus(message, round);
 						break;
 					case FLOODING_FOUND_SIGNAL:
 						if (myType == RobotType.HQ || myType == RobotType.DELIVERY_DRONE) {
@@ -240,8 +236,12 @@ public class Communication extends Globals {
 					case REVIEW_SIGNAL:
 						readTransactionReview(message, round);
 						break;
-					case PLATFORM_SIGNAL:
-						readTransactionPlatformComplete(message, round);
+					case PLATFORM_COMPLETED_SIGNAL:
+						readTransactionPlatformCompleted(message, round);
+						break;
+					case PLATFORM_BUILDINGS_COMPLETED_SIGNAL:
+						readTransactionPlatformBuildingsCompleted(message, round);
+						break;
 				}
 			}
 
@@ -427,6 +427,7 @@ public class Communication extends Globals {
 	final public static int BUILD_CLOSE_DESIGN_SCHOOL = 2;
 	final public static int BUILD_CLOSE_VAPORATOR = 3;
 	final public static int BUILD_CLOSE_REFINERY = 4;
+	final public static int BUILD_PLATFORM = 5;
 
 	/*
 	message[2] = miner id
@@ -465,11 +466,16 @@ public class Communication extends Globals {
 		ttlog("Instruction: " + message[4]);
 		ttlog("Detail: " + message[5]);
 		ttlog("Posted round: " + round);
-		if (myID == message[2]) {
-			BotMiner.myRole = BotMiner.MINER_BUILDER_ROLE;
-			BotMinerBuilder.assignRound = message[3];
-			BotMinerBuilder.buildInstruction = message[4];
-			BotMinerBuilder.buildDetail = message[5];
+		if (message[4] == BUILD_PLATFORM) {
+			platformMinerID = message[2];
+		}
+		if (myType == RobotType.MINER) {
+			if (myID == message[2]) {
+				BotMiner.myRole = BotMiner.MINER_BUILDER_ROLE;
+				BotMinerBuilder.assignRound = message[3];
+				BotMinerBuilder.buildInstruction = message[4];
+				BotMinerBuilder.buildDetail = message[5];
+			}
 		}
 	}
 
@@ -588,10 +594,10 @@ public class Communication extends Globals {
 	}
 
 	public static void readTransactionAssignPlatform (int[] message, int round) {
-		platformerID = message[2];
+		platformLandscaperID = message[2];
 		tlog("Reading 'Assign Platform' transaction");
 		ttlog("Submitter ID: " + decryptID(message[0]));
-		ttlog("platformerID: " + platformerID);
+		ttlog("platformerID: " + platformLandscaperID);
 		ttlog("Posted round: " + round);
 	}
 
@@ -622,7 +628,7 @@ public class Communication extends Globals {
 			message[3] = (1 << 16) | symmetryHQLocsIndex;
 		}
 		message[4] = (platformCornerLoc.x << 16) | platformCornerLoc.y;
-		message[5] = platformerID;
+		message[5] = platformLandscaperID;
 
 		xorMessage(message);
 		if (rc.getTeamSoup() >= dynamicCost) {
@@ -660,18 +666,24 @@ public class Communication extends Globals {
 		}
 
 		platformCornerLoc = new MapLocation(message[4] >>> 16, message[4] & ((1 << 16) - 1));
-		platformerID = message[5];
+		platformLocs = new MapLocation[4];
+		platformLocs[0] = platformCornerLoc;
+		platformLocs[1] = platformCornerLoc.translate(1,0);
+		platformLocs[2] = platformCornerLoc.translate(1,1);
+		platformLocs[3] = platformCornerLoc.translate(0,1);
+
+		platformLandscaperID = message[5];
 		log("Platform loc " + platformCornerLoc);
-		log("platformerID " + platformerID);
+		log("platformerID " + platformLandscaperID);
 
 		ttlog("Posted round: " + round);
 	}
 
-	public static void writeTransactionPlatformComplete() throws GameActionException {
-		log("Writing transaction for 'Platform'");
+	public static void writeTransactionPlatformCompleted() throws GameActionException {
+		log("Writing transaction for 'Platform Completed'");
 		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
-		message[1] = PLATFORM_SIGNAL;
+		message[1] = PLATFORM_COMPLETED_SIGNAL;
 		message[2] = 1;
 		xorMessage(message);
 		if (rc.getTeamSoup() >= dynamicCost) {
@@ -682,13 +694,35 @@ public class Communication extends Globals {
 		}
 	}
 
-	public static void readTransactionPlatformComplete(int[] message, int round) throws GameActionException {
-		tlog("Reading transaction for 'Review'");
+	public static void readTransactionPlatformCompleted(int[] message, int round) throws GameActionException {
+		tlog("Reading transaction for 'Platform Completed'");
 		ttlog("Submitter ID: " + decryptID(message[0]));
 
 		if (message[2] == 1) {
 			platformCompleted = true;
 		}
+		ttlog("Posted round: " + round);
+	}
+
+	public static void writeTransactionPlatformBuildingsCompleted() throws GameActionException {
+		log("Writing transaction for 'Platform Buildings Completed'");
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
+		message[0] = encryptID(myID);
+		message[1] = PLATFORM_BUILDINGS_COMPLETED_SIGNAL;
+		message[2] = 1;
+		xorMessage(message);
+		if (rc.getTeamSoup() >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
+		} else {
+			tlog("Could not afford transaction");
+			saveUnsentTransaction(message, dynamicCost);
+		}
+	}
+
+	public static void readTransactionPlatformBuildingsCompleted(int[] message, int round) throws GameActionException {
+		tlog("Reading transaction for 'Platform Buildings Completed'");
+		ttlog("Submitter ID: " + decryptID(message[0]));
+		platformBuildingsCompleted = true;
 		ttlog("Posted round: " + round);
 	}
 }

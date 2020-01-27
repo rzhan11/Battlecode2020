@@ -94,9 +94,9 @@ public class BotDeliveryDrone extends Globals {
 			case DRONE_HARASS_ROLE:
 				BotDeliveryDroneHarass.turn();
 				break;
-//			case DRONE_WALL_ROLE:
-//				BotDeliveryDroneWall.turn();
-//				break;
+			case DRONE_WALL_ROLE:
+				BotDeliveryDroneWall.turn();
+				break;
 		}
 	}
 

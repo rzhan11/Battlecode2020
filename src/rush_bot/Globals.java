@@ -79,8 +79,11 @@ public class Globals extends Constants {
     public static MapLocation targetNavLoc = null;
 
     public static MapLocation platformCornerLoc = null;
-    public static int platformerID = -1;
+    public static MapLocation[] platformLocs;
+    public static int platformLandscaperID = -1;
+    public static int platformMinerID = -1;
     public static boolean platformCompleted = false;
+    public static boolean platformBuildingsCompleted = false;
 
     public static boolean[] isDirMoveable = new boolean[8];
     public static boolean[] isDirDanger = new boolean[8];

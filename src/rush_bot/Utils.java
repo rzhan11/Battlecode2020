@@ -56,6 +56,9 @@ public class Utils extends Globals {
     public static Direction tryBuild (RobotType rt, Direction[] givenDirections) throws GameActionException {
         for (Direction dir : givenDirections) {
             MapLocation loc = rc.adjacentLocation(dir);
+            if (!rc.onTheMap(loc)) {
+                continue;
+            }
             if (isLocDryEmpty(loc) && (rt == RobotType.DELIVERY_DRONE || isLocFlat(loc))) {
                 Actions.doBuildRobot(rt, dir);
                 tlog("Built " + rt + " " + dir);

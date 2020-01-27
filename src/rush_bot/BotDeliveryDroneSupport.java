@@ -11,8 +11,7 @@ import static rush_bot.Wall.*;
 public class BotDeliveryDroneSupport extends BotDeliveryDrone {
 
     public static boolean initializedDroneSupport = false;
-    public static int targetID = -1;
-    public static MapLocation targetDropLoc = null;
+    public static boolean isCarryingPlatformMiner = false;
 
     public static void initDroneSupport() throws GameActionException {
 
@@ -39,6 +38,35 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
         }
 
         if (rc.isCurrentlyHoldingUnit()) {
+
+            if (isCarryingPlatformMiner) {
+                log("is carrying platform miner");
+                MapLocation closestLoc = null;
+                int closestDist = P_INF;
+                for (MapLocation loc: platformLocs) {
+                    if (here.isAdjacentTo(loc)) {
+                        if (rc.canSenseLocation(loc) && isLocDryEmpty(loc)) {
+                            Actions.doDropUnit(here.directionTo(loc));
+                            isCarryingPlatformMiner = false;
+                            return;
+                        }
+                    }
+                    if (!rc.canSenseLocation(loc) || isLocDryEmpty(loc)) {
+                        int dist = here.distanceSquaredTo(loc);
+                        if (dist < closestDist) {
+                            closestDist = dist;
+                            closestLoc = loc;
+                        }
+                    }
+                }
+                if (closestLoc != null) {
+                    moveLog(closestLoc);
+                    return;
+                } else {
+                    moveLog(platformCornerLoc);
+                    return;
+                }
+            }
 
             MapLocation[] targetLocs = null;
             int targetLocsLength = -1;
@@ -72,10 +100,29 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
             moveLog(closestLoc);
         } else {
             // STATE == NOT HOLDING UNIT
-            // pick up adjacent landscapers
+            /*
+            Pick up platform miner
+             */
+            for (RobotInfo ri: adjacentAllies) {
+                if (ri.ID == platformMinerID && !inArray(platformLocs, ri.location, platformLocs.length)) {
+                    Actions.doPickUpUnit(ri.ID);
+                    isCarryingPlatformMiner = true;
+                    return;
+                }
+            }
+            for (RobotInfo ri: visibleAllies) {
+                if (ri.ID == platformMinerID && !inArray(platformLocs, ri.location, platformLocs.length)) {
+                    moveLog(ri.location);
+                    return;
+                }
+            }
+
+            /*
+            pick up adjacent landscapers
+             */
             for (RobotInfo ri: adjacentAllies) {
                 if (ri.type == RobotType.LANDSCAPER) {
-                    if (ri.ID == platformerID && !platformCompleted) {
+                    if (ri.ID == platformLandscaperID && !platformCompleted) {
                         continue;
                     }
                     if (ri.location.isAdjacentTo(HQLoc)) {
@@ -94,7 +141,7 @@ public class BotDeliveryDroneSupport extends BotDeliveryDrone {
             int closestDist = P_INF;
             for (RobotInfo ri: visibleAllies) {
                 if (ri.type == RobotType.LANDSCAPER) {
-                    if (ri.ID == platformerID && !platformCompleted) {
+                    if (ri.ID == platformLandscaperID && !platformCompleted) {
                         continue;
                     }
                     if (ri.location.isAdjacentTo(HQLoc)) {

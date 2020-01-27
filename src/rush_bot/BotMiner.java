@@ -4,6 +4,7 @@ import battlecode.common.*;
 
 import static rush_bot.Debug.*;
 import static rush_bot.Map.*;
+import static rush_bot.Utils.*;
 import static rush_bot.Zones.*;
 
 public class BotMiner extends Globals {
@@ -14,6 +15,9 @@ public class BotMiner extends Globals {
 			MINER_RUSH_ROLE = 3;
 
 	public static int myRole = -1;
+
+	// disintegrates if stuck on platform
+	public static int numRoundsOnPlatform = 0;
 
 	final private static int MIN_SOUP_WRITE_SOUP_CLUSTER = 500;
 
@@ -37,7 +41,6 @@ public class BotMiner extends Globals {
 
 
 	public static boolean initializedMiner = false;
-	public static int evacuateRound = 0;
 
 	public static void initMiner() throws GameActionException {
 
@@ -46,7 +49,6 @@ public class BotMiner extends Globals {
 		} else {
 			myRole = MINER_RESOURCE_ROLE;
 		}
-		evacuateRound = HardCode.getRoundFlooded(3) - 100;
 
 		Clock.yield();
 		Globals.updateBasic();

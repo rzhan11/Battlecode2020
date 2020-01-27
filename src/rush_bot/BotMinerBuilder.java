@@ -2,15 +2,11 @@ package rush_bot;
 
 import battlecode.common.*;
 
-import static rush_bot.Actions.*;
 import static rush_bot.Communication.*;
 import static rush_bot.Debug.*;
-import static rush_bot.Globals.*;
 import static rush_bot.Map.*;
-import static rush_bot.Nav.*;
 import static rush_bot.Utils.*;
 import static rush_bot.Wall.*;
-import static rush_bot.Zones.*;
 
 public class BotMinerBuilder extends BotMiner {
     public static boolean initializedMinerBuilder = false;
@@ -39,10 +35,12 @@ public class BotMinerBuilder extends BotMiner {
             initMinerBuilder();
         }
 
-        if (roundNum - assignRound >= BotHQ.REASSIGN_ROUND_NUM) {
-            log("Assignment expired");
-            uninitMinerBuilder();
-            return;
+        if (buildInstruction != BUILD_PLATFORM) {
+            if (roundNum - assignRound >= BotHQ.REASSIGN_ROUND_NUM) {
+                log("Assignment expired");
+                uninitMinerBuilder();
+                return;
+            }
         }
 
         log("MINER BUILDER");
@@ -69,6 +67,86 @@ public class BotMinerBuilder extends BotMiner {
                     uninitMinerBuilder();
                 }
                 break;
+            case BUILD_PLATFORM:
+                buildPlatform();
+                if (builtVaporator && builtFulfillmentCenter && builtDesignSchool) {
+                    writeTransactionPlatformBuildingsCompleted();
+                    rc.disintegrate();
+                }
+                break;
+        }
+    }
+
+    public static boolean builtVaporator = false;
+    public static boolean builtFulfillmentCenter = false;
+    public static boolean builtDesignSchool = false;
+
+    public static void buildPlatform () throws GameActionException{
+        log("BUILDER MINER: PLATFORM");
+        if (!inArray(platformLocs, here, platformLocs.length)) {
+            log("hi " + here);
+            moveLog(platformCornerLoc);
+            return;
+        }
+        if (!builtVaporator) {
+            if (rc.getTeamSoup() < RobotType.VAPORATOR.cost) {
+                log("Cannot afford platform vaporator");
+                return;
+            }
+            for (Direction dir: directions) {
+                MapLocation loc = rc.adjacentLocation(dir);
+                if (!rc.onTheMap(loc)) {
+                    continue;
+                }
+                if (!inArray(platformLocs, loc, platformLocs.length)) {
+                    continue;
+                }
+                if (rc.senseElevation(loc) == PLATFORM_ELEVATION && isLocDryFlatEmpty(loc)) {
+                    Actions.doBuildRobot(RobotType.VAPORATOR, dir);
+                    builtVaporator = true;
+                    return;
+                }
+            }
+        } else if (!builtFulfillmentCenter) {
+            log("fc");
+            if (rc.getTeamSoup() < RobotType.FULFILLMENT_CENTER.cost) {
+                log("Cannot afford platform fulfillment center");
+                return;
+            }
+            for (Direction dir: directions) {
+                MapLocation loc = rc.adjacentLocation(dir);
+                if (!rc.onTheMap(loc)) {
+                    continue;
+                }
+                if (!inArray(platformLocs, loc, platformLocs.length)) {
+                    continue;
+                }
+                if (rc.senseElevation(loc) == PLATFORM_ELEVATION && isLocDryFlatEmpty(loc)) {
+                    Actions.doBuildRobot(RobotType.FULFILLMENT_CENTER, dir);
+                    builtFulfillmentCenter = true;
+                    return;
+                }
+            }
+        } else if (!builtDesignSchool) {
+            log("ds");
+            if (rc.getTeamSoup() < RobotType.DESIGN_SCHOOL.cost) {
+                log("Cannot afford platform design school");
+                return;
+            }
+            for (Direction dir: directions) {
+                MapLocation loc = rc.adjacentLocation(dir);
+                if (!rc.onTheMap(loc)) {
+                    continue;
+                }
+                if (!inArray(platformLocs, loc, platformLocs.length)) {
+                    continue;
+                }
+                if (rc.senseElevation(loc) == PLATFORM_ELEVATION && isLocDryFlatEmpty(loc)) {
+                    Actions.doBuildRobot(RobotType.DESIGN_SCHOOL, dir);
+                    builtDesignSchool = true;
+                    return;
+                }
+            }
         }
     }
 
@@ -80,7 +158,7 @@ public class BotMinerBuilder extends BotMiner {
                 continue;
             }
             if (maxXYDistance(HQLoc, loc) == targetRing) {
-                if (isDirDryFlatEmpty(dir)) {
+                if (isLocDryFlatEmpty(loc)) {
                     if (rc.getTeamSoup() >= rt.cost) {
                         Actions.doBuildRobot(rt, dir);
                         return true;

@@ -2,6 +2,8 @@ package rush_bot;
 
 import battlecode.common.*;
 
+import java.awt.*;
+
 import static rush_bot.Communication.*;
 import static rush_bot.Debug.*;
 import static rush_bot.Map.*;
@@ -61,12 +63,18 @@ public class BotDesignSchool extends Globals {
 			log("Not ready");
 			return;
 		}
-
-		if (landscapersBuilt < wallLocsLength + supportWallLocsLength) {
-			int aID = buildLandscaper(getCloseDirections(here.directionTo(HQLoc)), RobotType.LANDSCAPER.cost);
-			if(aID != -1 && landscapersBuilt == 6) {
-				writeTransactionAssignPlatform(aID);
+		
+		if (landscapersBuilt < 6 && platformLandscaperID == -1) {
+			int newID = buildLandscaper(getCloseDirections(here.directionTo(HQLoc)), RobotType.LANDSCAPER.cost);
+			if(newID != -1 && landscapersBuilt == 6) {
+				platformLandscaperID = newID;
+				writeTransactionAssignPlatform(platformLandscaperID);
 			}
+			return;
+		}
+
+		if (!supportFull && (platformBuildingsCompleted || rc.getTeamSoup() >= RobotType.VAPORATOR.cost + RobotType.LANDSCAPER.cost)) {
+			buildLandscaper(getCloseDirections(here.directionTo(HQLoc)), RobotType.LANDSCAPER.cost);
 			return;
 		}
 	}
