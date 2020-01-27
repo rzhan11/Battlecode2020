@@ -76,9 +76,13 @@ public class BotMinerRush extends BotMiner {
             writeTransactionRushStatus(CONTINUE_RUSH_FLAG);
         }
 
-        //
         if (droppedLastTurn) {
             usedDrone = true;
+        }
+
+        if (!rc.isReady()) {
+            log("Not ready");
+            return;
         }
 
         seesEnemyDrone = false;

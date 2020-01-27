@@ -74,13 +74,13 @@ public class BotMiner extends Globals {
 
 		locateSoup();
 
-		if (!rc.isReady()) {
-			log("Not ready");
+		if (myRole == MINER_RUSH_ROLE) {
+			BotMinerRush.turn();
 			return;
 		}
 
-		if (myRole == MINER_RUSH_ROLE) {
-			BotMinerRush.turn();
+		if (!rc.isReady()) {
+			log("Not ready");
 			return;
 		}
 

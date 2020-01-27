@@ -64,6 +64,11 @@ public class BotDeliveryDrone extends Globals {
 
 	public static void turn() throws GameActionException {
 
+		if (myRole == DRONE_RUSH_ROLE) {
+			BotDeliveryDroneRush.turn();
+			return;
+		}
+
 		if (!rc.isReady()) {
 			log("Not ready");
 			return;
@@ -80,11 +85,6 @@ public class BotDeliveryDrone extends Globals {
 		if (avoidDangerResult == -1) {
 			// when danger is unavoidable, reset isDirMoveable to ignore danger tiles
 			updateIsDirMoveable();
-		}
-
-		if (myRole == DRONE_RUSH_ROLE) {
-			BotDeliveryDroneRush.turn();
-			return;
 		}
 
 		switch (myRole) {

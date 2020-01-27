@@ -28,23 +28,32 @@ public class BotDeliveryDroneRush extends BotDeliveryDrone {
     }
 
     public static void turn() throws GameActionException {
+        if (abortRush) {
+            myRole = DRONE_SUPPORT_ROLE;
+            return;
+        }
+
+        if (rc.isCurrentlyHoldingUnit()) {
+            if (roundNum > START_RUSH_STATUS_ROUND && roundNum % RUSH_STATUS_INTERVAL == 0) {
+                writeTransactionRushStatus(CONTINUE_RUSH_FLAG);
+            }
+        }
 
         if (!rc.isReady()) {
             log("Not ready");
             return;
         }
 
-        if (abortRush) {
-            myRole = DRONE_SUPPORT_ROLE;
-            return;
-        }
-
         log("DRONE RUSH");
 
-        if (rc.isCurrentlyHoldingUnit()) {
-            if (roundNum > START_RUSH_STATUS_ROUND && roundNum % RUSH_STATUS_INTERVAL == 0) {
-                writeTransactionRushStatus(CONTINUE_RUSH_FLAG);
-            }
+        int avoidDangerResult = Nav.avoidDanger();
+        if (avoidDangerResult == 1) {
+            Nav.bugTracing = false;
+            return;
+        }
+        if (avoidDangerResult == -1) {
+            // when danger is unavoidable, reset isDirMoveable to ignore danger tiles
+            updateIsDirMoveable();
         }
 
         if (!rc.isCurrentlyHoldingUnit()) {
