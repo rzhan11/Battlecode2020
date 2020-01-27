@@ -81,6 +81,13 @@ public class BotHQ extends Globals {
 			}
 		}
 
+		if (waterLevel > UNFLOOD_WALL_LIMIT) {
+			wallFull = true;
+			supportFull = true;
+			writeTransactionWallStatus(WALL_FULL_FLAG);
+			writeTransactionWallStatus(SUPPORT_FULL_FLAG);
+		}
+
 		if (!wallFull) {
 			wallFull = true;
 			for (int i = 0; i < wallLocsLength; i++) {
@@ -183,21 +190,20 @@ public class BotHQ extends Globals {
 						return;
 					}
 				}
+				// assign platform builder
+			} else if (platformLandscaperID != -1 && !platformBuildingsCompleted && platformMinerID == -1) {
+				log("Trying to assign platform miner");
+				int id = assignTask(BUILD_PLATFORM);
+				if (id >= 100000) {
+					// we built this turn
+					return;
+				}
+				if (id != -1) {
+					platformMinerID = id;
+				}
 			}
 		}
 
-		// assign platform builder
-		if (platformLandscaperID != -1 && !platformBuildingsCompleted && platformMinerID == -1) {
-			log("Trying to assign platform miner");
-			int id = assignTask(BUILD_PLATFORM);
-			if (id >= 100000) {
-				// we built this turn
-				return;
-			}
-			if (id != -1) {
-				platformMinerID = id;
-			}
-		}
 
 		int shotID = BotNetGun.tryShoot();
 		if (shotID != -1) {

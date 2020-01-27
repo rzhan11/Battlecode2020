@@ -108,8 +108,8 @@ public class BotMinerBuilder extends BotMiner {
             }
         } else if (!builtFulfillmentCenter) {
             log("fc");
-            if (rc.getTeamSoup() < RobotType.FULFILLMENT_CENTER.cost + 25) {
-                log("Cannot afford platform fulfillment center + 25");
+            if (rc.getTeamSoup() < RobotType.FULFILLMENT_CENTER.cost) {
+                log("Cannot afford platform fulfillment center");
                 return;
             }
             for (Direction dir: directions) {

@@ -8,6 +8,8 @@ import static rush_bot.Utils.*;
 
 public class Wall extends Globals {
 
+    final public static int UNFLOOD_WALL_LIMIT = 5;
+
     public static boolean hasLoadedWall = false;
 
     public static boolean startBuildInnerWall = false;

@@ -234,6 +234,8 @@ public class BotLandscaper extends Globals {
 		}
 
 		if (wallFull && inArray(supportWallLocs, here, supportWallLocsLength)) {
+
+			// move to tile farthest from enemyhq
 			int maxDist = N_INF;
 			Direction maxDir = null;
 			for (Direction dir: directions) {
@@ -241,7 +243,11 @@ public class BotLandscaper extends Globals {
 				if (!rc.onTheMap(loc)) {
 					continue;
 				}
-				if (isLocEmpty(loc) && inArray(supportWallLocs, loc, supportWallLocsLength)) {
+				// tiles that are (2, 2) away from hq have least priority since they cannot be defended by hq's net gun
+				if (loc.distanceSquaredTo(HQLoc) == 8) {
+					continue;
+				}
+				if (isLocDryFlatEmpty(loc) && inArray(supportWallLocs, loc, supportWallLocsLength)) {
 					int dist = loc.distanceSquaredTo(getSymmetryLoc());
 					if (dist > maxDist) {
 						maxDist = dist;
@@ -250,8 +256,8 @@ public class BotLandscaper extends Globals {
 				}
 			}
 			int curDist = here.distanceSquaredTo(getSymmetryLoc());
-			if (maxDist > curDist) {
-				log("Moving to farther support loc");
+			if (curDist == 8 || maxDist > curDist) {
+				log("Moving to better/farther support loc");
 				Actions.doMove(maxDir);
 				return;
 			}
@@ -279,7 +285,7 @@ public class BotLandscaper extends Globals {
 	}
 
 	private static boolean unfloodWall() throws GameActionException {
-		if (waterLevel > 5) {
+		if (waterLevel > UNFLOOD_WALL_LIMIT) {
 			return false;
 		}
 		// adds dirt to flooded support tiles
