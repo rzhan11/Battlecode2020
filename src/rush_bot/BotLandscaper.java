@@ -92,6 +92,7 @@ public class BotLandscaper extends Globals {
 		}
 
 		ttlog("MY ROLE IS: " + myRole);
+		log("initialWallSetup " + initialWallSetup);
 		log("wallFull " + wallFull);
 		log("supportFull " + supportFull);
 
@@ -111,45 +112,121 @@ public class BotLandscaper extends Globals {
 		}
 	}
 
-	private static void doWallRole() throws GameActionException {
-		// in the 3x3
-		if (inArray(wallLocs, here, wallLocsLength)) {
-			int maxDist = N_INF;
-			Direction maxDir = null;
-			for (Direction dir: directions) {
-				MapLocation loc = rc.adjacentLocation(dir);
+	private static void doInitialSetupWall() throws GameActionException {
+		boolean shouldMove = false;
+		if (here.distanceSquaredTo(HQLoc) == 1) {
+			// STATE = CARDINAL from HQ
+			int count = 0;
+			int id = -1;
+			RobotInfo[] cardHQAllies = rc.senseNearbyRobots(HQLoc, 1, us);
+			for (RobotInfo ri : cardHQAllies) {
+				if (ri.type == RobotType.LANDSCAPER) {
+					count++;
+					id = ri.ID;
+				}
+			}
+			if (count > 0) {
+				if (myID < id) {
+					shouldMove = true;
+				}
+			}
+		} else {
+			shouldMove = true;
+		}
+
+		log("shouldMove " + shouldMove);
+		if (shouldMove) {
+			// directly move onto cardinal direction
+			for (Direction dir: cardinalDirections) {
+				MapLocation loc = HQLoc.add(dir);
+				Direction dirFromHere = here.directionTo(loc);
 				if (!rc.onTheMap(loc)) {
 					continue;
 				}
-				if (isLocEmpty(loc) && inArray(wallLocs, loc, wallLocsLength)) {
-					int dist = loc.distanceSquaredTo(getSymmetryLoc());
-					if (dist > maxDist) {
-						maxDist = dist;
-						maxDir = dir;
+				if (here.isAdjacentTo(loc) && isLocDryFlatEmpty(loc)) {
+					log("Moving to satisfy initial wall setup");
+					Actions.doMove(dirFromHere);
+					return;
+				}
+			}
+			// use dig/deposit to reach cardinal direction
+			for (Direction dir: cardinalDirections) {
+				MapLocation loc = HQLoc.add(dir);
+				Direction dirFromHere = here.directionTo(loc);
+				if (!rc.onTheMap(loc)) {
+					continue;
+				}
+				if (isLocEmpty(loc)) {
+					if (isLocWet(loc)) {
+						log("Water to cardinal");
+						if (rc.getDirtCarrying() > 0) {
+							Actions.doDepositDirt(dirFromHere);
+							return;
+						} else {
+							wallDig();
+							return;
+						}
+					} else if (!isLocFlat(loc)) {
+						log("Not flat to cardinal");
+						if (rc.getDirtCarrying() > 0) {
+							if (myElevation < rc.senseElevation(loc)) {
+								Actions.doDepositDirt(Direction.CENTER);
+								return;
+							} else {
+								Actions.doDepositDirt(dirFromHere);
+								return;
+							}
+						} else {
+							wallDig();
+							return;
+						}
 					}
 				}
 			}
-			int curDist = here.distanceSquaredTo(getSymmetryLoc());
-			if (maxDist > curDist) {
-				log("Moving to farther 3x3 loc");
-				Actions.doMove(maxDir);
+		}
+	}
+
+	private static void doWallRole() throws GameActionException {
+
+		// unflood tiles adjacent to HQ
+		for (Direction dir: directions) {
+			MapLocation loc = HQLoc.add(dir);
+			if (!rc.onTheMap(loc)) {
+				continue;
+			}
+			if (here.isAdjacentTo(loc) && isLocWet(loc)) {
+				if (rc.getDirtCarrying() > 0) {
+					Actions.doDepositDirt(here.directionTo(loc));
+					return;
+				} else {
+					wallDig();
+					return;
+				}
+			}
+		}
+
+		// in the 3x3
+		if (inArray(wallLocs, here, wallLocsLength)) {
+			if (!initialWallSetup) {
+				initialWallSetup = checkInitialWallSetup();
+			}
+			if (!initialWallSetup) {
+				doInitialSetupWall();
 				return;
 			}
 
 			if (rc.getDirtCarrying() > 0) {
+				// save myself from flooding
+				if(rc.senseElevation(here) - waterLevel < 3) {
+					Actions.doDepositDirt(Direction.CENTER);
+					return;
+				}
 				// keep other tiles unflooded
 				if (unfloodWall()) {
 					return;
 				}
-				if (wallFull) {
-					// build wall
-					wallDeposit();
-					return;
-				} else {
-					// build only my tile
-					Actions.doDepositDirt(Direction.CENTER);
-					return;
-				}
+				wallDeposit();
+				return;
 			} else {
 				wallDig();
 				return;
@@ -223,6 +300,32 @@ public class BotLandscaper extends Globals {
 	}
 
 	private static void wallDeposit() throws GameActionException {
+
+		// raise elevation of tiles adjacent to HQ
+		if (roundNum >= HardCode.getRoundFlooded(2) - 100) {
+			for (Direction dir: directions) {
+				MapLocation loc = HQLoc.add(dir);
+				if (!rc.onTheMap(loc)) {
+					continue;
+				}
+				if (here.isAdjacentTo(loc) && rc.senseElevation(here) - waterLevel < 2) {
+					if (rc.getDirtCarrying() > 0) {
+						Actions.doDepositDirt(here.directionTo(loc));
+						return;
+					} else {
+						wallDig();
+						return;
+					}
+				}
+			}
+		}
+
+		// build only my tile in early rounds
+		if (roundNum < HardCode.getRoundFlooded(2) && !wallFull && here.isAdjacentTo(HQLoc)) {
+			Actions.doDepositDirt(Direction.CENTER);
+			return;
+		}
+
 		// adds dirt to 3x3 wall
 		int minElevation = P_INF;
 		Direction minDir = null;
@@ -370,7 +473,7 @@ public class BotLandscaper extends Globals {
 						Actions.doDepositDirt(here.directionTo(loc));
 						return;
 					} else {
-						platformerDig(Direction.CENTER);
+						platformDig(Direction.CENTER);
 						return;
 					}
 				}
@@ -390,7 +493,7 @@ public class BotLandscaper extends Globals {
 					Actions.doDepositDirt(dirToPlatform);
 					return;
 				} else {
-					platformerDig(dirToPlatform);
+					platformDig(dirToPlatform);
 					return;
 				}
 			} else if (!isLocFlat(locToPlatform)) {
@@ -404,7 +507,7 @@ public class BotLandscaper extends Globals {
 						return;
 					}
 				} else {
-					platformerDig(dirToPlatform);
+					platformDig(dirToPlatform);
 					return;
 				}
 			} else {
@@ -420,7 +523,7 @@ public class BotLandscaper extends Globals {
 	}
 
 
-	private static void platformerDig(Direction noDigDir) throws GameActionException {
+	private static void platformDig(Direction noDigDir) throws GameActionException {
 		Direction bestDir = null;
 		int bestScore = N_INF;
 		for (Direction dir: directions) {

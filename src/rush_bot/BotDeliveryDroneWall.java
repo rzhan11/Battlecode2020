@@ -18,9 +18,6 @@ public class BotDeliveryDroneWall extends BotDeliveryDrone {
         initializedDroneWall = true;
 
         loadDroneWallInfo();
-        for (int i = 0; i < droneWallLocsLength; i++) {
-            log("loc " + i + " " + droneWallLocs[i]);
-        }
 
         Globals.endTurn();
         Globals.update();

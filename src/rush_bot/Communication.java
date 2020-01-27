@@ -9,6 +9,7 @@ public class Communication extends Globals {
 
 	final public static int RESUBMIT_EARLY = 10;
 	final public static int RESUBMIT_INTERVAL = 100;
+	final public static int RUSH_STATUS_INTERVAL = 50;
 
 	final public static int MAX_UNSENT_TRANSACTIONS_LENGTH = 25;
 	final public static int READ_TRANSACTION_MIN_BYTECODE = 500; // how many bytecodes required to read a transaction
@@ -29,6 +30,7 @@ public class Communication extends Globals {
 	final public static int ASSIGN_PLATFORM_SIGNAL = 9;
 	final public static int PLATFORM_COMPLETED_SIGNAL = 10;
 	final public static int PLATFORM_BUILDINGS_COMPLETED_SIGNAL = 11;
+	final public static int RUSH_STATUS_SIGNAL = 12;
 
 	final public static int ALL_ZONE_STATUS_SIGNAL = 103;
 	final public static int REVIEW_SIGNAL = 104;
@@ -242,6 +244,9 @@ public class Communication extends Globals {
 					case PLATFORM_BUILDINGS_COMPLETED_SIGNAL:
 						readTransactionPlatformBuildingsCompleted(message, round);
 						break;
+					case RUSH_STATUS_SIGNAL:
+						readTransactionRushStatus(message, round);
+						break;
 				}
 			}
 
@@ -264,6 +269,7 @@ public class Communication extends Globals {
 
 		while (round >= roundNum) {
 			log("WAITING FOR REVIEW BLOCK " + round);
+			log("EARLY END");
 			Clock.yield();
 			Globals.updateBasic();
 		}
@@ -479,10 +485,11 @@ public class Communication extends Globals {
 		}
 	}
 
+	final public static int INITIAL_WALL_SETUP_FLAG = 1;
+	final public static int WALL_FULL_FLAG = 2;
+	final public static int SUPPORT_FULL_FLAG = 3;
 	/*
-	status:
-		1 = wallFull
-		2 = supportFull
+	message[2] = status
 	 */
 	public static void writeTransactionWallStatus(int status) throws GameActionException {
 		log("Writing transaction for 'Wall Status'");
@@ -507,10 +514,13 @@ public class Communication extends Globals {
 		ttlog("Wall Status " + message[2]);
 		ttlog("Posted round: " + round);
 		switch (message[2]) {
-			case 1:
+			case INITIAL_WALL_SETUP_FLAG:
+				initialWallSetup = true;
+				break;
+			case WALL_FULL_FLAG:
 				wallFull = true;
 				break;
-			case 2:
+			case SUPPORT_FULL_FLAG:
 				supportFull = true;
 				break;
 		}
@@ -612,11 +622,14 @@ public class Communication extends Globals {
 		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = REVIEW_SIGNAL;
+		if (initialWallSetup) {
+			message[2] |= (1 << INITIAL_WALL_SETUP_FLAG);
+		}
 		if (wallFull) {
-			message[2] |= 1;
+			message[2] |= (1 << WALL_FULL_FLAG);
 		}
 		if (supportFull) {
-			message[2] |= 2;
+			message[2] |= (1 << SUPPORT_FULL_FLAG);
 		}
 		if (enemyHQLoc == null) {
 			for (int i = 0; i < symmetryHQLocs.length; i++) {
@@ -627,7 +640,7 @@ public class Communication extends Globals {
 		} else {
 			message[3] = (1 << 16) | symmetryHQLocsIndex;
 		}
-		message[4] = (platformCornerLoc.x << 16) | platformCornerLoc.y;
+		message[4] = (PLATFORM_ELEVATION << 12) | (platformCornerLoc.x << 6) | platformCornerLoc.y;
 		message[5] = platformLandscaperID;
 
 		xorMessage(message);
@@ -646,8 +659,10 @@ public class Communication extends Globals {
 		tlog("Reading transaction for 'Review'");
 		ttlog("Submitter ID: " + decryptID(message[0]));
 
-		wallFull = (message[2] & 1) > 0;
-		supportFull = (message[2] & 2) > 0;
+		initialWallSetup = (message[2] & (1 << INITIAL_WALL_SETUP_FLAG)) > 0;
+		wallFull = (message[2] & (1 << WALL_FULL_FLAG)) > 0;
+		supportFull = (message[2] & (1 << SUPPORT_FULL_FLAG)) > 0;
+		ttlog("initialWallSetup " + initialWallSetup);
 		ttlog("wallFull " + wallFull);
 		ttlog("supportFull " + supportFull);
 
@@ -665,7 +680,8 @@ public class Communication extends Globals {
 			ttlog("Symmetry " + symmetryHQLocsIndex + " confirmed");
 		}
 
-		platformCornerLoc = new MapLocation(message[4] >>> 16, message[4] & ((1 << 16) - 1));
+		PLATFORM_ELEVATION = message[4] >>> 12;
+		platformCornerLoc = new MapLocation((message[4] >>> 6) & ((1 << 6) - 1), message[4] & ((1 << 6) - 1));
 		platformLocs = new MapLocation[4];
 		platformLocs[0] = platformCornerLoc;
 		platformLocs[1] = platformCornerLoc.translate(1,0);
@@ -673,8 +689,9 @@ public class Communication extends Globals {
 		platformLocs[3] = platformCornerLoc.translate(0,1);
 
 		platformLandscaperID = message[5];
-		log("Platform loc " + platformCornerLoc);
-		log("platformerID " + platformLandscaperID);
+		ttlog("Platform elevation " + PLATFORM_ELEVATION);
+		ttlog("Platform location " + platformCornerLoc);
+		ttlog("platformerID " + platformLandscaperID);
 
 		ttlog("Posted round: " + round);
 	}
@@ -723,6 +740,43 @@ public class Communication extends Globals {
 		tlog("Reading transaction for 'Platform Buildings Completed'");
 		ttlog("Submitter ID: " + decryptID(message[0]));
 		platformBuildingsCompleted = true;
+		ttlog("Posted round: " + round);
+	}
+
+	/*
+	status = 1 means continue
+	status = -1 means abort
+	 */
+	final public static int ABORT_RUSH_FLAG = 1;
+	final public static int CONTINUE_RUSH_FLAG = 2;
+	public static void writeTransactionRushStatus(int status) throws GameActionException {
+		log("Writing transaction for 'Rush Status'");
+		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
+		message[0] = encryptID(myID);
+		message[1] = RUSH_STATUS_SIGNAL;
+		message[2] = status;
+		xorMessage(message);
+		if (rc.getTeamSoup() >= dynamicCost) {
+			rc.submitTransaction(message, dynamicCost);
+		} else {
+			tlog("Could not afford transaction");
+			saveUnsentTransaction(message, dynamicCost);
+		}
+	}
+
+	public static void readTransactionRushStatus(int[] message, int round) throws GameActionException {
+		tlog("Reading transaction for 'Rush Status'");
+		ttlog("Submitter ID: " + decryptID(message[0]));
+		switch(message[2]) {
+			case ABORT_RUSH_FLAG:
+				ttlog("ABORTING RUSH");
+				abortRush = true;
+				break;
+			case CONTINUE_RUSH_FLAG:
+				ttlog("CONTINUE RUSH");
+				continueRushSignalRound = round;
+				break;
+		}
 		ttlog("Posted round: " + round);
 	}
 }

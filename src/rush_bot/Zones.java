@@ -48,6 +48,7 @@ public class Zones extends Globals {
         log("LOADING ZONE INFORMATION 0");
 
         if (myType != RobotType.HQ) {
+            log("EARLY END");
             Clock.yield();
             Globals.updateBasic();
         }
@@ -65,6 +66,7 @@ public class Zones extends Globals {
         hasLoadedZones = true;
 
         if (myType != RobotType.HQ) {
+            log("EARLY END");
             Clock.yield();
             Globals.updateBasic();
         }
@@ -236,6 +238,21 @@ public class Zones extends Globals {
     }
 
     public static int findClosestSoupCluster () throws GameActionException {
-        return -1;
+
+        int closestDistance = P_INF;
+        int closestIndex = -1;
+        log("len " + soupClustersLength);
+        for (int i = 0; i < soupClustersLength; i++) {
+            if (!emptySoupClusters[i]) {
+                log("soup i " + i + " " + soupClusters[i]);
+                int dist = here.distanceSquaredTo(soupClusters[i]);
+                if (dist < closestDistance) {
+                    closestDistance = dist;
+                    closestIndex = i;
+                }
+
+            }
+        }
+        return closestIndex;
     }
 }

@@ -227,6 +227,18 @@ public class BotLandscaperRush extends BotLandscaper {
                 return;
             }
         } else {
+            for (Direction dir: directions) {
+                MapLocation loc = rc.adjacentLocation(dir);
+                if (!rc.onTheMap(loc)) {
+                    continue;
+                }
+                if (loc.isAdjacentTo(HQLoc)) {
+                    if (isLocDryFlatEmpty(loc)) {
+                        Actions.doMove(dir);
+                        return;
+                    }
+                }
+            }
             moveLog(enemyHQLoc);
             return;
         }

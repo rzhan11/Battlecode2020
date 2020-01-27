@@ -70,7 +70,6 @@ public class BotMinerBuilder extends BotMiner {
             case BUILD_PLATFORM:
                 buildPlatform();
                 if (builtVaporator && builtFulfillmentCenter && builtDesignSchool) {
-                    writeTransactionPlatformBuildingsCompleted();
                     rc.disintegrate();
                 }
                 break;
@@ -84,13 +83,12 @@ public class BotMinerBuilder extends BotMiner {
     public static void buildPlatform () throws GameActionException{
         log("BUILDER MINER: PLATFORM");
         if (!inArray(platformLocs, here, platformLocs.length)) {
-            log("hi " + here);
             moveLog(platformCornerLoc);
             return;
         }
         if (!builtVaporator) {
-            if (rc.getTeamSoup() < RobotType.VAPORATOR.cost) {
-                log("Cannot afford platform vaporator");
+            if (rc.getTeamSoup() < RobotType.VAPORATOR.cost + dynamicCost) {
+                log("Cannot afford platform vaporator + dynamicCost");
                 return;
             }
             for (Direction dir: directions) {
@@ -104,13 +102,14 @@ public class BotMinerBuilder extends BotMiner {
                 if (rc.senseElevation(loc) == PLATFORM_ELEVATION && isLocDryFlatEmpty(loc)) {
                     Actions.doBuildRobot(RobotType.VAPORATOR, dir);
                     builtVaporator = true;
+                    writeTransactionPlatformBuildingsCompleted();
                     return;
                 }
             }
         } else if (!builtFulfillmentCenter) {
             log("fc");
-            if (rc.getTeamSoup() < RobotType.FULFILLMENT_CENTER.cost) {
-                log("Cannot afford platform fulfillment center");
+            if (rc.getTeamSoup() < RobotType.FULFILLMENT_CENTER.cost + 25) {
+                log("Cannot afford platform fulfillment center + 25");
                 return;
             }
             for (Direction dir: directions) {
@@ -129,8 +128,8 @@ public class BotMinerBuilder extends BotMiner {
             }
         } else if (!builtDesignSchool) {
             log("ds");
-            if (rc.getTeamSoup() < RobotType.DESIGN_SCHOOL.cost + dynamicCost) {
-                log("Cannot afford platform design school");
+            if (rc.getTeamSoup() < RobotType.DESIGN_SCHOOL.cost + 25) {
+                log("Cannot afford platform design school + 25");
                 return;
             }
             for (Direction dir: directions) {

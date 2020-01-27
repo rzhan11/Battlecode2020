@@ -37,10 +37,6 @@ public class BotHQ extends Globals {
 				Globals.update();
 
 				if (!initializedHQ) {
-					loadDroneWallInfo();
-					for (int i = 0; i < droneWallLocsLength; i++) {
-						log("loc " + i + " " + droneWallLocs[i]);
-					}
 					initHQ();
 				}
 				if (roundNum == 2) {
@@ -67,12 +63,24 @@ public class BotHQ extends Globals {
 		// finds visible soup locations
 		closestVisibleSoupLoc = findClosestVisibleSoupLoc(true);
 		log("closestVisibleSoupLocation: " + closestVisibleSoupLoc);
+		// supposed to be 24 not 35, to give some room for special cases
+		if (HQLoc.distanceSquaredTo(closestVisibleSoupLoc) > 24) {
+			writeTransactionSoupCluster(closestVisibleSoupLoc);
+		}
 
 		initializedHQ = true;
 	}
 
 	public static void turn() throws GameActionException {
 		log("Turn start bytes " + Clock.getBytecodesLeft());
+
+		if (!initialWallSetup) {
+			initialWallSetup = checkInitialWallSetup();
+			if (initialWallSetup) {
+				writeTransactionWallStatus(INITIAL_WALL_SETUP_FLAG);
+			}
+		}
+
 		if (!wallFull) {
 			wallFull = true;
 			for (int i = 0; i < wallLocsLength; i++) {
@@ -83,7 +91,7 @@ public class BotHQ extends Globals {
 				}
 			}
 			if (wallFull) {
-				writeTransactionWallStatus(1);
+				writeTransactionWallStatus(WALL_FULL_FLAG);
 			}
 		}
 
@@ -97,12 +105,11 @@ public class BotHQ extends Globals {
 				}
 			}
 			if (supportFull) {
-				writeTransactionWallStatus(2);
+				writeTransactionWallStatus(SUPPORT_FULL_FLAG);
 			}
 		}
 
-
-
+		log("initialWallSetup " + initialWallSetup);
 		log("wallFull " + wallFull);
 		log("supportFull " + supportFull);
 
@@ -127,7 +134,7 @@ public class BotHQ extends Globals {
 			return;
 		}
 
-		if (roundNum >= 150) {
+		if (roundNum >= 150 || abortRush) {
 			if (closeDesignSchoolInfo == null) {
 				log("Trying to assign design school");
 				for (RobotInfo ri: visibleAllies) {

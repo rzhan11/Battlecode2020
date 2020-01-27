@@ -73,8 +73,8 @@ public class BotDeliveryDrone extends Globals {
 		log("floodingMemory: " + floodingMemory);
 
 		int avoidDangerResult = Nav.avoidDanger();
-		log("avoid result " + avoidDangerResult);
 		if (avoidDangerResult == 1) {
+			Nav.bugTracing = false;
 			return;
 		}
 		if (avoidDangerResult == -1) {

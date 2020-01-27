@@ -17,6 +17,7 @@ public class Wall extends Globals {
     public static int supportWallLocsLength;
     public static MapLocation[] digLocs2x2 = new MapLocation[4];
 
+    public static boolean initialWallSetup;
     public static boolean wallFull;
     public static boolean supportFull;
 
@@ -158,7 +159,8 @@ public class Wall extends Globals {
         hasLoadedWall = true;
     }
 
-    final public static int PLATFORM_ELEVATION = 8;
+    // minimum height, subject to change based on conditions
+    public static int PLATFORM_ELEVATION = 10;
 
     public static void loadPlatformInfo() throws GameActionException {
 
@@ -192,37 +194,40 @@ public class Wall extends Globals {
         }
 
         // finding optimal platform locations
+        int bestMaxElevation = -1;
         int minChange = P_INF;
         MapLocation bestLoc = null;
         outer: for (MapLocation initLoc: possibleLocs) {
-            log("i " + initLoc);
             MapLocation[] arr = {initLoc, initLoc.translate(1,0), initLoc.translate(0, 1), initLoc.translate(1,1)};
-            int change = 0;
+            int maxElevation = PLATFORM_ELEVATION;
             for (MapLocation loc: arr) {
                 if (!rc.onTheMap(loc)) {
                     continue outer;
                 }
-                int ring = maxXYDistance(HQLoc, loc);
-                if(ring < 4 || ring > 5) {
+                // ignore not fully visible locs
+                if (!rc.canSenseLocation(loc)) {
                     continue outer;
                 }
-                if (rc.canSenseLocation(loc)) {
-                    change += Math.abs(PLATFORM_ELEVATION - rc.senseElevation(loc));
-                } else {
-                    change += P_INF / arr.length;
-                }
+                maxElevation = Math.max(maxElevation, rc.senseElevation(loc));
             }
-            log("change " + change + " " + minChange);
+            int change = 0;
+            for (MapLocation loc: arr) {
+                change += Math.abs(maxElevation - rc.senseElevation(loc));
+            }
             if(change < minChange) {
+                bestMaxElevation = maxElevation;
                 minChange = change;
                 bestLoc = initLoc;
             }
         }
+
         if(bestLoc == null) {
             log("ERROR: Sanity check failed - No platform location found");
         } else {
             log("PLATFORM LOCATION: " + bestLoc);
+            PLATFORM_ELEVATION = bestMaxElevation;
             platformCornerLoc = bestLoc;
+
             platformLocs = new MapLocation[4];
             platformLocs[0] = platformCornerLoc;
             platformLocs[1] = platformCornerLoc.translate(1,0);
@@ -319,5 +324,29 @@ public class Wall extends Globals {
 
         droneWallLocsLength = index;
         tlog("DRONE_WALL_LOCS_LENGTH: " + droneWallLocsLength);
+    }
+
+    public static boolean checkInitialWallSetup () throws GameActionException {
+        for (int i = 0; i < wallLocsLength; i++) {
+            MapLocation adjLoc = wallLocs[i];
+            boolean isAdjToAllyLandscaper = false;
+            for (Direction dir: allDirections) {
+                MapLocation loc = adjLoc.add(dir);
+                if (!rc.onTheMap(loc)) {
+                    continue;
+                }
+                if (loc.isAdjacentTo(HQLoc)) {
+                    if (rc.canSenseLocation(loc) && isLocAllyLandscaper(loc)) {
+                        isAdjToAllyLandscaper = true;
+                        break;
+                    }
+                }
+            }
+            if (!isAdjToAllyLandscaper) {
+                log("no adjloc " + adjLoc);
+                return false;
+            }
+        }
+        return true;
     }
 }

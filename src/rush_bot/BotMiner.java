@@ -50,10 +50,9 @@ public class BotMiner extends Globals {
 			myRole = MINER_RESOURCE_ROLE;
 		}
 
+		log("EARLY END");
 		Clock.yield();
 		Globals.updateBasic();
-
-		BotMinerResource.initMinerResource();
 
 		initializedMiner = true;
 
@@ -62,7 +61,6 @@ public class BotMiner extends Globals {
 	}
 
 	public static void turn() throws GameActionException {
-
 		if (platformCompleted && myID != platformMinerID) {
 			if (inArray(platformLocs, here, platformLocs.length)) {
 				numRoundsOnPlatform++;
@@ -88,6 +86,7 @@ public class BotMiner extends Globals {
 
 		int avoidDangerResult = Nav.avoidDanger();
 		if (avoidDangerResult == 1) {
+			Nav.bugTracing = false;
 			return;
 		}
 		if (avoidDangerResult == -1) {
@@ -151,10 +150,13 @@ public class BotMiner extends Globals {
 			centerOfVisibleSoup = new MapLocation(totalX / size, totalY / size);
 
 			for (int i = 0; i < soupClustersLength; i++) {
-				if (centerOfVisibleSoup.distanceSquaredTo(soupClusters[i]) < 16) {
+				if (centerOfVisibleSoup.distanceSquaredTo(soupClusters[i]) < BotMinerResource.REFINERY_DISTANCE_LIMIT) {
 					worthSubmitting = false;
 					break;
 				}
+			}
+			if (centerOfVisibleSoup.distanceSquaredTo(HQLoc) <= 24) {
+				worthSubmitting = false;
 			}
 
 			if (worthSubmitting) {

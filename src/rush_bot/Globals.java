@@ -2,13 +2,9 @@ package rush_bot;
 
 import battlecode.common.*;
 
-import static rush_bot.Actions.*;
 import static rush_bot.Communication.*;
 import static rush_bot.Debug.*;
-import static rush_bot.Globals.*;
 import static rush_bot.Map.*;
-import static rush_bot.Nav.*;
-import static rush_bot.Utils.*;
 import static rush_bot.Wall.*;
 import static rush_bot.Zones.*;
 
@@ -107,7 +103,9 @@ public class Globals extends Constants {
     public static MapLocation enemyHQLoc = null;
 
     public static int rushMinerID = -1;
-    public static boolean abandonRush = false;
+    final public static int START_RUSH_STATUS_ROUND = 100;
+    public static int continueRushSignalRound = -1;
+    public static boolean abortRush = false;
     public static boolean enemyRush = false;
 
     public static void init(RobotController theRC) throws GameActionException {
@@ -149,12 +147,21 @@ public class Globals extends Constants {
         log("Initial exploreSymmetryLocation: " + symmetryHQLocs[symmetryHQLocsIndex]);
         log("Post-findHQLoc: " + Clock.getBytecodesLeft());
 
+        if (myType == RobotType.MINER) {
+            BotMinerResource.initMinerResource();
+            log("Post-initMinerResource: " + Clock.getBytecodesLeft());
+            log("EARLY END");
+            Clock.yield();
+            Globals.updateBasic();
+        }
+
         if (!isLowBytecodeLimit(myType)) {
             loadWallInfo();
             log("Post-loadWallInfo: " + Clock.getBytecodesLeft());
             loadZoneInfo();
             log("Post-loadZoneInfo: " + Clock.getBytecodesLeft());
         } else {
+            log("EARLY END");
             Clock.yield();
             Globals.updateBasic();
         }
@@ -166,14 +173,16 @@ public class Globals extends Constants {
             readReviewBlock(recentReviewRound, 0);
             oldBlocksIndex = recentReviewRound;
             log("Review round bytecode: " + (startByte - Clock.getBytecodesLeft()));
+            if (myType != RobotType.HQ) {
+                log("EARLY END");
+                Clock.yield();
+                Globals.updateBasic();
+            }
         } else {
             oldBlocksIndex = 1;
         }
 
-        if (myType != RobotType.HQ) {
-            Clock.yield();
-            Globals.updateBasic();
-        }
+        log("Finished init");
     }
 
     /*
@@ -219,6 +228,13 @@ public class Globals extends Constants {
             Nav.bugClosestDistanceToTarget = P_INF;
         }
         lastActiveTurn = rc.getRoundNum();
+
+        if (roundNum > START_RUSH_STATUS_ROUND && roundNum - Math.max(continueRushSignalRound, START_RUSH_STATUS_ROUND) >= RUSH_STATUS_INTERVAL + 5) {
+            abortRush = true;
+        }
+        if (roundNum > 250) {
+            abortRush = true;
+        }
     }
 
     public static void update() throws GameActionException {
@@ -319,6 +335,7 @@ public class Globals extends Constants {
             while (HQLoc == null) {
                 while (index >= rc.getRoundNum()) {
                     log("YIELDING TO FIND HQ LOC");
+                    log("EARLY END");
                     Clock.yield();
                     Globals.updateBasic();
                 }

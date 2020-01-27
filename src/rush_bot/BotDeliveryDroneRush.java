@@ -34,6 +34,19 @@ public class BotDeliveryDroneRush extends BotDeliveryDrone {
             return;
         }
 
+        if (abortRush) {
+            myRole = DRONE_SUPPORT_ROLE;
+            return;
+        }
+
+        log("DRONE RUSH");
+
+        if (rc.isCurrentlyHoldingUnit()) {
+            if (roundNum > START_RUSH_STATUS_ROUND && roundNum % RUSH_STATUS_INTERVAL == 0) {
+                writeTransactionRushStatus(CONTINUE_RUSH_FLAG);
+            }
+        }
+
         if (!rc.isCurrentlyHoldingUnit()) {
             if (!rc.canSenseRobot(rushMinerID)) {
                 log("Cannot see rush miner");

@@ -2,14 +2,9 @@ package rush_bot;
 
 import battlecode.common.*;
 
-import static rush_bot.Actions.*;
 import static rush_bot.Communication.*;
 import static rush_bot.Debug.*;
-import static rush_bot.Globals.*;
 import static rush_bot.Map.*;
-import static rush_bot.Nav.*;
-import static rush_bot.Utils.*;
-import static rush_bot.Wall.*;
 
 
 public class BotMinerRush extends BotMiner {
@@ -54,6 +49,34 @@ public class BotMinerRush extends BotMiner {
 
         log("MINER RUSH");
 
+        /*
+        Abort rush if past a certain round
+        Abort rush if too many enemy landscapers
+         */
+        if (rushDSLoc == null) {
+            // check number of visible enemy landscapers
+            int count = 0;
+            for (RobotInfo ri: visibleEnemies) {
+                if (ri.type == RobotType.LANDSCAPER) {
+                    count++;
+                }
+            }
+            if (count >= 3) {
+                abortRush = true;
+            }
+        }
+
+        if (abortRush) {
+            myRole = MINER_RESOURCE_ROLE;
+            writeTransactionRushStatus(ABORT_RUSH_FLAG);
+            return;
+        }
+
+        if (roundNum > START_RUSH_STATUS_ROUND && roundNum % RUSH_STATUS_INTERVAL == 0) {
+            writeTransactionRushStatus(CONTINUE_RUSH_FLAG);
+        }
+
+        //
         if (droppedLastTurn) {
             usedDrone = true;
         }
@@ -125,6 +148,7 @@ public class BotMinerRush extends BotMiner {
 
         int avoidDangerResult = Nav.avoidDanger();
         if (avoidDangerResult == 1) {
+            Nav.bugTracing = false;
             // for rush miner, reset closest dist if distracted by enemies
             closestDistToSymmetry = here.distanceSquaredTo(rushSymmetryLoc);
             movesSinceCloser = 0;

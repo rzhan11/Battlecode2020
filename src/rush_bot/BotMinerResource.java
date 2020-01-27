@@ -5,20 +5,20 @@ import battlecode.common.*;
 import static rush_bot.Communication.*;
 import static rush_bot.Debug.*;
 import static rush_bot.Map.*;
+import static rush_bot.Nav.*;
 import static rush_bot.Utils.*;
 import static rush_bot.Wall.*;
 import static rush_bot.Zones.*;
 
 public class BotMinerResource extends BotMiner {
 
-    final private static int MIN_MINER_BYTECODE_TURN = 3000;
+    final public static int MIN_MINER_BYTECODE_TURN = 3000;
 
     // distance at which we try to use refineries
-    final private static int REFINERY_DISTANCE_LIMIT = 32;
-    final private static int MIN_SOUP_BUILD_REFINERY = 1000;
-    final private static int MIN_SOUP_RETURN_REFINERY = 20;
+    final public static int REFINERY_DISTANCE_LIMIT = 64;
+    final public static int MIN_SOUP_BUILD_REFINERY = 1000;
 
-    final private static int NUM_ROUNDS_BEFORE_RANDOMIZE_ZONE = 25;
+    final public static int NUM_ROUNDS_BEFORE_RANDOMIZE_ZONE = 25;
 
     public static boolean mustBuild = false;
     public static MapLocation[] refineries;
@@ -48,9 +48,10 @@ public class BotMinerResource extends BotMiner {
 
     public static void turn() throws GameActionException {
 
-        if (!initializedMinerResource) {
-            initMinerResource();
-        }
+        // initialized in the Globals.init() method
+//        if (!initializedMinerResource) {
+//            initMinerResource();
+//        }
 
         log("MINER RESOURCE");
 
@@ -141,10 +142,10 @@ public class BotMinerResource extends BotMiner {
                 }
             }
             // if HQ is walled off, force a new refinery to be built
-			if (wallFull && refineries[refineriesIndex].equals(HQLoc)) {
-				deadRefineries[refineriesIndex] = true;
-				pickRefinery();
-			}
+//			if (wallFull && refineries[refineriesIndex].equals(HQLoc)) {
+//				deadRefineries[refineriesIndex] = true;
+//				pickRefinery();
+//			}
         }
 
 		/*
@@ -330,6 +331,32 @@ public class BotMinerResource extends BotMiner {
             return;
         }
 
+        /*
+        Finds very close soup locs
+         */
+        outer: while (targetVisibleSoupLoc == null || !here.isAdjacentTo(targetVisibleSoupLoc)) {
+            MapLocation[] adjSoupLocs = rc.senseNearbySoup(2);
+            for (MapLocation loc: adjSoupLocs) {
+                targetVisibleSoupLoc = loc;
+                break outer;
+            }
+
+            MapLocation[] closeSoupLocs = rc.senseNearbySoup(8);
+            for (MapLocation loc: closeSoupLocs) {
+                for (Direction dir: directions) {
+                    MapLocation dirLoc = rc.adjacentLocation(dir);
+                    if (!rc.onTheMap(dirLoc)) {
+                        continue;
+                    }
+                    if (checkDirMoveable(dir) && dirLoc.isAdjacentTo(loc)) {
+                        targetVisibleSoupLoc = loc;
+                        break outer;
+                    }
+                }
+            }
+            break;
+        }
+
 		/*
 		Tries to give miner tasks in order of:
 		1. Visible soup location
@@ -479,9 +506,9 @@ public class BotMinerResource extends BotMiner {
                 tlogi("ERROR: soupClustersSize reached BIG_ARRAY_SIZE limit");
                 return false;
             }
+            tlog("Added soupCluster " + soupClustersLength + " at " + loc);
             soupClusters[soupClustersLength] = loc;
             soupClustersLength++;
-            Debug.tlog("Added a soupCluster at " + loc);
         }
         return isNew;
     }
@@ -574,7 +601,7 @@ public class BotMinerResource extends BotMiner {
             return;
         }
 
-        if (rc.getTeamSoup() >= RobotType.REFINERY.cost) {
+        if (abortRush && rc.getTeamSoup() >= RobotType.REFINERY.cost) {
             if (visibleSoup >= MIN_SOUP_BUILD_REFINERY) { // enough soup to warrant a refinery
                 if (isLocDry(centerOfVisibleSoup)) { // centerOfVisibleSoup is not flooded
                     buildRefineryLocation = centerOfVisibleSoup;

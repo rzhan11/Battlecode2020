@@ -16,8 +16,6 @@ public class BotDesignSchool extends Globals {
 	public static int landscapersBuilt = 0;
 	public static int lastBuildRound = N_INF;
 	public static boolean isRushDS = false;
-	public static boolean assignedPlatform = false;
-
 
 	public static void loop() throws GameActionException {
 		while (true) {
@@ -28,11 +26,7 @@ public class BotDesignSchool extends Globals {
 					initDesignSchool();
 				}
 
-				if (isRushDS) {
-					BotDesignSchoolRush.turn();
-				} else {
-					turn();
-				}
+				turn();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -64,29 +58,70 @@ public class BotDesignSchool extends Globals {
 			return;
 		}
 
-		if (landscapersBuilt < 6 && platformLandscaperID == -1) {
-			int newID = buildLandscaper(getCloseDirections(here.directionTo(HQLoc)), RobotType.LANDSCAPER.cost);
-			if(newID != -1 && landscapersBuilt == 6) {
-				platformLandscaperID = newID;
-				writeTransactionAssignPlatform(platformLandscaperID);
-			}
+		if (isRushDS) {
+			BotDesignSchoolRush.turn();
 			return;
 		}
 
-		log("status " + supportFull + " " + platformBuildingsCompleted + " " + rc.getTeamSoup());
-		if (!supportFull && (platformBuildingsCompleted || rc.getTeamSoup() >= RobotType.VAPORATOR.cost + RobotType.LANDSCAPER.cost)) {
+		// build 2 landscapers
+		if (landscapersBuilt < 2) {
 			buildLandscaper(getCloseDirections(here.directionTo(HQLoc)), RobotType.LANDSCAPER.cost);
+			log("Created landscaper " + landscapersBuilt);
+			return;
+		}
+
+		if (platformLandscaperID == -1) {
+			int newID = buildLandscaper(getCloseDirections(here.directionTo(platformCornerLoc)), RobotType.LANDSCAPER.cost);
+			if (newID != -1) {
+				platformLandscaperID = newID;
+				writeTransactionAssignPlatform(platformLandscaperID);
+			}
+			log("Created platform landscaper");
+			return;
+		}
+
+		if (!initialWallSetup && roundNum - lastBuildRound > 25) {
+			buildLandscaper(getCloseDirections(here.directionTo(HQLoc)), RobotType.LANDSCAPER.cost);
+			log("Created extra init landscaper " + landscapersBuilt);
+			return;
+		}
+
+		if (supportFull) {
+			log("Returning: Support full");
+			return;
+		}
+
+		// if platform buildings have taken too long to complete
+//		if () {
+//
+//		}
+
+		// create landscapers if platform buildings are completed
+		if (platformBuildingsCompleted || rc.getTeamSoup() >= RobotType.VAPORATOR.cost + RobotType.LANDSCAPER.cost) {
+			int id = buildLandscaper(getCloseDirections(here.directionTo(HQLoc)), RobotType.LANDSCAPER.cost);
+			log("Created wall/support landscaper " + landscapersBuilt);
 			return;
 		}
 	}
 
 	public static int buildLandscaper(Direction[] orderedDirs, int soupLimit) throws GameActionException{
-		for (Direction dir : orderedDirs) {
+		if (rc.getTeamSoup() < soupLimit) {
+			log("Team does not have " + soupLimit + " soup");
+			return -1;
+		}
+		outer: for (Direction dir : orderedDirs) {
 			MapLocation loc = rc.adjacentLocation(dir);
 			if (!rc.onTheMap(loc)) {
 				continue;
 			}
-			if (rc.getTeamSoup() >= soupLimit && isLocDryFlatEmpty(loc)) {
+			RobotInfo[] spawnLocEnemies = rc.senseNearbyRobots(loc, 2, them);
+			for (RobotInfo ri: spawnLocEnemies) {
+				if (ri.type == RobotType.DELIVERY_DRONE) {
+					continue outer;
+				}
+			}
+			log("loc " + loc);
+			if (isLocDryFlatEmpty(loc)) {
 				tlog("BUILDING LANDSCAPER " + dir);
 				Actions.doBuildRobot(RobotType.LANDSCAPER, dir);
 				landscapersBuilt++;

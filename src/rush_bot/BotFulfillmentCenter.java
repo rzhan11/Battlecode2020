@@ -45,7 +45,7 @@ public class BotFulfillmentCenter extends Globals {
 		}
 
 		if (platformCornerLoc != null && inArray(platformLocs, here, platformLocs.length)) {
-			return;
+			onPlatform = true;
 		}
 	}
 
@@ -60,7 +60,8 @@ public class BotFulfillmentCenter extends Globals {
 			return;
 		}
 
-		if (dronesBuilt < 1) {
+		if (!onPlatform && dronesBuilt < 2) {
+			log("Building drone " + dronesBuilt);
 			buildDrone(getCloseDirections(here.directionTo(HQLoc)), RobotType.DELIVERY_DRONE.cost);
 			return;
 		}
@@ -69,18 +70,26 @@ public class BotFulfillmentCenter extends Globals {
 			// spam drones
 			if (supportFull) {
 				buildDrone(getCloseDirections(here.directionTo(HQLoc)), RobotType.DELIVERY_DRONE.cost);
+				return;
 			}
 
-			boolean seesDrone = false;
-			for (RobotInfo ri: visibleAllies) {
-				if (ri.type == RobotType.DELIVERY_DRONE) {
-					seesDrone = true;
-					break;
-				}
-			}
-			if (!seesDrone) {
+			// if platform design school cannot build landscapers due to danger
+			if (platformBuildingsCompleted && rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost + RobotType.LANDSCAPER.cost) {
 				buildDrone(getCloseDirections(here.directionTo(HQLoc)), RobotType.DELIVERY_DRONE.cost);
+				return;
 			}
+
+//			boolean seesDrone = false;
+//			for (RobotInfo ri: visibleAllies) {
+//				if (ri.type == RobotType.DELIVERY_DRONE) {
+//					seesDrone = true;
+//					break;
+//				}
+//			}
+//			if (!seesDrone) {
+//				buildDrone(getCloseDirections(here.directionTo(HQLoc)), RobotType.DELIVERY_DRONE.cost);
+//				return;
+//			}
 		}
 
 	}
