@@ -129,7 +129,7 @@ public class BotMinerBuilder extends BotMiner {
             }
         } else if (!builtDesignSchool) {
             log("ds");
-            if (rc.getTeamSoup() < RobotType.DESIGN_SCHOOL.cost) {
+            if (rc.getTeamSoup() < RobotType.DESIGN_SCHOOL.cost + dynamicCost) {
                 log("Cannot afford platform design school");
                 return;
             }

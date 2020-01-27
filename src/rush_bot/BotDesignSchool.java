@@ -63,7 +63,7 @@ public class BotDesignSchool extends Globals {
 			log("Not ready");
 			return;
 		}
-		
+
 		if (landscapersBuilt < 6 && platformLandscaperID == -1) {
 			int newID = buildLandscaper(getCloseDirections(here.directionTo(HQLoc)), RobotType.LANDSCAPER.cost);
 			if(newID != -1 && landscapersBuilt == 6) {
@@ -73,6 +73,7 @@ public class BotDesignSchool extends Globals {
 			return;
 		}
 
+		log("status " + supportFull + " " + platformBuildingsCompleted + " " + rc.getTeamSoup());
 		if (!supportFull && (platformBuildingsCompleted || rc.getTeamSoup() >= RobotType.VAPORATOR.cost + RobotType.LANDSCAPER.cost)) {
 			buildLandscaper(getCloseDirections(here.directionTo(HQLoc)), RobotType.LANDSCAPER.cost);
 			return;

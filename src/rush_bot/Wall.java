@@ -254,6 +254,7 @@ public class Wall extends Globals {
                     if (maxXYDistance(HQLoc, loc) == ringRadius + 1) {
                         droneWallLocs[index] = newl;
                         index++;
+                        break;
                     }
                 }
             }
@@ -272,6 +273,7 @@ public class Wall extends Globals {
                     if (maxXYDistance(HQLoc, loc) == ringRadius + 1) {
                         droneWallLocs[index] = newl;
                         index++;
+                        break;
                     }
                 }
             }
@@ -290,6 +292,7 @@ public class Wall extends Globals {
                     if (maxXYDistance(HQLoc, loc) == ringRadius + 1) {
                         droneWallLocs[index] = newl;
                         index++;
+                        break;
                     }
                 }
             }
@@ -308,6 +311,7 @@ public class Wall extends Globals {
                     if (maxXYDistance(HQLoc, loc) == ringRadius + 1) {
                         droneWallLocs[index] = newl;
                         index++;
+                        break;
                     }
                 }
             }

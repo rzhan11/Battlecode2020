@@ -37,6 +37,10 @@ public class BotHQ extends Globals {
 				Globals.update();
 
 				if (!initializedHQ) {
+					loadDroneWallInfo();
+					for (int i = 0; i < droneWallLocsLength; i++) {
+						log("loc " + i + " " + droneWallLocs[i]);
+					}
 					initHQ();
 				}
 				if (roundNum == 2) {

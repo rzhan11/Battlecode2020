@@ -63,6 +63,17 @@ public class BotMiner extends Globals {
 
 	public static void turn() throws GameActionException {
 
+		if (platformCompleted && myID != platformMinerID) {
+			if (inArray(platformLocs, here, platformLocs.length)) {
+				numRoundsOnPlatform++;
+			} else {
+				numRoundsOnPlatform = 0;
+			}
+			if (numRoundsOnPlatform > 10) {
+				rc.disintegrate();
+			}
+		}
+
 		locateSoup();
 
 		if (!rc.isReady()) {
