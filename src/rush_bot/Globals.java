@@ -229,6 +229,11 @@ public class Globals extends Constants {
         }
         lastActiveTurn = rc.getRoundNum();
 
+        if (roundNum > HardCode.getRoundFlooded(UNFLOOD_WALL_LIMIT)) {
+            wallFull = true;
+            supportFull = true;
+        }
+
         if (myID != rushMinerID) {
             if (roundNum > START_RUSH_STATUS_ROUND && roundNum - Math.max(continueRushSignalRound, START_RUSH_STATUS_ROUND) >= RUSH_STATUS_INTERVAL + 5) {
                 abortRush = true;
