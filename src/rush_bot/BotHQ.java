@@ -74,18 +74,25 @@ public class BotHQ extends Globals {
 	public static void turn() throws GameActionException {
 		log("Turn start bytes " + Clock.getBytecodesLeft());
 
+		// checks if we are being rushed
+		if (!abortRush && !enemyRush) {
+			RobotInfo[] closeEnemies = rc.senseNearbyRobots(8, them);
+			for (RobotInfo ri: closeEnemies) {
+				if (ri.type == RobotType.LANDSCAPER || ri.type == RobotType.MINER) {
+					enemyRush = true;
+					break;
+				}
+			}
+			if (enemyRush) {
+				writeTransactionEnemyRush();
+			}
+		}
+
 		if (!initialWallSetup) {
 			initialWallSetup = checkInitialWallSetup();
 			if (initialWallSetup) {
 				writeTransactionWallStatus(INITIAL_WALL_SETUP_FLAG);
 			}
-		}
-
-		if (waterLevel > UNFLOOD_WALL_LIMIT) {
-			wallFull = true;
-			supportFull = true;
-			writeTransactionWallStatus(WALL_FULL_FLAG);
-			writeTransactionWallStatus(SUPPORT_FULL_FLAG);
 		}
 
 		if (!wallFull) {
@@ -121,7 +128,6 @@ public class BotHQ extends Globals {
 		log("supportFull " + supportFull);
 
 		Communication.resubmitImportantTransactions();
-
 
 		if (!rc.isReady()) {
 			log("Not ready");

@@ -11,7 +11,7 @@ public class Communication extends Globals {
 	final public static int RESUBMIT_EARLY = 10;
 	final public static int RESUBMIT_INTERVAL = 100;
 
-	final public static int MAX_UNSENT_TRANSACTIONS_LENGTH = 25;
+	final public static int MAX_UNSENT_TRANSACTIONS_LENGTH = 50;
 	final public static int READ_TRANSACTION_MIN_BYTECODE = 500; // how many bytecodes required to read a transaction
 	final public static int READ_BIG_TRANSACTION_MIN_BYTECODE = 1500; // how many bytecodes required to read a costly transaction
 
@@ -45,7 +45,7 @@ public class Communication extends Globals {
 
 	public static int dynamicCost;
 
-	public static int[][] unsentMessages = new int[MAX_UNSENT_TRANSACTIONS_LENGTH][GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
+	public static int[][] unsentMessages;
 	public static int unsentTransactionsIndex = 0;
 	public static int unsentTransactionsLength = 0;
 

@@ -217,7 +217,7 @@ public class BotLandscaper extends Globals {
 
 			if (rc.getDirtCarrying() > 0) {
 				// save myself from flooding
-				if(rc.senseElevation(here) - waterLevel < 3) {
+				if(myElevation - waterLevel < 3) {
 					Actions.doDepositDirt(Direction.CENTER);
 					return;
 				}
@@ -264,9 +264,22 @@ public class BotLandscaper extends Globals {
 
 			if (rc.getDirtCarrying() > 0) {
 				// save myself from flooding
-				if(rc.senseElevation(here) - waterLevel < 3) {
-					Actions.doDepositDirt(Direction.CENTER);
-					return;
+				if(myElevation - waterLevel < 3) {
+					boolean trySaveSelf = true;
+					int diff = waterLevel - myElevation;
+					// if large difference between my height and water level
+					if (diff >= MAX_ELE_DIFF) {
+						int roundsLeft = HardCode.getRoundFlooded(2) - roundNum;
+						if (roundsLeft / 2 < diff) {
+							trySaveSelf = false;
+						}
+					}
+					if (trySaveSelf) {
+						Actions.doDepositDirt(Direction.CENTER);
+						return;
+					} else {
+						log("Cannot save self");
+					}
 				}
 				// keep other tiles above water
 				if (unfloodWall()) {
@@ -295,8 +308,8 @@ public class BotLandscaper extends Globals {
 				continue;
 			}
 			if (inArray(wallLocs, loc, wallLocsLength) || inArray(supportWallLocs, loc, supportWallLocsLength)) {
-				if (rc.senseElevation(loc) - waterLevel < 2 ||
-						(isLocWet(loc) && waterLevel - rc.senseElevation(loc) < MAX_ELE_DIFF)) {
+				if (waterLevel - rc.senseElevation(loc) < MAX_ELE_DIFF &&
+						(rc.senseElevation(loc) - waterLevel < 2 || isLocWet(loc))) {
 					Actions.doDepositDirt(dir);
 					return true;
 				}
@@ -314,7 +327,7 @@ public class BotLandscaper extends Globals {
 				if (!rc.onTheMap(loc)) {
 					continue;
 				}
-				if (here.isAdjacentTo(loc) && rc.senseElevation(here) - waterLevel < 2) {
+				if (here.isAdjacentTo(loc) && rc.senseElevation(loc) - waterLevel < 2) {
 					if (rc.getDirtCarrying() > 0) {
 						Actions.doDepositDirt(here.directionTo(loc));
 						return;
@@ -335,7 +348,7 @@ public class BotLandscaper extends Globals {
 		// adds dirt to 3x3 wall
 		int minElevation = P_INF;
 		Direction minDir = null;
-		for (Direction dir: directions) {
+		for (Direction dir: allDirections) {
 			MapLocation loc = rc.adjacentLocation(dir);
 			if (!rc.onTheMap(loc)) {
 				continue;

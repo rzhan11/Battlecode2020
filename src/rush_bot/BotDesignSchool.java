@@ -66,7 +66,7 @@ public class BotDesignSchool extends Globals {
 		// build 2 landscapers
 		if (landscapersBuilt < 2) {
 			buildLandscaper(getCloseDirections(here.directionTo(HQLoc)), RobotType.LANDSCAPER.cost);
-			log("Created landscaper " + landscapersBuilt);
+			log("Created init landscaper " + landscapersBuilt);
 			return;
 		}
 
@@ -90,11 +90,6 @@ public class BotDesignSchool extends Globals {
 			log("Returning: Support full");
 			return;
 		}
-
-		// if platform buildings have taken too long to complete
-//		if () {
-//
-//		}
 
 		// create landscapers if platform buildings are completed
 		if (platformBuildingsCompleted || rc.getTeamSoup() >= RobotType.VAPORATOR.cost + RobotType.LANDSCAPER.cost) {
@@ -120,7 +115,6 @@ public class BotDesignSchool extends Globals {
 					continue outer;
 				}
 			}
-			log("loc " + loc);
 			if (isLocDryFlatEmpty(loc)) {
 				tlog("BUILDING LANDSCAPER " + dir);
 				Actions.doBuildRobot(RobotType.LANDSCAPER, dir);

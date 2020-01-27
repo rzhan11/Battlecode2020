@@ -182,6 +182,8 @@ public class Globals extends Constants {
             oldBlocksIndex = 1;
         }
 
+        unsentMessages = new int[MAX_UNSENT_TRANSACTIONS_LENGTH][GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
+
         log("Finished init");
     }
 
@@ -228,6 +230,11 @@ public class Globals extends Constants {
             Nav.bugClosestDistanceToTarget = P_INF;
         }
         lastActiveTurn = rc.getRoundNum();
+
+        if (waterLevel >= UNFLOOD_WALL_LIMIT) {
+            wallFull = true;
+            supportFull = true;
+        }
 
         if (myID != rushMinerID) {
             if (roundNum > START_RUSH_STATUS_ROUND && roundNum - Math.max(continueRushSignalRound, START_RUSH_STATUS_ROUND) >= RUSH_STATUS_INTERVAL + 5) {

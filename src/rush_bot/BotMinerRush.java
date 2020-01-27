@@ -232,7 +232,6 @@ public class BotMinerRush extends BotMiner {
                 movesSinceCloser++;
                 return;
             } else {
-                log("rush " + rushNGLoc);
                 if (rushNGLoc == null) {
                     if (here.equals(annoyLoc)) {
                         log("At annoy loc");

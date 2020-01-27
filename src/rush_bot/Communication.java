@@ -488,6 +488,7 @@ public class Communication extends Globals {
 	final public static int INITIAL_WALL_SETUP_FLAG = 1;
 	final public static int WALL_FULL_FLAG = 2;
 	final public static int SUPPORT_FULL_FLAG = 3;
+	final public static int PLATFORM_BUILDINGS_COMPLETED_FLAG = 4;
 	/*
 	message[2] = status
 	 */
@@ -557,11 +558,6 @@ public class Communication extends Globals {
 		log("Posted round: " + round);
 	}
 
-	/*
-	message[2] = flooded tile x
-	message[3] = flooded tile y
-	 */
-
 	public static void writeTransactionEnemyRush () throws GameActionException{
 		log("Writing transaction for 'Enemy Rush'");
 		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
@@ -622,6 +618,7 @@ public class Communication extends Globals {
 		int[] message = new int[GameConstants.BLOCKCHAIN_TRANSACTION_LENGTH];
 		message[0] = encryptID(myID);
 		message[1] = REVIEW_SIGNAL;
+
 		if (initialWallSetup) {
 			message[2] |= (1 << INITIAL_WALL_SETUP_FLAG);
 		}
@@ -631,6 +628,10 @@ public class Communication extends Globals {
 		if (supportFull) {
 			message[2] |= (1 << SUPPORT_FULL_FLAG);
 		}
+		if (platformBuildingsCompleted) {
+			message[2] |= (1 << PLATFORM_BUILDINGS_COMPLETED_FLAG);
+		}
+
 		if (enemyHQLoc == null) {
 			for (int i = 0; i < symmetryHQLocs.length; i++) {
 				if (isSymmetryHQLoc[i] == 2) {
@@ -640,6 +641,7 @@ public class Communication extends Globals {
 		} else {
 			message[3] = (1 << 16) | symmetryHQLocsIndex;
 		}
+
 		message[4] = (PLATFORM_ELEVATION << 12) | (platformCornerLoc.x << 6) | platformCornerLoc.y;
 		message[5] = platformLandscaperID;
 
@@ -662,9 +664,11 @@ public class Communication extends Globals {
 		initialWallSetup = (message[2] & (1 << INITIAL_WALL_SETUP_FLAG)) > 0;
 		wallFull = (message[2] & (1 << WALL_FULL_FLAG)) > 0;
 		supportFull = (message[2] & (1 << SUPPORT_FULL_FLAG)) > 0;
+		platformBuildingsCompleted = (message[2] & (1 << PLATFORM_BUILDINGS_COMPLETED_FLAG)) > 0;
 		ttlog("initialWallSetup " + initialWallSetup);
 		ttlog("wallFull " + wallFull);
 		ttlog("supportFull " + supportFull);
+		ttlog("platformBuildingsCompleted " + platformBuildingsCompleted);
 
 		if ((message[3] & (1 << 16)) == 0) {
 			for (int i = 0; i < symmetryHQLocs.length; i++) {
