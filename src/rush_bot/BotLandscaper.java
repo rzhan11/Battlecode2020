@@ -156,7 +156,7 @@ public class BotLandscaper extends Globals {
 				if (!rc.onTheMap(loc)) {
 					continue;
 				}
-				if (isLocEmpty(loc)) {
+				if (here.isAdjacentTo(loc) && isLocEmpty(loc)) {
 					if (isLocWet(loc)) {
 						log("Water to cardinal");
 						if (rc.getDirtCarrying() > 0) {
