@@ -39,7 +39,7 @@ public class Utils extends Globals {
     public static Direction[] getCloseDirections (Direction dir) {
         if (dir == Direction.CENTER) {
             logi("WARNING: Tried to getCloseDirections of center");
-            return null;
+            return directions;
         }
         Direction[] dirs = new Direction[8];
         dirs[0] = dir;
