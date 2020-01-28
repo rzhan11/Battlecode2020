@@ -249,6 +249,14 @@ public class Globals extends Constants {
 
         printMyInfo();
 
+        while (extremePollution) {
+            doExtremePollutionBehavior();
+            log("EARLY END");
+            Clock.yield();
+            Globals.updateBasic();
+        }
+
+
         if (roundNum > 1) {
             if (oldBlocksLength == -1) {
                 oldBlocksLength = roundNum - 2;
@@ -501,5 +509,32 @@ public class Globals extends Constants {
             }
         }
         return bestIndex;
+    }
+
+    public static void doExtremePollutionBehavior () throws GameActionException {
+        if (myType.canMove()) {
+            if (rc.isReady()) {
+                Direction[] shuffledDirections = new Direction[directions.length];
+                for (int i = 0; i < directions.length; i++) {
+                    shuffledDirections[i] = directions[i];
+                }
+                // shuffle directions
+                Direction temp;
+                for (int i = 0; i < 25; i++) {
+                    int a = rand.nextInt(shuffledDirections.length);
+                    int b = rand.nextInt(shuffledDirections.length);
+                    temp = shuffledDirections[a];
+                    shuffledDirections[a] = shuffledDirections[b];
+                    shuffledDirections[b] = temp;
+                }
+                // try shuffled directions
+                for (Direction dir: shuffledDirections) {
+                    if (rc.canMove(dir)) {
+                        Actions.doMove(dir);
+                        return;
+                    }
+                }
+            }
+        }
     }
 }

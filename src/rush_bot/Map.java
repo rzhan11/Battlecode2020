@@ -156,6 +156,12 @@ public class Map extends Globals {
                 continue;
             }
 
+            double locSensorRadiusSquared = myType.sensorRadiusSquared * GameConstants.getSensorRadiusPollutionCoefficient(rc.sensePollution(adjLoc));
+            if (locSensorRadiusSquared < 2) {
+                isDirMoveable[i] = false;
+                continue;
+            }
+
             if (myType == RobotType.DELIVERY_DRONE) {
                 if (!isLocEmpty(adjLoc)) {
                     isDirMoveable[i] = false;
