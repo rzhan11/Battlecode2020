@@ -404,11 +404,12 @@ public class Globals extends Constants {
         // if the HQ is on a horizontal/vertical/rotational symmetry that generates the same symmetryHQLocs
         if ((mapWidth % 2 == 1 && mapWidth / 2 == HQLoc.x) ||
                 (mapHeight % 2 == 1 && mapHeight / 2 == HQLoc.y)) {
-            isSymmetryHQLoc[0] = 1;
+            isSymmetryHQLoc[0] = 2;
             isSymmetryHQLoc[1] = 2;
-            isSymmetryHQLoc[2] = 2;
-            enemyHQLoc = symmetryHQLocs[0];
-            symmetryHQLocsIndex = 0;
+            isSymmetryHQLoc[2] = 1;
+            symmetryHQLocsIndex = 2;
+            enemyHQLoc = symmetryHQLocs[symmetryHQLocsIndex];
+            log("Enemy HQ has to be at " + enemyHQLoc);
             return;
         }
 
@@ -417,7 +418,7 @@ public class Globals extends Constants {
             MapLocation loc = symmetryHQLocs[i];
             if (isSymmetryHQLoc[i] == 0 && rc.canSenseLocation(loc)) {
                 RobotInfo ri = rc.senseRobotAtLocation(loc);
-                if (ri != null && ri.type == RobotType.HQ) {
+                if (ri != null && ri.type == RobotType.HQ && ri.team == them) {
                     //STATE == enemy FOUND
 
                     enemyHQLoc = loc;
