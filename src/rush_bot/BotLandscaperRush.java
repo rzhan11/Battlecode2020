@@ -42,6 +42,17 @@ public class BotLandscaperRush extends BotLandscaper {
             }
         }
 
+        if (netGunInfo != null) {
+            if (rc.canSenseLocation(netGunInfo.location)) {
+                RobotInfo ri = rc.senseRobotAtLocation(netGunInfo.location);
+                if (ri == null || ri.ID != netGunInfo.ID) {
+                    netGunInfo = null;
+                } else {
+                    netGunInfo = ri;
+                }
+            }
+        }
+
         // checks if netgun is protected by at least 4 ally landscapers
         if (netGunInfo != null) {
             if (here.isAdjacentTo(netGunInfo.location)) {
