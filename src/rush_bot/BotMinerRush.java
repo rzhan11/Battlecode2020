@@ -102,43 +102,48 @@ public class BotMinerRush extends BotMiner {
         if (enemyHQLoc != null && rushDSLoc != null && rushNGLoc == null) {
             if (seesEnemyDrone || seesEnemyFulfillmentCenter) {
 
-                Direction buildDir = null;
-                int openCardinals = 0;
+                Direction buildDiagonalDir = null;
+                for (Direction dir: diagonalDirections) {
+                    MapLocation loc = enemyHQLoc.add(dir);
+                    if (!rc.onTheMap(loc)) {
+                        continue;
+                    }
+                    if (!rc.canSenseLocation(loc)) {
+                        continue;
+                    }
+                    if (here.isAdjacentTo(loc)) {
+                        if (isLocDryFlatEmpty(loc)) {
+                            buildDiagonalDir = here.directionTo(loc);
+                            if (loc.isAdjacentTo(rushDSLoc)) {
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                Direction buildCardinalDir = null;
                 for (Direction dir: cardinalDirections) {
                     MapLocation loc = enemyHQLoc.add(dir);
                     if (!rc.onTheMap(loc)) {
                         continue;
                     }
                     if (!rc.canSenseLocation(loc)) {
-                        openCardinals++;
                         continue;
                     }
                     if (here.isAdjacentTo(loc)) {
                         if (isLocDryFlatEmpty(loc)) {
-                            buildDir = here.directionTo(loc);
-                        }
-                    }
-                    if (isLocDryEmpty(loc)) {
-                        openCardinals++;
-                    }
-                }
-
-                // try diagonals if no cardinal directions are available
-                if (openCardinals == 0) {
-                    for (Direction dir: diagonalDirections) {
-                        MapLocation loc = enemyHQLoc.add(dir);
-                        if (!rc.onTheMap(loc)) {
-                            continue;
-                        }
-                        if (!rc.canSenseLocation(loc)) {
-                            continue;
-                        }
-                        if (here.isAdjacentTo(loc)) {
-                            if (isLocDryFlatEmpty(loc)) {
-                                buildDir = here.directionTo(loc);
+                            buildCardinalDir = here.directionTo(loc);
+                            if (loc.isAdjacentTo(rushDSLoc)) {
+                                break;
                             }
                         }
                     }
+                }
+
+                Direction buildDir = buildDiagonalDir;
+                // try diagonals if no cardinal directions are available
+                if (buildDir == null) {
+                    buildDir = buildCardinalDir;
                 }
 
                 // build netgun
@@ -242,12 +247,12 @@ public class BotMinerRush extends BotMiner {
                         return;
                     }
                 } else {
-                    if (here.isAdjacentTo(enemyHQLoc)) {
-                        log("At hq annoy loc");
+                    if (here.isAdjacentTo(rushNGLoc)) {
+                        log("At netgun annoy loc");
                         return;
                     } else {
                         log("Trying to move to any annoy loc");
-                        moveLog(enemyHQLoc);
+                        moveLog(rushNGLoc);
                         return;
                     }
                 }
