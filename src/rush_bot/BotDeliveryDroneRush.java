@@ -56,6 +56,12 @@ public class BotDeliveryDroneRush extends BotDeliveryDrone {
             updateIsDirMoveable();
         }
 
+        if (here.distanceSquaredTo(getSymmetryLoc()) <= 25) {
+            for (int i = 1; i < directions.length; i++) {
+                isDirMoveable[i] = false;
+            }
+        }
+
         if (!rc.isCurrentlyHoldingUnit()) {
             if (!rc.canSenseRobot(rushMinerID)) {
                 log("Cannot see rush miner");
@@ -77,8 +83,19 @@ public class BotDeliveryDroneRush extends BotDeliveryDrone {
             // STATE = enemyHQLoc is known
             if (here.distanceSquaredTo(enemyHQLoc) <= RobotType.DELIVERY_DRONE.sensorRadiusSquared) {
                 Direction[] orderedDirections = getCloseDirections(here.directionTo(enemyHQLoc));
-                for (Direction dir: orderedDirections) {
+                outer: for (Direction dir: orderedDirections) {
+                    MapLocation loc = rc.adjacentLocation(dir);
+                    if (!rc.onTheMap(loc)) {
+                        continue;
+                    }
                     if (isLocDryEmpty(rc.adjacentLocation(dir))) {
+                        // avoid placing into enemy drone pick up range
+                        RobotInfo[] possibleEnemyDrones = rc.senseNearbyRobots(loc, 2, them);
+                        for (RobotInfo ri: possibleEnemyDrones) {
+                            if (ri.type == RobotType.DELIVERY_DRONE) {
+                                continue outer;
+                            }
+                        }
                         Actions.doDropUnit(dir);
                         myRole = DRONE_SUPPORT_ROLE;
                         return;

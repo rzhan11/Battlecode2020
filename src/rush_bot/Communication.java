@@ -627,6 +627,7 @@ public class Communication extends Globals {
 	message[3] = explored symmetries
 	message[4] = location.x + location.y
 	message[5] = platformerID
+	message[6] = enemy rush
 	 */
 	public static void writeTransactionReview() throws GameActionException{
 		log("Writing transaction for 'Review'");
@@ -659,6 +660,9 @@ public class Communication extends Globals {
 
 		message[4] = (PLATFORM_ELEVATION << 12) | (platformCornerLoc.x << 6) | platformCornerLoc.y;
 		message[5] = platformLandscaperID;
+		if (enemyRush) {
+			message[6] = 1;
+		}
 
 		xorMessage(message);
 		if (rc.getTeamSoup() >= dynamicCost) {
@@ -711,6 +715,9 @@ public class Communication extends Globals {
 		ttlog("Platform elevation " + PLATFORM_ELEVATION);
 		ttlog("Platform location " + platformCornerLoc);
 		ttlog("platformerID " + platformLandscaperID);
+		if (message[6] == 1) {
+			enemyRush = true;
+		}
 
 		ttlog("Posted round: " + round);
 	}

@@ -24,6 +24,7 @@ public class BotMinerRush extends BotMiner {
     public static int closestDistToSymmetry;
     public static int movesSinceCloser;
     public static boolean usedDrone;
+    public static boolean builtNearNetgun = false;
 
     final public static int BUILD_DRONE_NUM_MOVES = 3;
 
@@ -53,7 +54,7 @@ public class BotMinerRush extends BotMiner {
         Abort rush if past a certain round
         Abort rush if too many enemy landscapers
          */
-        if (rushDSLoc == null) {
+        if (rushDSLoc == null && !builtNearNetgun) {
             // check number of visible enemy landscapers
             int count = 0;
             for (RobotInfo ri: visibleEnemies) {
@@ -98,9 +99,38 @@ public class BotMinerRush extends BotMiner {
             }
         }
 
+        // if somewhat close to enemy hq, sees enemy drone, and sees fulfillment center
+        // build netgun
+        if (!enemyRush && !builtNearNetgun && rc.getTeamSoup() >= RobotType.NET_GUN.cost) {
+            if ((seesEnemyDrone || seesEnemyFulfillmentCenter) && rushDSLoc == null) {
+                if (maxXYDistance(enemyHQLoc, here) == 3 || maxXYDistance(enemyHQLoc, here) == 4) {
+                    int bestDist = P_INF;
+                    Direction bestDir = null;
+                    for (Direction dir: directions) {
+                        MapLocation loc = rc.adjacentLocation(dir);
+                        if (!rc.onTheMap(loc)) {
+                            continue;
+                        }
+                        if (maxXYDistance(enemyHQLoc, loc) == 3 && isLocDryFlatEmpty(loc)) {
+                            int dist = loc.distanceSquaredTo(enemyHQLoc);
+                            if (dist < bestDist) {
+                                bestDir = dir;
+                                bestDist = dist;
+                            }
+                        }
+                    }
+                    if (bestDir != null) {
+                        Actions.doBuildRobot(RobotType.NET_GUN, bestDir);
+                        builtNearNetgun = true;
+                        return;
+                    }
+                }
+            }
+        }
+
         // build netgun if potential drone threat is seen
         if (enemyHQLoc != null && rushDSLoc != null && rushNGLoc == null) {
-            if (seesEnemyDrone || seesEnemyFulfillmentCenter) {
+            if (true || seesEnemyDrone || seesEnemyFulfillmentCenter) {
 
                 Direction buildDiagonalDir = null;
                 for (Direction dir: diagonalDirections) {
@@ -239,19 +269,36 @@ public class BotMinerRush extends BotMiner {
             } else {
                 if (rushNGLoc == null) {
                     if (here.equals(annoyLoc)) {
-                        log("At annoy loc");
+                        log("At ANNOY annoy loc");
                         return;
                     } else {
-                        log("Trying to move to annoy loc");
+                        log("Trying to move to ANNOY annoy loc");
                         moveLog(annoyLoc);
                         return;
                     }
                 } else {
                     if (here.isAdjacentTo(rushNGLoc)) {
-                        log("At netgun annoy loc");
-                        return;
+                        if (here.isAdjacentTo(rushDSLoc)) {
+                            // move to tile adjacent to net gun, not adjacent to design school
+                            for (Direction dir: directions) {
+                                MapLocation loc = rc.adjacentLocation(dir);
+                                if (!rc.onTheMap(loc)) {
+                                    continue;
+                                }
+                                if (isLocDryFlatEmpty(loc) && loc.isAdjacentTo(rushNGLoc) && !loc.isAdjacentTo(rushDSLoc)) {
+                                    Actions.doMove(dir);
+                                    log("At ok netgun annoy loc, moving to a good one");
+                                    return;
+                                }
+                            }
+                            log("At ok netgun annoy loc, can't find a good one");
+                            return;
+                        } else {
+                            log("At good netgun annoy loc");
+                            return;
+                        }
                     } else {
-                        log("Trying to move to any annoy loc");
+                        log("Trying to move to any netgun annoy loc");
                         moveLog(rushNGLoc);
                         return;
                     }

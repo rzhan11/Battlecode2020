@@ -17,6 +17,7 @@ public class BotDesignSchoolRush extends BotDesignSchool {
     public static boolean seesEnemyDrone = false;
     public static boolean seesEnemyFulfillmentCenter = false;
     public static boolean seesAllyNetGun = false;
+    public static boolean seesAllyMiner = false;
 
     public static void loop() throws GameActionException {
         while (true) {
@@ -52,23 +53,42 @@ public class BotDesignSchoolRush extends BotDesignSchool {
         }
 
         seesAllyNetGun = false;
+        MapLocation netGunLoc = null;
         for (RobotInfo ri: visibleAllies) {
-            switch (ri.type) {
-                case NET_GUN:
-                    seesAllyNetGun = true;
-                    break;
+            if (maxXYDistance(enemyHQLoc, ri.location) <= 2) {
+                switch (ri.type) {
+                    case NET_GUN:
+                        seesAllyNetGun = true;
+                        netGunLoc = ri.location;
+                        break;
+                }
             }
         }
 
+        seesAllyMiner = false;
+        if (rc.canSenseRobot(rushMinerID)) {
+            RobotInfo rushMinerInfo = rc.senseRobot(rushMinerID);
+            if (maxXYDistance(enemyHQLoc, rushMinerInfo.location) <= 2) {
+                seesAllyMiner = true;
+            }
+        }
 
-        if (!seesAllyNetGun) {
-            if (seesEnemyDrone || seesEnemyFulfillmentCenter) {
+        if (seesEnemyDrone && !seesAllyNetGun) {
+            return;
+        }
+
+        if (seesEnemyFulfillmentCenter) {
+            if (!seesAllyNetGun && !seesAllyMiner) {
                 return;
             }
         }
 
         if (landscapersBuilt < 8) {
-            buildLandscaper(getCloseDirections(here.directionTo(enemyHQLoc)), RobotType.LANDSCAPER.cost);
+            if (netGunLoc != null) {
+                buildLandscaper(getCloseDirections(here.directionTo(netGunLoc)), RobotType.LANDSCAPER.cost);
+            } else {
+                buildLandscaper(getCloseDirections(here.directionTo(enemyHQLoc)), RobotType.LANDSCAPER.cost);
+            }
             return;
         }
     }
