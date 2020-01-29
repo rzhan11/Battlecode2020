@@ -102,7 +102,7 @@ public class BotMinerRush extends BotMiner {
         // if somewhat close to enemy hq, sees enemy drone, and sees fulfillment center
         // build netgun
         if (!enemyRush && !builtNearNetgun && rc.getTeamSoup() >= RobotType.NET_GUN.cost) {
-            if ((seesEnemyDrone || seesEnemyFulfillmentCenter) && rushDSLoc == null) {
+            if (seesEnemyDrone && rushDSLoc == null) {
                 if (maxXYDistance(enemyHQLoc, here) == 3 || maxXYDistance(enemyHQLoc, here) == 4) {
                     int bestDist = P_INF;
                     Direction bestDir = null;
