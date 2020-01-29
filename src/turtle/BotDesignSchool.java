@@ -68,7 +68,7 @@ public class BotDesignSchool extends Globals {
 
 	public static void buildLandscaper(Direction[] dirs, int soupLimit) throws GameActionException{
 		for (Direction dir : dirs) {
-			if (rc.getTeamSoup() >= soupLimit && isDirDryFlatEmpty(dir)) {
+			if (rc.getTeamSoup() >= soupLimit && isDirDryFlatEmpty(dir) && rc.canBuildRobot(RobotType.LANDSCAPER,dir)) {
 				tlog("BUILDING LANDSCAPER " + dir);
 				Actions.doBuildRobot(RobotType.LANDSCAPER, dir);
 				landscapersBuilt++;
