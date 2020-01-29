@@ -43,9 +43,9 @@ public class BotHQ extends Globals {
 					loadPlatformInfo();
 				}
 
-				if(roundNum > 1500 && roundNum%5 == 0){
-					writeTrollMessage();
-				}
+//				if(roundNum > 1500 && roundNum%5 == 0){
+//					writeTrollMessage();
+//				}
 
 				turn();
 			} catch (Exception e) {

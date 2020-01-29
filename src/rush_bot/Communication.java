@@ -53,8 +53,8 @@ public class Communication extends Globals {
 	public static int unsentTransactionsIndex = 0;
 	public static int unsentTransactionsLength = 0;
 
-	public static int[][] opponentMessages = new int[1000][7];
-	public static int opponentMessagesCount = 0;
+//	public static int[][] opponentMessages = new int[1000][7];
+//	public static int opponentMessagesCount = 0;
 
 	/*
 		Communication is made up of 7 integers (32-bit)
@@ -201,8 +201,8 @@ public class Communication extends Globals {
 			if (submitterID == -1) {
 				tlog("Found opponent's transaction");
 
-				opponentMessages[opponentMessagesCount%1000] = message;
-				opponentMessagesCount++;
+//				opponentMessages[opponentMessagesCount%1000] = message;
+//				opponentMessagesCount++;
 
 
 
@@ -800,12 +800,12 @@ public class Communication extends Globals {
 
 
 
-	public static void writeTrollMessage() throws GameActionException{
-		int[] message = opponentMessages[rand.nextInt(opponentMessagesCount)%1000];
-		if (rc.getTeamSoup() >= dynamicCost && dynamicCost <= 2) {
-			tlog("Writing Troll Message");
-			rc.submitTransaction(message, dynamicCost);
-		}
-
-	}
+//	public static void writeTrollMessage() throws GameActionException{
+//		int[] message = opponentMessages[rand.nextInt(opponentMessagesCount)%1000];
+//		if (rc.getTeamSoup() >= dynamicCost && dynamicCost <= 2) {
+//			tlog("Writing Troll Message");
+//			rc.submitTransaction(message, dynamicCost);
+//		}
+//
+//	}
 }
