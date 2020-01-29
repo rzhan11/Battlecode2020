@@ -25,6 +25,7 @@ public class BotMinerRush extends BotMiner {
     public static int movesSinceCloser;
     public static boolean usedDrone;
     public static boolean builtNearNetgun = false;
+    public static MapLocation nearNetgunLoc = null;
 
     final public static int BUILD_DRONE_NUM_MOVES = 3;
 
@@ -99,6 +100,40 @@ public class BotMinerRush extends BotMiner {
             }
         }
 
+        if (inDanger && builtNearNetgun && nearNetgunLoc != null && here.distanceSquaredTo(nearNetgunLoc) <= 8) {
+            int bestDistToNetgun = P_INF;
+            Direction bestDir = null;
+            int minPossDist = P_INF;
+            Direction minPossDir = null;
+            for (int i = 0; i < directions.length; i++) {
+                MapLocation loc = rc.adjacentLocation(directions[i]);
+                if (!rc.onTheMap(loc)) {
+                    continue;
+                }
+                if (isDirMoveable[i] && !isDirDanger[i]) {
+                    int dist = loc.distanceSquaredTo(nearNetgunLoc);
+                    if (dist < bestDistToNetgun) {
+                        bestDistToNetgun = dist;
+                        bestDir = directions[i];
+                    }
+                }
+                if (isLocDryFlatEmpty(loc)) {
+                    int dist = loc.distanceSquaredTo(nearNetgunLoc);
+                    if (dist < minPossDist) {
+                        minPossDist = dist;
+                        minPossDir = directions[i];
+                    }
+                }
+            }
+            if (bestDir != null) {
+                Actions.doMove(bestDir);
+                return;
+            } else if (minPossDir != null) {
+                Actions.doMove(minPossDir);
+                return;
+            }
+        }
+
         // if somewhat close to enemy hq, sees enemy drone, and sees fulfillment center
         // build netgun
         if (!enemyRush && !builtNearNetgun && rc.getTeamSoup() >= RobotType.NET_GUN.cost) {
@@ -122,6 +157,7 @@ public class BotMinerRush extends BotMiner {
                     if (bestDir != null) {
                         Actions.doBuildRobot(RobotType.NET_GUN, bestDir);
                         builtNearNetgun = true;
+                        nearNetgunLoc = rc.adjacentLocation(bestDir);
                         return;
                     }
                 }

@@ -188,6 +188,17 @@ public class BotLandscaper extends Globals {
 
 	private static void doWallRole() throws GameActionException {
 
+		if (here.isAdjacentTo(HQLoc)) {
+			RobotInfo HQInfo = rc.senseRobotAtLocation(HQLoc);
+			if (HQInfo.dirtCarrying > 0) {
+				Direction dir = here.directionTo(HQInfo.location);
+				if (rc.getDirtCarrying() < myType.dirtLimit && rc.canDigDirt(dir)) {
+					Actions.doDigDirt(dir);
+					return;
+				}
+			}
+		}
+
 		// unflood tiles adjacent to HQ
 		for (Direction dir: directions) {
 			MapLocation loc = HQLoc.add(dir);

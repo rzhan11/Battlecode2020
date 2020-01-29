@@ -182,6 +182,7 @@ public class BotLandscaperRush extends BotLandscaper {
         int openCount = 0;
         int enemyLandscaperCount = 0;
         int allyLandscaperCount = 0;
+        int occupiedCount = 0;
         for (Direction dir: directions) {
             MapLocation loc = targetLoc.add(dir);
             if (!rc.onTheMap(loc)) {
@@ -202,12 +203,16 @@ public class BotLandscaperRush extends BotLandscaper {
                     } else {
                         enemyLandscaperCount++;
                     }
+                } else {
+                    if (ri.type != RobotType.HQ) {
+                        occupiedCount++;
+                    }
                 }
                 continue;
             }
         }
         log(targetLoc + ": o e a " + openCount + " " + enemyLandscaperCount + " " + allyLandscaperCount);
-        return new int[] {openCount, enemyLandscaperCount, allyLandscaperCount};
+        return new int[] {openCount, enemyLandscaperCount, allyLandscaperCount, occupiedCount};
     }
 
     private static void protectDeposit() throws GameActionException {
