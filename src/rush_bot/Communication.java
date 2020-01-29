@@ -327,7 +327,12 @@ public class Communication extends Globals {
 		}
 	}
 
+	public static boolean hasReadHQFirstTurn = false;
 	public static void readTransactionHQFirstTurn (int[] message, int round) {
+		if (hasReadHQFirstTurn) {
+			return;
+		}
+		hasReadHQFirstTurn = true;
 		tlog("Reading 'HQ First Turn' transaction");
 		HQLoc = new MapLocation(message[2], message[3]);
 		HQElevation = message[4];
