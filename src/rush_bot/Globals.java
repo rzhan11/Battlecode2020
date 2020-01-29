@@ -130,9 +130,9 @@ public class Globals extends Constants {
         mapHeight = rc.getMapHeight();
 
         if (us == Team.A) {
-            Communication.secretKey = 1337;
+            Communication.secretKey = 22;
         } else {
-            Communication.secretKey = 7331;
+            Communication.secretKey = 44;
         }
 
         lastActiveTurn = rc.getRoundNum() - 1;
